@@ -1,5 +1,9 @@
-import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import Image from 'next/image';
+
+// Mark as dynamic since it requires environment variables and real-time profile data
+export const dynamic = 'force-dynamic';
 
 // STEP 1: TypeScript interfaces for profile shape
 interface Profile {
@@ -45,10 +49,12 @@ function ProfileCard({ profile, isLocked }: ProfileCardProps): JSX.Element {
         <div className="flex h-full flex-col items-center justify-center">
           <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
             {profile.avatar_url ? (
-              <img
+              <Image
                 src={profile.avatar_url}
                 alt={profile.display_name}
-                className="h-full w-full rounded-full object-cover"
+                width={64}
+                height={64}
+                className="rounded-full object-cover"
               />
             ) : (
               <span className="text-lg font-bold text-gray-500">{initials}</span>
@@ -76,10 +82,12 @@ function ProfileCard({ profile, isLocked }: ProfileCardProps): JSX.Element {
         <div className="flex h-full flex-col items-center justify-center">
           <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
             {profile.avatar_url ? (
-              <img
+              <Image
                 src={profile.avatar_url}
                 alt={profile.display_name}
-                className="h-full w-full rounded-full object-cover"
+                width={64}
+                height={64}
+                className="rounded-full object-cover"
               />
             ) : (
               <span className="text-lg font-bold text-blue-600">{initials}</span>
@@ -103,7 +111,7 @@ export default async function SelectUserPage({
   searchParams,
 }: SelectUserPageProps): Promise<JSX.Element> {
   // STEP 2: Server-side profile fetch using service role
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
 
   let profiles: Profile[] = [];
   let fetchError: Error | null = null;
