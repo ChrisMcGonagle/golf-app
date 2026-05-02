@@ -1,6 +1,6 @@
 # Product Backlog — Golf Club Management App (Phase 1 MVP)
 
-_Managed by Planner. Executed by Coder. Source of truth: /docs/SAB.md_
+_Managed by Planner. Executed by Coder. Source of truth: /docs/SAD.md_
 
 ## Status Model
 
@@ -173,7 +173,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-003d: Inactivity Auto-Lockout
 
-- **Status:** TESTING
+- **Status:** DONE
 - **Goal:** Implement client-side inactivity detection that clears the `activeUser` cookie server-side and returns the device to `/select-user` after 5 minutes of no user interaction.
 - **Scope:**
   - `InactivityProvider` React context component (`components/InactivityProvider.tsx`) — `"use client"`
@@ -199,7 +199,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-004: Role-Based Middleware
 
-- **Status:** TESTING
+- **Status:** DONE
 - **Goal:** Implement Next.js `middleware.ts` to enforce active-user presence and route protection on every request by reading the signed `activeUser` cookie — no Supabase session is used.
 - **Scope:**
   - `middleware.ts` at project root
@@ -226,72 +226,183 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ---
 
-## PBI-005: Admin Dashboard — Members List
+## PBI-005: Admin Dashboard Layout
 
 - **Status:** READY
-- **Goal:** Implement the `/staff/members` page that displays a list of all users with the `staff` role, visible to admin only.
+- **Goal:** Create the admin dashboard shell with a left side menu and admin-only dashboard pages.
 - **Scope:**
-  - `/app/staff/members/page.tsx` — Server Component
-  - Read active user from `activeUser` cookie to confirm `role = 'admin'` (middleware already enforces this)
-  - Fetch all profiles where `role = 'staff'` server-side using `SUPABASE_SERVICE_ROLE_KEY`
-  - Display: `display_name`, `avatar_url` (fallback initials), `created_at`
-  - Basic Tailwind-styled table or card list
-  - Navigation link to `/staff/staff`
-- **Out of Scope:** Pagination, search/filter, editing profiles, staff member detail pages
+  - Create `/app/dashboard/layout.tsx` for the admin dashboard shell
+  - Left side menu includes: `Submissions` and `Members`
+  - Create `/app/dashboard/page.tsx` as the admin dashboard landing page
+  - Create blank admin pages `/app/dashboard/submissions/page.tsx` and `/app/dashboard/members/page.tsx`
+  - Dashboard content renders to the right of the side menu
+- **Out of Scope:** Real submissions data, real members data, CRUD flows, filters, search
 - **Acceptance Criteria:**
-  - Page renders a list of all staff profiles
-  - Data is fetched server-side via service role
-  - Page is inaccessible without a valid `admin` activeUser cookie (middleware enforces)
-  - Empty state is handled gracefully (e.g. "No staff found")
+  - Admin users can access `/dashboard`
+  - The dashboard shows a left side menu with `Submissions` and `Members`
+  - `/dashboard/submissions` and `/dashboard/members` exist as blank placeholder pages
+  - The selected admin page renders in the main content area to the right of the side menu
 - **Dependencies:** PBI-002, PBI-004
-- **Systems Affected:** frontend, supabase
-- **Risk Level:** Medium
-- **Estimated Effort:** S
-
----
-
-## PBI-006: Admin List
-
-- **Status:** READY
-- **Goal:** Implement the `/staff/staff` page that displays a list of all users with the `admin` role, visible to admin only.
-- **Scope:**
-  - `/app/staff/staff/page.tsx` — Server Component
-  - Fetch all profiles where `role = 'admin'` server-side using `SUPABASE_SERVICE_ROLE_KEY`
-  - Display: `display_name`, `avatar_url` (fallback initials), `created_at`
-  - Basic Tailwind-styled table or card list
-  - Navigation link to `/staff/members`
-- **Out of Scope:** Pagination, search/filter, editing profiles, admin detail pages
-- **Acceptance Criteria:**
-  - Page renders a list of all admin profiles
-  - Data is fetched server-side via service role
-  - Page is inaccessible without a valid `admin` activeUser cookie (middleware enforces)
-  - Empty state is handled gracefully
-- **Dependencies:** PBI-002, PBI-004
-- **Systems Affected:** frontend, supabase
+- **Systems Affected:** frontend
 - **Risk Level:** Low
 - **Estimated Effort:** S
 
 ---
 
-## PBI-007: Staff Dashboard
+## PBI-006: Staff Membership Registration
 
 - **Status:** READY
-- **Goal:** Implement the `/dashboard` page that shows a logged-in staff member their own profile information only.
+- **Goal:** Create the staff landing page at `/dashboard/membership-registration`.
 - **Scope:**
-  - `/app/dashboard/page.tsx` — Server Component
-  - Read `profileId` from `activeUser` cookie
-  - Fetch the profile for that `profileId` server-side using `SUPABASE_SERVICE_ROLE_KEY`
-  - Display: `display_name`, `role`, `avatar_url` (if present, else initials), `created_at`
-  - Sign-off button that calls the `clearActiveUser` Server Action (from PBI-003d)
-  - Basic Tailwind styling
-- **Out of Scope:** Profile editing, avatar upload, any other users' data
+  - Create `/app/dashboard/membership-registration/page.tsx`
+  - Page contains two buttons: `New Membership` and `Membership Renewal`
+  - This page does not use the admin dashboard side menu
+  - Buttons are placeholders only for now
+- **Out of Scope:** Form flows, payments, renewals logic, submissions logic, member creation logic
 - **Acceptance Criteria:**
-  - Logged-in staff member sees only their own profile data
-  - Page is inaccessible without a valid `staff` activeUser cookie (middleware enforces)
-  - `admin` activeUser cookie visiting `/dashboard` is redirected to `/staff` (middleware)
-  - Sign-off button clears cookie and redirects to `/select-user`
-  - Avatar displayed if `avatar_url` present; initials fallback if null
-- **Dependencies:** PBI-002, PBI-003b, PBI-004
-- **Systems Affected:** frontend, supabase
+  - Staff users can access `/dashboard/membership-registration`
+  - The page shows `New Membership` and `Membership Renewal` buttons
+  - The page renders as a standalone staff page, not inside the admin dashboard shell
+- **Dependencies:** PBI-002, PBI-004
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** S
+
+---
+
+## PBI-007: Middleware Role Routing
+
+- **Status:** READY
+- **Goal:** Route admin and staff users to different authenticated destinations after login.
+- **Scope:**
+  - Update middleware role routing so `admin` users land on `/dashboard`
+  - Update middleware role routing so `staff` users land on `/dashboard/membership-registration`
+  - Reserve `/dashboard`, `/dashboard/submissions`, and `/dashboard/members` for admin users
+  - Reserve `/dashboard/membership-registration` for staff users
+  - Keep PIN and setup-PIN success redirects simple; middleware performs the final role-based routing
+- **Out of Scope:** Changing page UI, implementing form logic, submissions logic, members logic
+- **Acceptance Criteria:**
+  - Admin login ends on `/dashboard`
+  - Staff login ends on `/dashboard/membership-registration`
+  - Admin users can access `/dashboard`, `/dashboard/submissions`, and `/dashboard/members`
+  - Staff users attempting to access admin dashboard routes are redirected to `/dashboard/membership-registration`
+  - Admin users attempting to access `/dashboard/membership-registration` are redirected to `/dashboard`
+  - All routing enforcement is server-side in middleware
+- **Dependencies:** PBI-002, PBI-004, PBI-005, PBI-006
+- **Systems Affected:** backend, frontend
+- **Risk Level:** Medium
+- **Estimated Effort:** S
+
+---
+
+## PBI-008: Admin Member Submissions Page
+
+- **Status:** READY
+- **Goal:** Add an admin-only `Member Submissions` menu item and placeholder page inside the admin dashboard shell.
+- **Scope:**
+  - Add `Member Submissions` as a new menu item in the admin dashboard shell
+  - Create `/app/dashboard/member-submissions/page.tsx`
+  - The page is a placeholder page with simple text content only
+  - The page renders inside the admin dashboard shell, to the right of the side menu
+- **Out of Scope:** Real submissions data, filters, search, actions, forms
+- **Acceptance Criteria:**
+  - Admin users can see `Member Submissions` in the admin side menu
+  - Admin users can navigate to `/dashboard/member-submissions`
+  - The page displays simple placeholder text only
+  - The page renders within the admin dashboard shell layout
+  - Staff users cannot access this route
+- **Dependencies:** PBI-004, PBI-005, PBI-007
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** S
+
+---
+
+## PBI-009: Admin Member Lists Page
+
+- **Status:** READY
+- **Goal:** Add an admin-only `Member Lists` menu item and placeholder page inside the admin dashboard shell.
+- **Scope:**
+  - Add `Member Lists` as a new menu item in the admin dashboard shell
+  - Create `/app/dashboard/member-lists/page.tsx`
+  - The page is a placeholder page with simple text content only
+  - The page renders inside the admin dashboard shell, to the right of the side menu
+- **Out of Scope:** Real member list data, filters, search, actions, exports
+- **Acceptance Criteria:**
+  - Admin users can see `Member Lists` in the admin side menu
+  - Admin users can navigate to `/dashboard/member-lists`
+  - The page displays simple placeholder text only
+  - The page renders within the admin dashboard shell layout
+  - Staff users cannot access this route
+- **Dependencies:** PBI-004, PBI-005, PBI-007
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** S
+
+---
+
+## PBI-010: New Member Flow Entry
+
+- **Status:** READY
+- **Goal:** Handle the `New Membership` button click from the staff membership registration page.
+- **Scope:**
+  - Add navigation behavior for the `New Membership` button on `/dashboard/membership-registration`
+  - Define and create the destination route for the new-member entry page
+  - Show simple placeholder content on the destination page only
+  - Keep the page staff-only
+- **Out of Scope:** Full registration form, validation, payments, persistence, admin access
+- **Acceptance Criteria:**
+  - Staff users can click `New Membership`
+  - The click navigates to the new-member destination page
+  - The destination page displays simple placeholder text only
+  - The route is accessible to staff users only
+- **Dependencies:** PBI-004, PBI-006, PBI-007
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** S
+
+---
+
+## PBI-011: Membership Renewal Flow Entry
+
+- **Status:** READY
+- **Goal:** Handle the `Membership Renewal` button click from the staff membership registration page.
+- **Scope:**
+  - Add navigation behavior for the `Membership Renewal` button on `/dashboard/membership-registration`
+  - Define and create the destination route for the membership-renewal entry page
+  - Show simple placeholder content on the destination page only
+  - Keep the page staff-only
+- **Out of Scope:** Renewal form, payment handling, lookup logic, persistence, admin access
+- **Acceptance Criteria:**
+  - Staff users can click `Membership Renewal`
+  - The click navigates to the membership-renewal destination page
+  - The destination page displays simple placeholder text only
+  - The route is accessible to staff users only
+- **Dependencies:** PBI-004, PBI-006, PBI-007
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** S
+
+---
+
+## PBI-012: Admin Dashboard Quick Access Buttons
+
+- **Status:** READY
+- **Goal:** Add quick-access buttons to the admin dashboard landing page for `New Member` and `Membership Renewal`.
+- **Scope:**
+  - Add two quick-access buttons on `/dashboard`
+  - Buttons are labeled `New Member` and `Membership Renewal`
+  - The buttons sit inside the dashboard content area, not in the side menu
+  - `New Member` button links to the same new-member entry route defined in PBI-010
+  - `Membership Renewal` button links to the same membership-renewal entry route defined in PBI-011
+  - Buttons are visible to admin users only
+- **Out of Scope:** Form logic, button styling polish beyond basic layout, staff access changes, submission handling
+- **Acceptance Criteria:**
+  - Admin users see `New Member` and `Membership Renewal` quick-access buttons on `/dashboard`
+  - The buttons are rendered in the main dashboard content area, not the side menu
+  - Each button navigates to the same destination route used by the corresponding staff flow entry
+  - Staff users do not see or access these admin dashboard quick-access buttons
+- **Dependencies:** PBI-005, PBI-007, PBI-010, PBI-011
+- **Systems Affected:** frontend
 - **Risk Level:** Low
 - **Estimated Effort:** S

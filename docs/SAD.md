@@ -1,4 +1,4 @@
-# SAB — Spec and Build Document
+# SAD — System Architecture Document
 **Golf Club Management App — Phase 1 MVP**
 _Single source of truth for all implementation decisions._
 
@@ -6,7 +6,7 @@ _Single source of truth for all implementation decisions._
 
 ## 1. Project Overview
 
-A web-based Golf Club Management application that allows club admins to manage staff records and allows staff and admins to authenticate on a shared device. Phase 1 delivers PIN-based authentication, role-based access control, and read-only dashboards.
+A web-based Golf Club Management application that allows club admins to manage staff records and allows staff and admins to authenticate on a shared device. Phase 1 delivers PIN-based authentication, role-based access control, an admin dashboard shell, and a staff membership-registration landing page.
 
 ### Delivery Model
 
@@ -54,6 +54,8 @@ Browser
 - `@supabase/ssr` — cookie-based session management for App Router.
 - Server components fetch data directly from Supabase (no intermediate REST layer needed for reads).
 - `middleware.ts` intercepts every request to validate session and enforce role routing.
+- The admin dashboard shell exposes a side menu with `Submissions`, `Members`, `Member Submissions`, and `Member Lists`.
+- The staff membership-registration flow remains outside the admin dashboard shell.
 - No client-side Supabase calls for sensitive operations.
 
 ---
@@ -102,7 +104,7 @@ After PIN validation, the server creates a signed `activeUser` cookie using `ACT
 2. User taps their card → navigates to `/pin?userId=<profileId>`.
 3. User enters 4-digit PIN → Server Action receives `profileId` + `pin`.
 4. Server Action fetches `profiles.pin_hash` via service role → `bcrypt.compare()` server-side.
-5. **Success:** Server Action sets signed `activeUser` cookie → redirect to `/dashboard`. Middleware keeps `staff` on `/dashboard` and redirects `admin` to `/staff`.
+5. **Success:** Server Action sets signed `activeUser` cookie → redirect to `/dashboard`. Middleware routes `admin` to `/dashboard` and routes `staff` to `/dashboard/membership-registration`.
 6. **Failure:** Server Action increments `pin_fail_count` on the profile row. After 5 failures: set `pin_locked_until = now() + 15 minutes` on the profile → redirect to `/select-user` with a lockout error.
 7. **Locked profile:** if `pin_locked_until` is in the future, `/select-user` shows a "Locked" badge on the card and the card is not tappable. Any direct navigation to `/pin?userId=<profileId>` for a locked profile redirects to `/select-user`.
 
@@ -121,7 +123,7 @@ After PIN validation, the server creates a signed `activeUser` cookie using `ACT
 4. Server Action calls `supabase.auth.signInWithPassword()` server-side to verify credentials.
 5. If the authenticated email does not match the selected profile's email → error, stay on `/setup-pin`.
 6. On success: user enters + confirms a 4-digit PIN → Server Action hashes with bcrypt, saves to `profiles.pin_hash`.
-7. Server Action sets signed `activeUser` cookie → redirect to `/dashboard`. Middleware keeps `staff` on `/dashboard` and redirects `admin` to `/staff`.
+7. Server Action sets signed `activeUser` cookie → redirect to `/dashboard`. Middleware routes `admin` to `/dashboard` and routes `staff` to `/dashboard/membership-registration`.
 
 ### Security Properties
 - No Supabase session cookie exists on the device at rest.
@@ -137,8 +139,14 @@ After PIN validation, the server creates a signed `activeUser` cookie using `ACT
 | Route | `staff` | `admin` |
 |---|---|---|
 | `/select-user` | ✅ (unauthenticated only) | ✅ (unauthenticated only) |
-| `/dashboard` | ✅ own profile only | ❌ → redirect `/staff` |
-| `/staff/*` | ❌ → redirect `/dashboard` | ✅ |
+| `/dashboard` | ❌ → redirect `/dashboard/membership-registration` | ✅ |
+| `/dashboard/submissions` | ❌ → redirect `/dashboard/membership-registration` | ✅ |
+| `/dashboard/members` | ❌ → redirect `/dashboard/membership-registration` | ✅ |
+| `/dashboard/member-submissions` | ❌ → redirect `/dashboard/membership-registration` | ✅ |
+| `/dashboard/member-lists` | ❌ → redirect `/dashboard/membership-registration` | ✅ |
+| `/dashboard/membership-registration` | ✅ | ❌ → redirect `/dashboard` |
+| `/dashboard/membership-registration/new-membership` | ✅ | ❌ → redirect `/dashboard` |
+| `/dashboard/membership-registration/membership-renewal` | ✅ | ❌ → redirect `/dashboard` |
 
 **Enforcement:** middleware reads role and issues redirects server-side. No role logic runs on the client.
 
@@ -151,9 +159,14 @@ After PIN validation, the server creates a signed `activeUser` cookie using `ACT
 | `/select-user` | `SelectUserPage` | No | staff/admin |
 | `/pin` | `PinEntryPage` | No | staff/admin |
 | `/setup-pin` | `SetupPinPage` | No | staff/admin |
-| `/dashboard` | `StaffDashboard` | Yes | staff |
-| `/staff/members` | `AdminMembersListPage` | Yes | admin |
-| `/staff/staff` | `AdminStaffListPage` | Yes | admin |
+| `/dashboard` | `AdminDashboardHome` | Yes | admin |
+| `/dashboard/submissions` | `AdminSubmissionsPage` | Yes | admin |
+| `/dashboard/members` | `AdminMembersPage` | Yes | admin |
+| `/dashboard/member-submissions` | `AdminMemberSubmissionsPage` | Yes | admin |
+| `/dashboard/member-lists` | `AdminMemberListsPage` | Yes | admin |
+| `/dashboard/membership-registration` | `StaffMembershipRegistrationPage` | Yes | staff |
+| `/dashboard/membership-registration/new-membership` | `StaffNewMembershipEntryPage` | Yes | staff |
+| `/dashboard/membership-registration/membership-renewal` | `StaffMembershipRenewalEntryPage` | Yes | staff |
 
 ---
 
