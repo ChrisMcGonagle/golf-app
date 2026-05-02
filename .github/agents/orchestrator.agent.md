@@ -229,6 +229,8 @@ RUN SEQUENTIALLY when:
 
 Branch and PR Enforcement
 - Orchestrator must not start implementation without assigning a branch per PBI
+- Every new PBI branch MUST be created from a freshly pulled origin/main
+- Before instructing the Coder to create a branch, Orchestrator must explicitly instruct: checkout main, pull origin/main, then create the new branch
 - Coder must not work on main
 - No PR means the feature is incomplete
 - No merge means the PBI cannot be DONE

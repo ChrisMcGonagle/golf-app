@@ -16,7 +16,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-001: Project Scaffold
 
-- **Status:** READY
+- **Status:** IN_PROGRESS
 - **Goal:** Initialise the Next.js 14 (App Router) project with TypeScript strict mode, Tailwind CSS, and the Supabase SSR client configured.
 - **Scope:**
   - `create-next-app` with App Router and TypeScript
