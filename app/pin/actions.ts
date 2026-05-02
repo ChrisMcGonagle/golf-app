@@ -3,7 +3,6 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { getIronSession } from 'iron-session';
-import bcrypt from 'bcrypt';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 
 interface ActiveUserSession {
@@ -24,6 +23,9 @@ const SESSION_DURATION_MS = 8 * 60 * 60 * 1000; // 8 hours
 const SESSION_MAX_AGE_SECONDS = 8 * 60 * 60; // 8 hours in seconds
 
 export async function validatePin(formData: FormData): Promise<never> {
+  // Dynamically import bcrypt to avoid native module issues on Vercel
+  const bcrypt = await import('bcrypt');
+  
   const profileId = formData.get('profileId');
 
   // Validate profileId is a string
