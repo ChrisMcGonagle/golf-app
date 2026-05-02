@@ -396,8 +396,8 @@ describe('savePin server action', () => {
     // session was saved
     expect(mockSession.save).toHaveBeenCalled();
 
-    // redirect to /staff
-    expect(redirectUrl).toBe('/staff');
+    // redirect to /dashboard
+    expect(redirectUrl).toBe('/dashboard');
   });
 
   it('does not include raw PIN in any redirect URLs', async () => {

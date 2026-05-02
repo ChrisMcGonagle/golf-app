@@ -6,7 +6,7 @@ _Single source of truth for all implementation decisions._
 
 ## 1. Project Overview
 
-A web-based Golf Club Management application that allows club staff to manage member and staff records, and allows individual members to view their own profile. Phase 1 delivers authentication, role-based access control, and read-only dashboards.
+A web-based Golf Club Management application that allows club admins to manage staff records and allows staff and admins to authenticate on a shared device. Phase 1 delivers PIN-based authentication, role-based access control, and read-only dashboards.
 
 ### Delivery Model
 
@@ -72,7 +72,7 @@ Browser
 |---|---|---|
 | id | uuid | PK, references auth.users(id) ON DELETE CASCADE |
 | display_name | text | Not null |
-| role | text | CHECK (role IN ('member', 'staff')), not null |
+| role | text | CHECK (role IN ('staff', 'admin')), not null |
 | avatar_url | text | Nullable |
 | created_at | timestamptz | Default now() |
 
@@ -89,7 +89,7 @@ This application runs as a **shared kiosk device** (tablet/browser). There is no
 After PIN validation, the server creates a signed `activeUser` cookie using `ACTIVE_USER_SECRET` (symmetric JWT or iron-session). The cookie payload is:
 
 ```json
-{ "profileId": "uuid", "displayName": "string", "role": "staff|member", "expiresAt": "ISO8601" }
+{ "profileId": "uuid", "displayName": "string", "role": "staff|admin", "expiresAt": "ISO8601" }
 ```
 
 - Cookie is `httpOnly`, `sameSite=strict`, server-signed.
@@ -98,11 +98,11 @@ After PIN validation, the server creates a signed `activeUser` cookie using `ACT
 - Middleware reads this cookie to identify the active user on every request — no DB call required per request.
 
 ### Normal Auth Flow
-1. Device shows `/select-user` — a server-rendered grid of all staff profile cards (name + avatar), fetched via service role.
-2. Staff taps their card → navigates to `/pin?userId=<profileId>`.
-3. Staff enters 4-digit PIN → Server Action receives `profileId` + `pin`.
+1. Device shows `/select-user` — a server-rendered grid of all user profile cards (name + avatar), fetched via service role.
+2. User taps their card → navigates to `/pin?userId=<profileId>`.
+3. User enters 4-digit PIN → Server Action receives `profileId` + `pin`.
 4. Server Action fetches `profiles.pin_hash` via service role → `bcrypt.compare()` server-side.
-5. **Success:** Server Action sets signed `activeUser` cookie → redirect to `/staff`.
+5. **Success:** Server Action sets signed `activeUser` cookie → redirect to `/dashboard`. Middleware keeps `staff` on `/dashboard` and redirects `admin` to `/staff`.
 6. **Failure:** Server Action increments `pin_fail_count` on the profile row. After 5 failures: set `pin_locked_until = now() + 15 minutes` on the profile → redirect to `/select-user` with a lockout error.
 7. **Locked profile:** if `pin_locked_until` is in the future, `/select-user` shows a "Locked" badge on the card and the card is not tappable. Any direct navigation to `/pin?userId=<profileId>` for a locked profile redirects to `/select-user`.
 
@@ -115,13 +115,13 @@ After PIN validation, the server creates a signed `activeUser` cookie using `ACT
 - Server Action clears `activeUser` cookie → redirect to `/select-user`.
 
 ### First-Time PIN Setup (pin_hash = null)
-1. Staff taps their card on `/select-user`.
+1. User taps their card on `/select-user`.
 2. Server detects `pin_hash = null` for that `profileId` → redirect to `/setup-pin?userId=<profileId>`.
-3. Staff enters their **email + password** to verify identity (one-time).
+3. User enters their **email + password** to verify identity (one-time).
 4. Server Action calls `supabase.auth.signInWithPassword()` server-side to verify credentials.
 5. If the authenticated email does not match the selected profile's email → error, stay on `/setup-pin`.
-6. On success: staff enters + confirms a 4-digit PIN → Server Action hashes with bcrypt, saves to `profiles.pin_hash`.
-7. Server Action sets signed `activeUser` cookie → redirect to `/staff`.
+6. On success: user enters + confirms a 4-digit PIN → Server Action hashes with bcrypt, saves to `profiles.pin_hash`.
+7. Server Action sets signed `activeUser` cookie → redirect to `/dashboard`. Middleware keeps `staff` on `/dashboard` and redirects `admin` to `/staff`.
 
 ### Security Properties
 - No Supabase session cookie exists on the device at rest.
@@ -134,12 +134,11 @@ After PIN validation, the server creates a signed `activeUser` cookie using `ACT
 
 ## 6. Role-Based Access Rules
 
-| Route | `member` | `staff` |
+| Route | `staff` | `admin` |
 |---|---|---|
-| `/login` | ✅ (unauthenticated only) | ✅ (unauthenticated only) |
-| `/dashboard` | ✅ own profile only | ✅ redirected to `/staff` |
-| `/staff/members` | ❌ → redirect `/dashboard` | ✅ |
-| `/staff/staff` | ❌ → redirect `/dashboard` | ✅ |
+| `/select-user` | ✅ (unauthenticated only) | ✅ (unauthenticated only) |
+| `/dashboard` | ✅ own profile only | ❌ → redirect `/staff` |
+| `/staff/*` | ❌ → redirect `/dashboard` | ✅ |
 
 **Enforcement:** middleware reads role and issues redirects server-side. No role logic runs on the client.
 
@@ -149,11 +148,12 @@ After PIN validation, the server creates a signed `activeUser` cookie using `ACT
 
 | Path | Component | Auth Required | Role |
 |---|---|---|---|
-| `/login` | `LoginPage` | No | Any |
-| `/dashboard` | `MemberDashboard` | Yes | member |
-| `/staff` | `StaffLayout` | Yes | staff |
-| `/staff/members` | `MembersListPage` | Yes | staff |
-| `/staff/staff` | `StaffListPage` | Yes | staff |
+| `/select-user` | `SelectUserPage` | No | staff/admin |
+| `/pin` | `PinEntryPage` | No | staff/admin |
+| `/setup-pin` | `SetupPinPage` | No | staff/admin |
+| `/dashboard` | `StaffDashboard` | Yes | staff |
+| `/staff/members` | `AdminMembersListPage` | Yes | admin |
+| `/staff/staff` | `AdminStaffListPage` | Yes | admin |
 
 ---
 

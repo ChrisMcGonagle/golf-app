@@ -106,7 +106,7 @@ export async function validatePin(formData: FormData): Promise<never> {
 
     await session.save();
 
-    redirect('/staff');
+    redirect('/dashboard');
   }
 
   // PIN incorrect — increment fail count

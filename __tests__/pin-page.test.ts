@@ -224,7 +224,7 @@ describe('validatePin server action', () => {
       redirectUrl = getRedirectUrl(e);
     }
 
-    expect(redirectUrl).toBe('/staff');
+    expect(redirectUrl).toBe('/dashboard');
     expect(saveMock).toHaveBeenCalled();
     // Ensure fail count is reset and lockout timestamp is cleared
     expect(supabaseMock.from('profiles').update).toHaveBeenCalledWith({ pin_fail_count: 0, pin_locked_until: null });
