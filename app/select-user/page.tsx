@@ -111,12 +111,11 @@ export default async function SelectUserPage({
   searchParams,
 }: SelectUserPageProps): Promise<JSX.Element> {
   // STEP 2: Server-side profile fetch using service role
-  const supabase = createServiceRoleClient();
-
   let profiles: Profile[] = [];
   let fetchError: Error | null = null;
 
   try {
+    const supabase = createServiceRoleClient();
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
