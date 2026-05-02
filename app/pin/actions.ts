@@ -23,8 +23,8 @@ const SESSION_DURATION_MS = 8 * 60 * 60 * 1000; // 8 hours
 const SESSION_MAX_AGE_SECONDS = 8 * 60 * 60; // 8 hours in seconds
 
 export async function validatePin(formData: FormData): Promise<never> {
-  // Dynamically import bcrypt to avoid native module issues on Vercel
-  const bcrypt = await import('bcrypt');
+  // Dynamically import bcryptjs to avoid native module issues on Vercel
+  const bcryptjs = await import('bcryptjs');
   
   const profileId = formData.get('profileId');
 
@@ -74,8 +74,8 @@ export async function validatePin(formData: FormData): Promise<never> {
     redirect('/select-user?error=locked');
   }
 
-  // bcrypt compare — server-side only, pin never stored or logged
-  const isValid = await bcrypt.compare(pin, profile.pin_hash as string);
+  // bcryptjs compare — server-side only, pin never stored or logged
+  const isValid = await bcryptjs.compare(pin, profile.pin_hash as string);
 
   if (isValid) {
     // Reset fail count

@@ -25,7 +25,7 @@ jest.mock('iron-session', () => ({
   getIronSession: jest.fn(),
 }));
 
-jest.mock('bcrypt', () => ({
+jest.mock('bcryptjs', () => ({
   compare: jest.fn(),
 }));
 
@@ -39,7 +39,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { redirect } from 'next/navigation';
 import { getIronSession } from 'iron-session';
-import bcrypt from 'bcrypt';
+import bcryptjs from 'bcryptjs';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { validatePin } from '@/app/pin/actions';
 import PinPage from '@/app/pin/page';
@@ -51,7 +51,7 @@ type MockedFn<T extends (...args: unknown[]) => unknown> = jest.MockedFunction<T
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const _mockRedirect = redirect as MockedFn<typeof redirect>;
 const mockGetIronSession = getIronSession as jest.MockedFunction<typeof getIronSession>;
-const mockBcryptCompare = bcrypt.compare as jest.MockedFunction<typeof bcrypt.compare>;
+const mockBcryptCompare = bcryptjs.compare as jest.MockedFunction<typeof bcryptjs.compare>;
 const mockCreateServiceRoleClient = createServiceRoleClient as jest.MockedFunction<
   typeof createServiceRoleClient
 >;
