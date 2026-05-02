@@ -15,6 +15,7 @@ export default function InactivityProvider({ children }: InactivityProviderProps
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     function resetTimer() {
       if (timerRef.current !== null) {
         clearTimeout(timerRef.current);
