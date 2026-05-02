@@ -160,5 +160,5 @@ export async function savePin(formData: FormData): Promise<never> {
 
   await session.save();
 
-  redirect('/staff');
+  redirect('/dashboard');
 }

@@ -10,7 +10,7 @@ interface Profile {
   id: string;
   display_name: string;
   avatar_url: string | null;
-  role: 'staff' | 'member';
+  role: 'staff' | 'admin';
   pin_hash: string | null;
   pin_locked_until: string | null;
 }
@@ -119,7 +119,7 @@ export default async function SelectUserPage({
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('role', 'staff');
+      .in('role', ['staff', 'admin']);
 
     if (error) {
       throw new Error(error.message);
@@ -143,7 +143,7 @@ export default async function SelectUserPage({
         <div className="mx-auto max-w-6xl">
           <h1 className="mb-8 text-3xl font-bold text-gray-900">Select Staff Member</h1>
           <div className="flex items-center justify-center rounded-lg bg-white p-8 text-center">
-            <p className="text-gray-600">No staff profiles available</p>
+            <p className="text-gray-600">No profiles available</p>
           </div>
         </div>
       </div>
