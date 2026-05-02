@@ -109,7 +109,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-003b: PIN Entry + Validation
 
-- **Status:** IN_PROGRESS
+- **Status:** TESTING
 - **Goal:** Implement the `/pin` route where a staff member enters their 4-digit PIN, validated server-side via bcrypt, resulting in a signed `activeUser` cookie on success or lockout on repeated failure.
 - **Scope:**
   - `/app/pin/page.tsx` — receives `userId` query param
