@@ -81,7 +81,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-003: Device User Selection Screen
 
-- **Status:** IN_PROGRESS
+- **Status:** TESTING
 - **Goal:** Implement the `/select-user` route — a server-rendered grid of staff profile cards that allows a staff member to identify themselves before PIN entry.
 - **Scope:**
   - `/app/select-user/page.tsx` — Server Component
