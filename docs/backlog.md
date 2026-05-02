@@ -16,7 +16,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-001: Project Scaffold
 
-- **Status:** DEV_DONE
+- **Status:** DONE
 - **Goal:** Initialise the Next.js 14 (App Router) project with TypeScript strict mode, Tailwind CSS, and the Supabase SSR client configured.
 - **Scope:**
   - `create-next-app` with App Router and TypeScript
@@ -47,7 +47,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-002: Supabase Schema — Profiles Table + RLS
 
-- **Status:** READY
+- **Status:** TESTING
 - **Goal:** Create the `public.profiles` table with role, PIN hash, lockout tracking columns, and Row Level Security policies that enforce access rules at the database level.
 - **Scope:**
   - Migration SQL written to `/supabase/schema.sql`
