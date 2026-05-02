@@ -97,14 +97,15 @@ describe('middleware role-based protection without database access', () => {
     )
   })
 
-  it('allows an admin cookie to access /staff/members', async () => {
+  it('redirects an admin cookie away from /staff/members to /dashboard', async () => {
     mockedUnsealData.mockResolvedValueOnce(adminSession)
     const request = createMockRequest('/staff/members', 'valid-admin-cookie')
 
     await middleware(request)
 
-    expect(NextResponse.next).toHaveBeenCalledTimes(1)
-    expect(NextResponse.redirect).not.toHaveBeenCalled()
+    expect(NextResponse.redirect).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: '/dashboard' })
+    )
   })
 
   it('redirects a staff cookie away from /staff/members to /dashboard', async () => {
@@ -118,15 +119,14 @@ describe('middleware role-based protection without database access', () => {
     )
   })
 
-  it('redirects an admin cookie from /dashboard to /staff', async () => {
+  it('allows an admin cookie to access /dashboard', async () => {
     mockedUnsealData.mockResolvedValueOnce(adminSession)
     const request = createMockRequest('/dashboard', 'valid-admin-cookie')
 
     await middleware(request)
 
-    expect(NextResponse.redirect).toHaveBeenCalledWith(
-      expect.objectContaining({ pathname: '/staff' })
-    )
+    expect(NextResponse.next).toHaveBeenCalledTimes(1)
+    expect(NextResponse.redirect).not.toHaveBeenCalled()
   })
 
   it('allows a staff cookie to access /dashboard', async () => {

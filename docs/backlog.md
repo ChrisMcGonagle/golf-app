@@ -173,7 +173,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-003d: Inactivity Auto-Lockout
 
-- **Status:** READY
+- **Status:** TESTING
 - **Goal:** Implement client-side inactivity detection that clears the `activeUser` cookie server-side and returns the device to `/select-user` after 5 minutes of no user interaction.
 - **Scope:**
   - `InactivityProvider` React context component (`components/InactivityProvider.tsx`) — `"use client"`
@@ -200,25 +200,22 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 ## PBI-004: Role-Based Middleware
 
 - **Status:** TESTING
-- **Goal:** Implement Next.js `middleware.ts` to enforce active-user presence and role-based route protection on every request by reading the signed `activeUser` cookie — no Supabase session is used.
+- **Goal:** Implement Next.js `middleware.ts` to enforce active-user presence and route protection on every request by reading the signed `activeUser` cookie — no Supabase session is used.
 - **Scope:**
   - `middleware.ts` at project root
   - On every request: read and verify the signed `activeUser` cookie using `ACTIVE_USER_SECRET`
   - If cookie is absent or signature is invalid → redirect to `/select-user`
   - Extract `role` from the verified cookie payload (no DB call per request)
-  - `admin` role: allowed to access `/staff/*`
-  - `admin` role visiting `/dashboard` → redirect to `/staff`
-  - `staff` role: allowed to access `/dashboard` only
-  - `staff` role attempting `/staff/*` → redirect to `/dashboard`
+  - Both `admin` and `staff` roles can access `/dashboard`
+  - `/staff/*` routes redirect to `/dashboard` (not yet implemented)
   - `/select-user`, `/pin`, `/setup-pin` are not protected — middleware passes them through
   - Matcher config excludes `/_next/`, `/api/`, and static assets
-- **Out of Scope:** Supabase session validation, DB lookups per request, page UI
+- **Out of Scope:** Supabase session validation, DB lookups per request, page UI, role-based routing within authenticated area
 - **Acceptance Criteria:**
   - Request with no `activeUser` cookie to a protected route redirects to `/select-user`
   - Request with a tampered/invalid cookie to a protected route redirects to `/select-user`
-  - Valid `admin` cookie allows access to `/staff/*`
-  - Valid `staff` cookie accessing `/staff/*` redirects to `/dashboard`
-  - Valid `admin` cookie accessing `/dashboard` redirects to `/staff`
+  - Both `admin` and `staff` roles can access `/dashboard`
+  - `/staff/*` routes redirect to `/dashboard`
   - `/select-user`, `/pin`, `/setup-pin` accessible without any cookie
   - No Supabase DB call made inside middleware
   - All redirects are server-side
