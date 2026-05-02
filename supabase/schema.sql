@@ -7,8 +7,12 @@ create table if not exists public.profiles (
     pin_fail_count integer not null default 0,
     pin_locked_until timestamptz,
     created_at timestamptz not null default now(),
-    constraint profiles_role_check check (role in ('member', 'staff'))
+    constraint profiles_role_check check (role in ('staff', 'admin'))
 );
+
+-- Idempotent migration: update role check constraint for existing databases
+alter table public.profiles drop constraint if exists profiles_role_check;
+alter table public.profiles add constraint profiles_role_check check (role in ('staff', 'admin'));
 
 alter table public.profiles enable row level security;
 

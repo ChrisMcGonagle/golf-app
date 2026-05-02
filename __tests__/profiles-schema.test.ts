@@ -20,7 +20,7 @@ describe('PBI-002: profiles schema', () => {
     expect(schema).toMatch(/pin_locked_until\s+timestamptz/)
     expect(schema).toMatch(/created_at\s+timestamptz\s+not\s+null\s+default\s+now\s*\(\s*\)/)
     expect(schema).toMatch(/references\s+auth\.users\s*\(\s*id\s*\)\s+on\s+delete\s+cascade/)
-    expect(schema).toMatch(/constraint\s+profiles_role_check\s+check\s*\(\s*role\s+in\s*\(\s*'member'\s*,\s*'staff'\s*\)\s*\)/)
+    expect(schema).toMatch(/constraint\s+profiles_role_check\s+check\s*\(\s*role\s+in\s*\(\s*'staff'\s*,\s*'admin'\s*\)\s*\)/)
   })
 
   test('row level security is enabled and public access is revoked', () => {
