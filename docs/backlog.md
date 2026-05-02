@@ -141,7 +141,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-003c: First-Time PIN Setup
 
-- **Status:** TESTING
+- **Status:** READY
 - **Goal:** Implement the `/setup-pin` route for staff whose `pin_hash` is null — requiring one-time email + password verification before allowing them to set their PIN.
 - **Scope:**
   - `/app/setup-pin/page.tsx` — receives `userId` query param
