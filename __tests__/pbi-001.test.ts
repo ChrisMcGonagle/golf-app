@@ -38,10 +38,10 @@ describe('PBI-001: Project Scaffold', () => {
     expect(content).toContain('createBrowserClient')
   })
 
-  test('bcrypt and iron-session are installed', () => {
+  test('bcryptjs and iron-session are installed', () => {
     const packagePath = path.join(__dirname, '../package.json')
     const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf-8'))
-    expect(pkg.dependencies).toHaveProperty('bcrypt')
+    expect(pkg.dependencies).toHaveProperty('bcryptjs')
     expect(pkg.dependencies).toHaveProperty('iron-session')
   })
 
