@@ -47,7 +47,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-002: Supabase Schema — Profiles Table + RLS
 
-- **Status:** TESTING
+- **Status:** DONE
 - **Goal:** Create the `public.profiles` table with role, PIN hash, lockout tracking columns, and Row Level Security policies that enforce access rules at the database level.
 - **Scope:**
   - Migration SQL written to `/supabase/schema.sql`
@@ -81,7 +81,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-003: Device User Selection Screen
 
-- **Status:** READY
+- **Status:** TESTING
 - **Goal:** Implement the `/select-user` route — a server-rendered grid of staff profile cards that allows a staff member to identify themselves before PIN entry.
 - **Scope:**
   - `/app/select-user/page.tsx` — Server Component
