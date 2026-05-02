@@ -390,6 +390,8 @@ describe('Staff User Selection Page', () => {
     });
 
     it('should render error message when database fetch fails', async () => {
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
       mockCreateServiceRoleClient.mockReturnValue({
         from: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
@@ -405,6 +407,9 @@ describe('Staff User Selection Page', () => {
       render(component);
 
       expect(screen.getByText(/Unable to load profiles/)).toBeInTheDocument();
+      expect(consoleErrorSpy).toHaveBeenCalled();
+
+      consoleErrorSpy.mockRestore();
     });
   });
 
