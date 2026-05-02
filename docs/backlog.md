@@ -47,7 +47,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-002: Supabase Schema — Profiles Table + RLS
 
-- **Status:** DEV_DONE
+- **Status:** TESTING
 - **Goal:** Create the `public.profiles` table with role, PIN hash, lockout tracking columns, and Row Level Security policies that enforce access rules at the database level.
 - **Scope:**
   - Migration SQL written to `/supabase/schema.sql`
