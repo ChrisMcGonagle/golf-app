@@ -70,6 +70,9 @@ You MUST always design tests at 3 levels:
 ## 1. Acceptance Criteria Driven
 Every test MUST map directly to PBI acceptance criteria.
 
+## 1a. PR Template Validation
+Tester MUST validate the PR against the `Acceptance Criteria`, `Reviewer Commands`, and `Browser Checks` sections defined in `.github/pull_request_template.md`.
+
 ## 2. Observable Behavior Only
 Test only:
 - outputs

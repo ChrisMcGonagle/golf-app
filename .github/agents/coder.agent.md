@@ -102,6 +102,10 @@ Never commit directly to main.
 - Return updated code only
 - No design explanation unless necessary
 
+### Step 7 — Pull Request Updates
+- When creating or updating a PR, use `.github/pull_request_template.md` as the exact structure
+- Fill the PR body with concrete acceptance criteria, reviewer commands, test coverage, browser checks, and security notes; do not leave placeholders
+
 ---
 
 # 🧱 ARCHITECTURE RULES

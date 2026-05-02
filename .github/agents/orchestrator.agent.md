@@ -51,7 +51,7 @@ This is a living test suite that grows over time.
 
 ## Coder
 - Implements code
-- Follows SAB strictly
+- Follows SAD strictly
 - Never changes scope
 - Never modifies database directly
 
@@ -152,10 +152,15 @@ After implementation is complete:
 Rules:
 - No direct commits to main
 - PR is required for every PBI
+- Use `.github/pull_request_template.md` as the required PR body structure
 - PR must include:
   - linked PBI
-  - summary of changes
-  - test coverage notes
+  - `Summary`
+  - `Acceptance Criteria`
+  - `Test Coverage`
+  - `Reviewer Commands`
+  - `Browser Checks`
+  - `Security Notes`
 
 ---
 

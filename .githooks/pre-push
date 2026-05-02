@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+
+echo "Running pre-push quality gate..."
+
+echo "\n--- npm test ---"
+npm test
+
+echo "\n--- npm run lint ---"
+npm run lint
+
+echo "\n--- npm run build ---"
+npm run build
+
+echo "\nAll quality checks passed. Proceeding with push."
