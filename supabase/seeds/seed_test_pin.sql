@@ -5,7 +5,7 @@
 -- Run as: Service Role (bypasses RLS)
 --
 -- PIN is 1234 for this test account
--- Bcrypt hash: $2b$10$TkxZq2vkL8.X8wCb6VVfPehLnPl8DZQn3cW0yJ9qL9V4dUqDJv8Pm
+-- Bcrypt hash: $2b$10$8fpQEwNB/4J6LbWFhPRTO.XN8DLUkqoStjufD2Ee62fxsJZGI9ymq
 --
 -- NOTE: Written as plain SQL only — no DO $$ / plpgsql blocks.
 --       The Supabase SQL editor injects comment metadata inside DO $$ blocks
@@ -67,7 +67,7 @@ VALUES (
   'Test Staff (PIN Ready)',
   'staff',
   NULL,
-  '$2b$10$TkxZq2vkL8.X8wCb6VVfPehLnPl8DZQn3cW0yJ9qL9V4dUqDJv8Pm',  -- PIN: 1234
+  '$2b$10$8fpQEwNB/4J6LbWFhPRTO.XN8DLUkqoStjufD2Ee62fxsJZGI9ymq',  -- PIN: 1234
   NULL,                           -- not locked
   0,
   now()
