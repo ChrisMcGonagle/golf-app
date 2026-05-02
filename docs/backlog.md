@@ -199,7 +199,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-004: Role-Based Middleware
 
-- **Status:** IN_PROGRESS
+- **Status:** TESTING
 - **Goal:** Implement Next.js `middleware.ts` to enforce active-user presence and role-based route protection on every request by reading the signed `activeUser` cookie — no Supabase session is used.
 - **Scope:**
   - `middleware.ts` at project root
