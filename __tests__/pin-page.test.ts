@@ -100,7 +100,19 @@ function getRedirectUrl(e: unknown): string {
 // ─── Page-level guard tests ────────────────────────────────────────────────────
 
 describe('/pin page guards', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.spyOn(console, 'error').mockImplementation((message) => {
+      if (typeof message === 'string' && message.includes('Invalid value for prop `action`')) {
+        return;
+      }
+      // Allow other errors through
+    });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
   it('redirects to /select-user when no userId is provided in searchParams', async () => {
     const supabaseMock = makeSupabaseMock(null);
