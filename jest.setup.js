@@ -1,1 +1,1 @@
-// Stub for any global setup needed
+import '@testing-library/jest-dom'
