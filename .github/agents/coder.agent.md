@@ -61,33 +61,44 @@ This is your **single source of truth**
 
 For each PBI:
 
-### Step 1 — Understand
+### Step 1 — Branch Setup (MANDATORY BEFORE ANY CODE)
+Before writing a single line of code:
+1. `git checkout main`
+2. `git pull origin main`
+3. `git checkout -b <pbi-branch-name>` (e.g. pbi-001-project-scaffold)
+
+Never create a branch from stale local main or from another feature branch.
+Never commit directly to main.
+
+---
+
+### Step 2 — Understand
 - Read full PBI
 - Identify required behavior
 - Identify required files ONLY
 
 ---
 
-### Step 2 — Verify context (context7 mandatory)
+### Step 3 — Verify context (context7 mandatory)
 - Use context7 MCP server for all frameworks/libraries
 - Confirm APIs and usage patterns
 
 ---
 
-### Step 3 — Implement
+### Step 4 — Implement
 - Write minimal required code
 - Prefer simple, direct solutions
 - Avoid abstraction unless explicitly required
 
 ---
 
-### Step 4 — Validate
+### Step 5 — Validate
 - Ensure acceptance criteria are fully satisfied
 - Ensure no unrelated changes were introduced
 
 ---
 
-### Step 5 — Output
+### Step 6 — Output
 - Return updated code only
 - No design explanation unless necessary
 
