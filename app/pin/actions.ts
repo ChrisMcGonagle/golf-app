@@ -78,10 +78,10 @@ export async function validatePin(formData: FormData): Promise<never> {
   const isValid = await bcryptjs.compare(pin, profile.pin_hash as string);
 
   if (isValid) {
-    // Reset fail count
+    // Reset fail count and clear any expired lockout timestamp
     await supabase
       .from('profiles')
-      .update({ pin_fail_count: 0 })
+      .update({ pin_fail_count: 0, pin_locked_until: null })
       .eq('id', trimmedProfileId);
 
     // Set iron-session cookie

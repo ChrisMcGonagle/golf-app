@@ -226,8 +226,8 @@ describe('validatePin server action', () => {
 
     expect(redirectUrl).toBe('/staff');
     expect(saveMock).toHaveBeenCalled();
-    // Ensure fail count is reset
-    expect(supabaseMock.from('profiles').update).toHaveBeenCalledWith({ pin_fail_count: 0 });
+    // Ensure fail count is reset and lockout timestamp is cleared
+    expect(supabaseMock.from('profiles').update).toHaveBeenCalledWith({ pin_fail_count: 0, pin_locked_until: null });
   });
 
   it('increments pin_fail_count when an incorrect PIN is entered', async () => {
