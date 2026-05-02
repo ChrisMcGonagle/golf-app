@@ -41,7 +41,7 @@ describe('Staff User Selection Page', () => {
       mockCreateServiceRoleClient.mockReturnValue({
         from: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+            in: jest.fn().mockResolvedValue({
               data: mockProfiles,
               error: null,
             }),
@@ -71,7 +71,7 @@ describe('Staff User Selection Page', () => {
       mockCreateServiceRoleClient.mockReturnValue({
         from: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+            in: jest.fn().mockResolvedValue({
               data: mockProfiles,
               error: null,
             }),
@@ -101,7 +101,7 @@ describe('Staff User Selection Page', () => {
       mockCreateServiceRoleClient.mockReturnValue({
         from: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+            in: jest.fn().mockResolvedValue({
               data: mockProfiles,
               error: null,
             }),
@@ -134,7 +134,7 @@ describe('Staff User Selection Page', () => {
       mockCreateServiceRoleClient.mockReturnValue({
         from: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+            in: jest.fn().mockResolvedValue({
               data: mockProfiles,
               error: null,
             }),
@@ -165,7 +165,7 @@ describe('Staff User Selection Page', () => {
       mockCreateServiceRoleClient.mockReturnValue({
         from: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+            in: jest.fn().mockResolvedValue({
               data: mockProfiles,
               error: null,
             }),
@@ -195,7 +195,7 @@ describe('Staff User Selection Page', () => {
       mockCreateServiceRoleClient.mockReturnValue({
         from: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+            in: jest.fn().mockResolvedValue({
               data: mockProfiles,
               error: null,
             }),
@@ -227,7 +227,7 @@ describe('Staff User Selection Page', () => {
       mockCreateServiceRoleClient.mockReturnValue({
         from: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+            in: jest.fn().mockResolvedValue({
               data: mockProfiles,
               error: null,
             }),
@@ -257,7 +257,7 @@ describe('Staff User Selection Page', () => {
       mockCreateServiceRoleClient.mockReturnValue({
         from: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+            in: jest.fn().mockResolvedValue({
               data: mockProfiles,
               error: null,
             }),
@@ -289,7 +289,7 @@ describe('Staff User Selection Page', () => {
       mockCreateServiceRoleClient.mockReturnValue({
         from: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+            in: jest.fn().mockResolvedValue({
               data: mockProfiles,
               error: null,
             }),
@@ -321,7 +321,7 @@ describe('Staff User Selection Page', () => {
       mockCreateServiceRoleClient.mockReturnValue({
         from: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+            in: jest.fn().mockResolvedValue({
               data: mockProfiles,
               error: null,
             }),
@@ -353,7 +353,7 @@ describe('Staff User Selection Page', () => {
       mockCreateServiceRoleClient.mockReturnValue({
         from: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+            in: jest.fn().mockResolvedValue({
               data: mockProfiles,
               error: null,
             }),
@@ -375,7 +375,7 @@ describe('Staff User Selection Page', () => {
       mockCreateServiceRoleClient.mockReturnValue({
         from: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+            in: jest.fn().mockResolvedValue({
               data: [],
               error: null,
             }),
@@ -386,7 +386,7 @@ describe('Staff User Selection Page', () => {
       const component = await SelectUserPage({ searchParams: Promise.resolve({}) });
       render(component);
 
-      expect(screen.getByText('No staff profiles available')).toBeInTheDocument();
+      expect(screen.getByText('No profiles available')).toBeInTheDocument();
     });
 
     it('should render error message when database fetch fails', async () => {
@@ -395,7 +395,7 @@ describe('Staff User Selection Page', () => {
       mockCreateServiceRoleClient.mockReturnValue({
         from: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+            in: jest.fn().mockResolvedValue({
               data: null,
               error: new Error('Database connection failed'),
             }),
@@ -418,7 +418,7 @@ describe('Staff User Selection Page', () => {
       mockCreateServiceRoleClient.mockReturnValue({
         from: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+            in: jest.fn().mockResolvedValue({
               data: [],
               error: null,
             }),
@@ -449,7 +449,7 @@ describe('Staff User Selection Page', () => {
       mockCreateServiceRoleClient.mockReturnValue({
         from: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
+            in: jest.fn().mockResolvedValue({
               data: mockProfiles,
               error: null,
             }),
