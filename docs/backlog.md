@@ -228,7 +228,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-005: Admin Dashboard Layout
 
-- **Status:** READY
+- **Status:** DONE
 - **Goal:** Create the admin dashboard shell with a left side menu and admin-only dashboard pages.
 - **Scope:**
   - Create `/app/dashboard/layout.tsx` for the admin dashboard shell
