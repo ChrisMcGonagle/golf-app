@@ -303,13 +303,13 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
   - Add navigation behavior for the `New Membership` button on `/dashboard/membership-registration`
   - Define and create the destination route for the new-member entry page
   - Show simple placeholder content on the destination page only
-  - Keep the page staff-only
-- **Out of Scope:** Full registration form, validation, payments, persistence, admin access
+  - Allow both staff and admin users to access this route
+- **Out of Scope:** Full registration form, validation, payments, persistence
 - **Acceptance Criteria:**
   - Staff users can click `New Membership`
   - The click navigates to the new-member destination page
   - The destination page displays simple placeholder text only
-  - The route is accessible to staff users only
+  - The route is accessible to both staff and admin users
 - **Dependencies:** PBI-004, PBI-006, PBI-007
 - **Systems Affected:** frontend
 - **Risk Level:** Low
@@ -325,13 +325,13 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
   - Add navigation behavior for the `Membership Renewal` button on `/dashboard/membership-registration`
   - Define and create the destination route for the membership-renewal entry page
   - Show simple placeholder content on the destination page only
-  - Keep the page staff-only
-- **Out of Scope:** Renewal form, payment handling, lookup logic, persistence, admin access
+  - Allow both staff and admin users to access this route
+- **Out of Scope:** Renewal form, payment handling, lookup logic, persistence
 - **Acceptance Criteria:**
   - Staff users can click `Membership Renewal`
   - The click navigates to the membership-renewal destination page
   - The destination page displays simple placeholder text only
-  - The route is accessible to staff users only
+  - The route is accessible to both staff and admin users
 - **Dependencies:** PBI-004, PBI-006, PBI-007
 - **Systems Affected:** frontend
 - **Risk Level:** Low
@@ -350,12 +350,12 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
   - `New Member` button links to the same new-member entry route defined in PBI-008
   - `Membership Renewal` button links to the same membership-renewal entry route defined in PBI-009
   - Buttons are visible to admin users only
-- **Out of Scope:** Form logic, button styling polish beyond basic layout, staff access changes, submission handling
+- **Out of Scope:** Form logic, button styling polish beyond basic layout, submission handling
 - **Acceptance Criteria:**
   - Admin users see `New Member` and `Membership Renewal` quick-access buttons on `/dashboard`
   - The buttons are rendered in the main dashboard content area, not the side menu
   - Each button navigates to the same destination route used by the corresponding staff flow entry
-  - Staff users do not see or access these admin dashboard quick-access buttons
+  - Staff access the new-member and renewal flows via buttons on `/dashboard/membership-registration`; admin accesses them via quick-access buttons on `/dashboard`
 - **Dependencies:** PBI-005, PBI-007, PBI-008, PBI-009
 - **Systems Affected:** frontend
 - **Risk Level:** Low
