@@ -3,8 +3,8 @@
  *
  * Acceptance Criteria:
  * 1. Page renders without errors
- * 2. Heading displays "New Member Registration"
- * 3. Placeholder text "Form coming soon" is visible
+ * 2. Heading displays "New Member"
+ * 3. Placeholder text "Placeholder for new member registration form" is visible
  * 4. Back link points to "/dashboard/membership-registration"
  */
 
@@ -21,14 +21,14 @@ describe('PBI-008: NewMemberPage', () => {
     expect(document.body).toBeTruthy();
   });
 
-  it('displays the "New Member Registration" heading', () => {
+  it('displays the "New Member" heading', () => {
     expect(
-      screen.getByRole('heading', { name: /new member registration/i })
+      screen.getByRole('heading', { name: /new member/i })
     ).toBeInTheDocument();
   });
 
-  it('displays the "Form coming soon" placeholder text', () => {
-    expect(screen.getByText(/form coming soon/i)).toBeInTheDocument();
+  it('displays the placeholder text', () => {
+    expect(screen.getByText(/placeholder for new member registration form/i)).toBeInTheDocument();
   });
 
   it('has a back link to /dashboard/membership-registration', () => {

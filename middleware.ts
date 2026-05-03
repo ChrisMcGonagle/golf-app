@@ -62,10 +62,13 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith('/dashboard/members/')
 
     const isStaffOnlyRoute =
-      pathname === '/dashboard/membership-registration' ||
-      pathname.startsWith('/dashboard/membership-registration/')
+      pathname === '/dashboard/new-member' ||
+      pathname.startsWith('/dashboard/new-member/')
 
     if (role === 'admin') {
+      if (isStaffOnlyRoute) {
+        return NextResponse.redirect(new URL('/dashboard', request.url))
+      }
       return NextResponse.next()
     }
 
