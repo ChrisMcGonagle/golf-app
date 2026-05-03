@@ -341,7 +341,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-010: Admin Dashboard Quick Access Buttons
 
-- **Status:** TESTING
+- **Status:** DONE
 - **Goal:** Add quick-access buttons to the admin dashboard landing page for `New Member` and `Membership Renewal`.
 - **Scope:**
   - Add two quick-access buttons on `/dashboard`
