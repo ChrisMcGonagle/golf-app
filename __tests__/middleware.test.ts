@@ -129,13 +129,77 @@ describe('middleware role-based protection without database access', () => {
     expect(NextResponse.redirect).not.toHaveBeenCalled()
   })
 
-  it('allows a staff cookie to access /dashboard', async () => {
-    mockedUnsealData.mockResolvedValueOnce(staffSession)
-    const request = createMockRequest('/dashboard', 'valid-staff-cookie')
+  it('allows an admin cookie to access /dashboard/submissions', async () => {
+    mockedUnsealData.mockResolvedValueOnce(adminSession)
+    const request = createMockRequest('/dashboard/submissions', 'valid-admin-cookie')
 
     await middleware(request)
 
     expect(NextResponse.next).toHaveBeenCalledTimes(1)
     expect(NextResponse.redirect).not.toHaveBeenCalled()
+  })
+
+  it('allows an admin cookie to access /dashboard/members', async () => {
+    mockedUnsealData.mockResolvedValueOnce(adminSession)
+    const request = createMockRequest('/dashboard/members', 'valid-admin-cookie')
+
+    await middleware(request)
+
+    expect(NextResponse.next).toHaveBeenCalledTimes(1)
+    expect(NextResponse.redirect).not.toHaveBeenCalled()
+  })
+
+  it('redirects an admin cookie away from /dashboard/membership-registration to /dashboard', async () => {
+    mockedUnsealData.mockResolvedValueOnce(adminSession)
+    const request = createMockRequest('/dashboard/membership-registration', 'valid-admin-cookie')
+
+    await middleware(request)
+
+    expect(NextResponse.redirect).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: '/dashboard' })
+    )
+  })
+
+  it('allows a staff cookie to access /dashboard/membership-registration', async () => {
+    mockedUnsealData.mockResolvedValueOnce(staffSession)
+    const request = createMockRequest('/dashboard/membership-registration', 'valid-staff-cookie')
+
+    await middleware(request)
+
+    expect(NextResponse.next).toHaveBeenCalledTimes(1)
+    expect(NextResponse.redirect).not.toHaveBeenCalled()
+  })
+
+  it('redirects a staff cookie away from /dashboard to /dashboard/membership-registration', async () => {
+    mockedUnsealData.mockResolvedValueOnce(staffSession)
+    const request = createMockRequest('/dashboard', 'valid-staff-cookie')
+
+    await middleware(request)
+
+    expect(NextResponse.redirect).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: '/dashboard/membership-registration' })
+    )
+  })
+
+  it('redirects a staff cookie away from /dashboard/submissions to /dashboard/membership-registration', async () => {
+    mockedUnsealData.mockResolvedValueOnce(staffSession)
+    const request = createMockRequest('/dashboard/submissions', 'valid-staff-cookie')
+
+    await middleware(request)
+
+    expect(NextResponse.redirect).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: '/dashboard/membership-registration' })
+    )
+  })
+
+  it('redirects a staff cookie away from /dashboard/members to /dashboard/membership-registration', async () => {
+    mockedUnsealData.mockResolvedValueOnce(staffSession)
+    const request = createMockRequest('/dashboard/members', 'valid-staff-cookie')
+
+    await middleware(request)
+
+    expect(NextResponse.redirect).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: '/dashboard/membership-registration' })
+    )
   })
 })
