@@ -61,14 +61,13 @@ export async function middleware(request: NextRequest) {
       pathname === '/dashboard/members' ||
       pathname.startsWith('/dashboard/members/')
 
-    const isStaffOnlyRoute =
+    const isSharedDashboardRoute =
+      pathname === '/dashboard/membership-registration' ||
+      pathname.startsWith('/dashboard/membership-registration/') ||
       pathname === '/dashboard/new-member' ||
       pathname.startsWith('/dashboard/new-member/')
 
     if (role === 'admin') {
-      if (isStaffOnlyRoute) {
-        return NextResponse.redirect(new URL('/dashboard', request.url))
-      }
       return NextResponse.next()
     }
 
@@ -76,6 +75,11 @@ export async function middleware(request: NextRequest) {
       if (isAdminOnlyRoute) {
         return NextResponse.redirect(new URL('/dashboard/membership-registration', request.url))
       }
+
+      if (isSharedDashboardRoute) {
+        return NextResponse.next()
+      }
+
       return NextResponse.next()
     }
 
