@@ -272,7 +272,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-007: Middleware Role Routing
 
-- **Status:** READY
+- **Status:** TESTING
 - **Goal:** Route admin and staff users to different authenticated destinations after login.
 - **Scope:**
   - Update middleware role routing so `admin` users land on `/dashboard`
