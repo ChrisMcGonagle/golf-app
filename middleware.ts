@@ -65,7 +65,9 @@ export async function middleware(request: NextRequest) {
       pathname === '/dashboard/membership-registration' ||
       pathname.startsWith('/dashboard/membership-registration/') ||
       pathname === '/dashboard/new-member' ||
-      pathname.startsWith('/dashboard/new-member/')
+      pathname.startsWith('/dashboard/new-member/') ||
+      pathname === '/dashboard/membership-renewal' ||
+      pathname.startsWith('/dashboard/membership-renewal/')
 
     if (role === 'admin') {
       return NextResponse.next()

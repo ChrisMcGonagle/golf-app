@@ -44,10 +44,10 @@ describe('PBI-006: MembershipRegistrationPage', () => {
     expect(link).toHaveAttribute('href', '/dashboard/new-member');
   });
 
-  it('shows a "Membership Renewal" button', () => {
-    expect(
-      screen.getByRole('button', { name: /membership renewal/i })
-    ).toBeInTheDocument();
+  it('shows a "Membership Renewal" link that navigates to /dashboard/membership-renewal', () => {
+    const link = screen.getByRole('link', { name: /membership renewal/i });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', '/dashboard/membership-renewal');
   });
 
   it('does NOT render DashboardSidebar', () => {

@@ -11,12 +11,12 @@ export default function MembershipRegistrationPage() {
         >
           New Membership
         </Link>
-        <button
-          type="button"
+        <Link
+          href="/dashboard/membership-renewal"
           className="px-10 py-5 text-xl font-semibold text-white bg-green-600 rounded-xl shadow-lg hover:bg-green-700 transition-colors"
         >
           Membership Renewal
-        </button>
+        </Link>
       </div>
     </div>
   );

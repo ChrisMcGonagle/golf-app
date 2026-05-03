@@ -297,7 +297,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-008: New Member Flow Entry
 
-- **Status:** TESTING
+- **Status:** DONE
 - **Goal:** Handle the `New Membership` button click from the staff membership registration page.
 - **Scope:**
   - Add navigation behavior for the `New Membership` button on `/dashboard/membership-registration`
@@ -319,7 +319,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-009: Membership Renewal Flow Entry
 
-- **Status:** READY
+- **Status:** TESTING
 - **Goal:** Handle the `Membership Renewal` button click from the staff membership registration page.
 - **Scope:**
   - Add navigation behavior for the `Membership Renewal` button on `/dashboard/membership-registration`
