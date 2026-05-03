@@ -6,7 +6,7 @@ _Single source of truth for all implementation decisions._
 
 ## 1. Project Overview
 
-A web-based Golf Club Management application that allows club admins to manage staff records and allows staff and admins to authenticate on a shared device. Phase 1 delivers PIN-based authentication, role-based access control, an admin dashboard shell, and a staff membership-registration landing page.
+A web-based Golf Club Management application that allows club admins to manage staff records and allows staff and admins to authenticate on a shared device. Phase 1 delivers PIN-based authentication, role-based access control, an admin dashboard shell, a shared staff/admin membership-registration entry experience, and the foundation for a unified membership flow.
 
 ### Delivery Model
 
@@ -54,8 +54,9 @@ Browser
 - `@supabase/ssr` — cookie-based session management for App Router.
 - Server components fetch data directly from Supabase (no intermediate REST layer needed for reads).
 - `middleware.ts` intercepts every request to validate session and enforce role routing.
-- The admin dashboard shell exposes a side menu with `Submissions`, `Members`, `Member Submissions`, and `Member Lists`.
-- The staff membership-registration flow remains outside the admin dashboard shell.
+- The admin dashboard shell exposes a side menu with `Submissions` and `Members`, while the admin dashboard home also exposes quick-access buttons for membership journeys.
+- The membership-registration page remains outside the admin dashboard shell so both staff and admin can use the same entry surface for membership flows.
+- Membership journeys are converging on a shared flow under protected dashboard routes: choose action, optionally search for an existing member for renewals, choose membership type, then continue into the final form or email path.
 - No client-side Supabase calls for sensitive operations.
 
 ---
@@ -125,6 +126,27 @@ After PIN validation, the server creates a signed `activeUser` cookie using `ACT
 6. On success: user enters + confirms a 4-digit PIN → Server Action hashes with bcrypt, saves to `profiles.pin_hash`.
 7. Server Action sets signed `activeUser` cookie → redirect to `/dashboard`. Middleware routes `admin` to `/dashboard` while also allowing access to `/dashboard/membership-registration`, and routes `staff` to `/dashboard/membership-registration`.
 
+### Membership Journey After Authentication
+- Staff land on `/dashboard/membership-registration` after PIN entry.
+- Admin land on `/dashboard` after PIN entry, with quick-access buttons for the same membership journeys.
+- Both roles can start either `New Membership` or `Membership Renewal`.
+- Both entry surfaces feed into one shared membership flow.
+- The shared flow preserves the full journey context:
+  - original intent (`New Membership` or `Membership Renewal`)
+  - chosen next action (`Membership Form` or `Generate Email Form`)
+  - selected member for renewals
+  - selected membership type
+- Planned downstream order:
+  - choose `Membership Form` or `Generate Email Form`
+  - for renewals only, search and select the existing member before continuing
+  - choose membership type
+  - continue into the final form or email screen with all context preserved
+- The `Membership Form` path then enters a shared 4-step form:
+  - `Personal Details`
+  - `Membership Details`
+  - `Safeguarding & Medical`
+  - `Additional Info and Consent` (placeholder for now)
+
 ### Security Properties
 - No Supabase session cookie exists on the device at rest.
 - `SUPABASE_SERVICE_ROLE_KEY` is server-only and never in any client bundle.
@@ -145,8 +167,13 @@ After PIN validation, the server creates a signed `activeUser` cookie using `ACT
 | `/dashboard/member-submissions` | ❌ → redirect `/dashboard/membership-registration` | ✅ |
 | `/dashboard/member-lists` | ❌ → redirect `/dashboard/membership-registration` | ✅ |
 | `/dashboard/membership-registration` | ✅ | ✅ |
-| `/dashboard/membership-registration/new-membership` | ✅ | ✅ |
-| `/dashboard/membership-registration/membership-renewal` | ✅ | ✅ |
+| `/dashboard/new-member` | ✅ | ✅ |
+| `/dashboard/membership-renewal` | ✅ | ✅ |
+| `/dashboard/membership/choice` | ✅ | ✅ |
+| `/dashboard/membership/member-search` | ✅ | ✅ |
+| `/dashboard/membership/type` | ✅ | ✅ |
+| `/dashboard/membership/form` | ✅ | ✅ |
+| `/dashboard/membership/email` | ✅ | ✅ |
 
 **Enforcement:** middleware reads role and issues redirects server-side. No role logic runs on the client.
 
@@ -165,8 +192,13 @@ After PIN validation, the server creates a signed `activeUser` cookie using `ACT
 | `/dashboard/member-submissions` | `AdminMemberSubmissionsPage` | Yes | admin |
 | `/dashboard/member-lists` | `AdminMemberListsPage` | Yes | admin |
 | `/dashboard/membership-registration` | `StaffMembershipRegistrationPage` | Yes | staff/admin |
-| `/dashboard/membership-registration/new-membership` | `StaffNewMembershipEntryPage` | Yes | staff/admin |
-| `/dashboard/membership-registration/membership-renewal` | `StaffMembershipRenewalEntryPage` | Yes | staff/admin |
+| `/dashboard/new-member` | `NewMembershipEntryPage` | Yes | staff/admin |
+| `/dashboard/membership-renewal` | `MembershipRenewalEntryPage` | Yes | staff/admin |
+| `/dashboard/membership/choice` | `SharedMembershipChoicePage` | Yes | staff/admin |
+| `/dashboard/membership/member-search` | `RenewalMemberSearchPage` | Yes | staff/admin |
+| `/dashboard/membership/type` | `MembershipTypeSelectionPage` | Yes | staff/admin |
+| `/dashboard/membership/form` | `SharedMembershipFormPage` | Yes | staff/admin |
+| `/dashboard/membership/email` | `MembershipEmailFlowPage` | Yes | staff/admin |
 
 ---
 

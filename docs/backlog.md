@@ -360,3 +360,224 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 - **Systems Affected:** frontend
 - **Risk Level:** Low
 - **Estimated Effort:** S
+
+---
+
+## PBI-011: Shared Membership Flow Choice Step With Preserved Flow Context
+
+- **Status:** READY
+- **Goal:** Introduce one shared intermediate step for membership flow entry that asks the user to choose between `Membership Form` and `Generate Email Form`, while preserving the original membership intent for the next step in the flow.
+- **Scope:**
+  - Create a shared membership-flow choice screen used by all supported entry journeys
+  - Display exactly two options: `Membership Form` and `Generate Email Form`
+  - Accept and retain the originating membership intent: `New Membership` or `Membership Renewal`
+  - Capture and retain the selected next action together with the original intent as shared flow context
+  - Pass that shared flow context forward to the next step without losing it
+  - Make the screen usable regardless of which supported entry point the user arrived from
+- **Out of Scope:** Real form implementation, real email generation, persistence beyond what is needed to carry flow context
+- **Acceptance Criteria:**
+  - Selecting `New Membership` from any supported entry point opens the same shared choice step
+  - Selecting `Membership Renewal` from any supported entry point opens the same shared choice step
+  - The choice step clearly shows `Membership Form` and `Generate Email Form`
+  - After the user chooses an option, the system still has both the selected next action and the original membership intent available for the next step
+  - No supported entry point bypasses this step before the flow continues
+- **Dependencies:** PBI-008, PBI-009, PBI-010
+- **Systems Affected:** frontend
+- **Risk Level:** Medium
+- **Estimated Effort:** S
+
+---
+
+## PBI-012: Unify Entry-Point Routing To Shared Choice Step
+
+- **Status:** READY
+- **Goal:** Refactor all supported membership entry points so they route into the shared choice-step flow instead of using separate per-entry navigation logic.
+- **Scope:**
+  - Update the membership-registration entry buttons to use the shared flow
+  - Update the admin dashboard quick-access buttons to use the same shared flow
+  - Update any kiosk membership entry surface to use the same shared flow
+  - Remove duplicated routing decisions where different entry points branch separately
+  - Keep labels and entry surfaces unchanged while standardising behaviour underneath
+- **Out of Scope:** Changing visual design of the existing buttons, implementing the downstream form/email screens themselves
+- **Acceptance Criteria:**
+  - `New Membership` behaves the same from every supported entry point
+  - `Membership Renewal` behaves the same from every supported entry point
+  - All supported entry points route through one shared decision path before any downstream screen
+  - There is no entry-point-specific logic for deciding whether the user goes to the choice step
+- **Dependencies:** PBI-011
+- **Systems Affected:** frontend
+- **Risk Level:** Medium
+- **Estimated Effort:** S
+
+---
+
+## PBI-013: Renewal Search, Membership Type Selection, And Final Flow Handoff
+
+- **Status:** READY
+- **Goal:** Send the user from the shared choice step through the required member-selection and membership-type steps, then into the correct final screen while carrying forward the full flow context.
+- **Scope:**
+  - Route both `Membership Form` and `Generate Email Form` choices for `New Membership` directly from the shared choice step to a membership-type selection screen
+  - Route both `Membership Form` and `Generate Email Form` choices for `Membership Renewal` to an existing-member search-and-select step before membership-type selection
+  - Allow the renewal flow to search and select an existing member
+  - After the renewal member is selected, show the same membership-type selection screen used by the new-member flow
+  - Allow the membership-type selection screen to choose one membership type from the available membership types
+  - Preserve the selected next action and original membership intent through the renewal search step when present
+  - Preserve the selected membership type and selected renewal member when present through the final handoff
+  - After membership type is selected, send the user to the previously chosen final screen with all preserved context applied
+  - Ensure downstream screens can read and use the preserved context consistently across supported entry points
+- **Out of Scope:** Full form logic, email sending logic, backend persistence beyond what is needed to maintain context between steps
+- **Acceptance Criteria:**
+  - Choosing `Membership Form` after starting `New Membership` opens the membership-type selection screen before the final form flow
+  - Choosing `Generate Email Form` after starting `New Membership` opens the membership-type selection screen before the final email flow
+  - Choosing either option after starting `Membership Renewal` opens an existing-member search step before membership-type selection
+  - A renewal user must select an existing member before the membership-type selection screen is shown
+  - The membership-type selection screen allows the user to choose a membership type
+  - After membership type is selected, the user is taken to the previously chosen final screen
+  - The final screen receives the selected next action, the original membership intent, and the selected membership type
+  - For renewals, the final screen also receives the selected member
+  - The downstream screen receives consistent flow context regardless of which supported entry point the user originally used
+- **Dependencies:** PBI-011, PBI-012
+- **Systems Affected:** frontend
+- **Risk Level:** Medium
+- **Estimated Effort:** M
+
+---
+
+## PBI-014: Shared Four-Step Membership Form Shell And Context Handoff
+
+- **Status:** READY
+- **Goal:** Introduce one shared 4-step membership form shell for the `Membership Form` path, used by both `New Membership` and `Membership Renewal` after membership type selection is confirmed, while preserving all required flow context.
+- **Scope:**
+  - Route the `Membership Form` journey from the PBI-013 handoff into one shared 4-step form
+  - Use the same form shell for both `New Membership` and `Membership Renewal`
+  - Define the 4 steps in order:
+    - `Personal Details`
+    - `Membership Details`
+    - `Safeguarding & Medical`
+    - `Additional Info and Consent`
+  - Provide `Next` and `Back` navigation between steps
+  - Preserve flow context throughout the form:
+    - `New Membership` vs `Membership Renewal`
+    - `Membership Form` vs `Generate Email Form`
+    - Selected member for renewal when present
+    - Membership type
+  - Ensure step-to-step navigation does not lose entered data within the current form session
+  - Render Step 4 as a placeholder section only for now
+- **Out of Scope:** Final submission or persistence of the form, `Generate Email Form` implementation, field-level implementation for Steps 1 to 3 beyond what is needed to mount the shared shell
+- **Acceptance Criteria:**
+  - After membership type confirmation in the `Membership Form` path, `New Membership` opens the shared 4-step form
+  - After membership type confirmation in the `Membership Form` path, `Membership Renewal` opens the same shared 4-step form
+  - The form shows four ordered steps with `Next` and `Back` navigation
+  - The flow context remains available on every step
+  - For renewal journeys, the selected member remains available throughout the form
+  - Navigating between steps does not clear already entered form values during the current session
+  - Step 4 is present as a placeholder and does not require final content yet
+- **Dependencies:** PBI-013
+- **Systems Affected:** frontend, tests
+- **Risk Level:** Medium
+- **Estimated Effort:** S
+
+---
+
+## PBI-015: Personal Details Step With Validation
+
+- **Status:** READY
+- **Goal:** Implement Step 1 of the shared membership form with the required Personal Details fields and step-level validation.
+- **Scope:**
+  - Implement Step 1 fields:
+    - `First Name`
+    - `Surname`
+    - `Date of Birth`
+    - `Gender (Male / Female)`
+    - `Address Line 1`
+    - `Address Line 2`
+    - `Address Line 3`
+    - `City`
+    - `County`
+    - `Postal Code`
+    - `Country`
+    - `Email`
+    - `Mobile Phone`
+  - Add step-level validation for obviously required inputs and invalid formats where applicable
+  - Prevent `Next` navigation while Step 1 is invalid
+  - Preserve entered Step 1 values when moving forward and back within the form
+- **Out of Scope:** Renewal-based prefilling of member details, backend persistence, any validation rules not directly implied by the listed fields and standard input formats
+- **Acceptance Criteria:**
+  - Step 1 displays all required Personal Details fields
+  - The user cannot progress from Step 1 while required fields are incomplete or invalid
+  - Email input is validated as an email format
+  - Date of Birth input rejects invalid date values
+  - Returning to Step 1 after moving forward retains previously entered values during the current form session
+  - Step 1 works the same for both `New Membership` and `Membership Renewal` flows
+- **Dependencies:** PBI-014
+- **Systems Affected:** frontend, tests
+- **Risk Level:** Low
+- **Estimated Effort:** S
+
+---
+
+## PBI-016: Membership Details Step With Conditional Field Behaviour
+
+- **Status:** READY
+- **Goal:** Implement Step 2 of the shared membership form with the required Membership Details fields and the explicitly defined enable/disable and prefill behaviour.
+- **Scope:**
+  - Implement Step 2 fields:
+    - `Will Cruit Island Golf Club be your home club? (Yes / No)`
+    - `Home Club`
+    - `Are you or have you been a member of another club? (Yes / No)`
+    - `Previous Clubs`
+    - `Golf Ireland Number / GHIN`
+    - `Do you have a current handicap index or ever had one? (Yes / No)`
+    - `Handicap Index`
+  - Disable `Home Club` when `Will Cruit Island Golf Club be your home club?` is answered `Yes`
+  - Prefill `Previous Clubs` from `Home Club` when `Home Club` has been entered, while still allowing additional text input
+  - Disable `Golf Ireland Number / GHIN` when:
+    - `Home Club` is not provided, or
+    - `Are you or have you been a member of another club?` is answered `No`
+  - Apply step-level validation only to the rules explicitly defined in this requirement
+  - Preserve entered Step 2 values when moving forward and back within the form
+- **Out of Scope:** Any conditional rule for `Handicap Index` beyond what is explicitly confirmed later, club lookup integrations or autocomplete, backend persistence
+- **Acceptance Criteria:**
+  - Step 2 displays all required Membership Details fields
+  - Selecting `Yes` for Cruit as home club disables the `Home Club` field
+  - When `Home Club` is entered, `Previous Clubs` is prefilled with that value and still allows additional text input
+  - `Golf Ireland Number / GHIN` is disabled when `Home Club` is empty
+  - `Golf Ireland Number / GHIN` is disabled when previous club membership is answered `No`
+  - `Golf Ireland Number / GHIN` becomes available only when `Home Club` is provided and previous club membership is answered `Yes`
+  - Returning to Step 2 after moving forward retains previously entered values during the current form session
+  - Step 2 works the same for both `New Membership` and `Membership Renewal` flows
+- **Dependencies:** PBI-014
+- **Systems Affected:** frontend, tests
+- **Risk Level:** Medium
+- **Estimated Effort:** M
+
+---
+
+## PBI-017: Safeguarding And Medical Step Plus Final Placeholder Step
+
+- **Status:** READY
+- **Goal:** Complete the remaining form journey by implementing Step 3 fields, keeping Step 4 as a placeholder, and validating navigation through to the end of the shared form.
+- **Scope:**
+  - Implement Step 3 fields:
+    - `Emergency Contact Name`
+    - `Emergency Contact Relationship`
+    - `Phone Number`
+    - `Allergies`
+    - `Medications`
+    - `Additional Assistance`
+  - Add step-level validation where needed for contact details
+  - Implement Step 4 as an `Additional Info and Consent` placeholder section only
+  - Ensure the user can navigate from Step 3 to Step 4 and back without losing entered data
+  - Ensure the full 4-step flow remains consistent for both `New Membership` and `Membership Renewal`
+- **Out of Scope:** Final Step 4 content definition, consent capture rules beyond placeholder presentation, final form submission or persistence
+- **Acceptance Criteria:**
+  - Step 3 displays all required Safeguarding & Medical fields
+  - Step 3 blocks forward navigation when required emergency contact details are incomplete or invalid
+  - Step 4 is reachable from Step 3 and is clearly marked as placeholder content
+  - The user can navigate back from Step 4 to earlier steps without losing entered values during the current form session
+  - The complete 4-step form remains usable for both `New Membership` and `Membership Renewal` flows
+  - All preserved context from the entry flow is still available at Step 4
+- **Dependencies:** PBI-014, PBI-015, PBI-016
+- **Systems Affected:** frontend, tests
+- **Risk Level:** Low
+- **Estimated Effort:** S
