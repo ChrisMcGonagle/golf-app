@@ -251,7 +251,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-006: Staff Membership Registration
 
-- **Status:** READY
+- **Status:** TESTING
 - **Goal:** Create the staff landing page at `/dashboard/membership-registration`.
 - **Scope:**
   - Create `/app/dashboard/membership-registration/page.tsx`
