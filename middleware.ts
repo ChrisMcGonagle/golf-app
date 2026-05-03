@@ -51,20 +51,32 @@ export async function middleware(request: NextRequest) {
     const { role } = session.activeUser
 
     if (isStaffRoute) {
-      // /staff routes not ready yet, redirect to /dashboard
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 
-    if (isDashboardRoute) {
-      // Allow both staff and admin roles on /dashboard
-      if (role === 'staff' || role === 'admin') {
-        return NextResponse.next()
-      }
-      // Invalid role, redirect to select-user
-      return NextResponse.redirect(new URL('/select-user', request.url))
+    const isAdminOnlyRoute =
+      pathname === '/dashboard' ||
+      pathname === '/dashboard/submissions' ||
+      pathname.startsWith('/dashboard/submissions/') ||
+      pathname === '/dashboard/members' ||
+      pathname.startsWith('/dashboard/members/')
+
+    const isStaffOnlyRoute =
+      pathname === '/dashboard/membership-registration' ||
+      pathname.startsWith('/dashboard/membership-registration/')
+
+    if (role === 'admin') {
+      return NextResponse.next()
     }
 
-    return NextResponse.next()
+    if (role === 'staff') {
+      if (isAdminOnlyRoute) {
+        return NextResponse.redirect(new URL('/dashboard/membership-registration', request.url))
+      }
+      return NextResponse.next()
+    }
+
+    return NextResponse.redirect(new URL('/select-user', request.url))
   } catch {
     return NextResponse.redirect(new URL('/select-user', request.url))
   }

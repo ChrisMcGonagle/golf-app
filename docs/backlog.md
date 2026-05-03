@@ -251,7 +251,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-006: Staff Membership Registration
 
-- **Status:** TESTING
+- **Status:** DONE
 - **Goal:** Create the staff landing page at `/dashboard/membership-registration`.
 - **Scope:**
   - Create `/app/dashboard/membership-registration/page.tsx`
@@ -272,13 +272,13 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-007: Middleware Role Routing
 
-- **Status:** READY
+- **Status:** TESTING
 - **Goal:** Route admin and staff users to different authenticated destinations after login.
 - **Scope:**
   - Update middleware role routing so `admin` users land on `/dashboard`
   - Update middleware role routing so `staff` users land on `/dashboard/membership-registration`
   - Reserve `/dashboard`, `/dashboard/submissions`, and `/dashboard/members` for admin users
-  - Reserve `/dashboard/membership-registration` for staff users
+  - Allow both admin and staff users to access `/dashboard/membership-registration`
   - Keep PIN and setup-PIN success redirects simple; middleware performs the final role-based routing
 - **Out of Scope:** Changing page UI, implementing form logic, submissions logic, members logic
 - **Acceptance Criteria:**
@@ -286,7 +286,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
   - Staff login ends on `/dashboard/membership-registration`
   - Admin users can access `/dashboard`, `/dashboard/submissions`, and `/dashboard/members`
   - Staff users attempting to access admin dashboard routes are redirected to `/dashboard/membership-registration`
-  - Admin users attempting to access `/dashboard/membership-registration` are redirected to `/dashboard`
+  - Admin users can also access `/dashboard/membership-registration` when needed
   - All routing enforcement is server-side in middleware
 - **Dependencies:** PBI-002, PBI-004, PBI-005, PBI-006
 - **Systems Affected:** backend, frontend
