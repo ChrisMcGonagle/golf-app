@@ -38,10 +38,10 @@ describe('PBI-006: MembershipRegistrationPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows a "New Membership" button', () => {
-    expect(
-      screen.getByRole('button', { name: /new membership/i })
-    ).toBeInTheDocument();
+  it('shows a "New Membership" link that navigates to /dashboard/new-member', () => {
+    const link = screen.getByRole('link', { name: /new membership/i });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', '/dashboard/new-member');
   });
 
   it('shows a "Membership Renewal" button', () => {

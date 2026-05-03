@@ -1,0 +1,16 @@
+
+> golfapp-scaffold@0.1.0 test
+> jest __tests__/new-member-page.test.tsx --verbose
+
+PASS __tests__/new-member-page.test.tsx
+  PBI-008: NewMemberPage
+    ✓ renders without errors (12 ms)
+    ✓ displays the "New Member Registration" heading (33 ms)
+    ✓ displays the "Form coming soon" placeholder text (3 ms)
+    ✓ has a back link to /dashboard/membership-registration (5 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        0.398 s, estimated 1 s
+Ran all test suites matching __tests__/new-member-page.test.tsx.
