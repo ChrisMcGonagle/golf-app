@@ -29,6 +29,19 @@ describe('DashboardPage', () => {
   });
 
   describe('stat placeholders', () => {
+    it('should render quick-access links for new member and membership renewal', () => {
+      render(<DashboardPage />);
+
+      expect(screen.getByRole('link', { name: /new member/i })).toHaveAttribute(
+        'href',
+        '/dashboard/new-member',
+      );
+      expect(screen.getByRole('link', { name: /membership renewal/i })).toHaveAttribute(
+        'href',
+        '/dashboard/membership-renewal',
+      );
+    });
+
     it('should render "Total Submissions" stat card', () => {
       render(<DashboardPage />);
       expect(screen.getByText('Total Submissions')).toBeInTheDocument();
