@@ -6,9 +6,9 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import DashboardPage from '@/app/(authenticated)/dashboard/page';
-import SubmissionsPage from '@/app/(authenticated)/dashboard/submissions/page';
-import MembersPage from '@/app/(authenticated)/dashboard/members/page';
+import DashboardPage from '@/app/(authenticated)/dashboard/(with-sidebar)/page';
+import SubmissionsPage from '@/app/(authenticated)/dashboard/(with-sidebar)/submissions/page';
+import MembersPage from '@/app/(authenticated)/dashboard/(with-sidebar)/members/page';
 
 describe('DashboardPage', () => {
   describe('rendering', () => {
