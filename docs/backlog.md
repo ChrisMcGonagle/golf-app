@@ -228,7 +228,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-005: Admin Dashboard Layout
 
-- **Status:** READY
+- **Status:** DONE
 - **Goal:** Create the admin dashboard shell with a left side menu and admin-only dashboard pages.
 - **Scope:**
   - Create `/app/dashboard/layout.tsx` for the admin dashboard shell
@@ -251,7 +251,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-006: Staff Membership Registration
 
-- **Status:** READY
+- **Status:** TESTING
 - **Goal:** Create the staff landing page at `/dashboard/membership-registration`.
 - **Scope:**
   - Create `/app/dashboard/membership-registration/page.tsx`

@@ -14,7 +14,7 @@ jest.mock('next/navigation', () => ({
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import DashboardLayout from '@/app/(authenticated)/dashboard/layout';
+import DashboardLayout from '@/app/(authenticated)/dashboard/(with-sidebar)/layout';
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
