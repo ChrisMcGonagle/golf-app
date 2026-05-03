@@ -319,7 +319,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-009: Membership Renewal Flow Entry
 
-- **Status:** READY
+- **Status:** TESTING
 - **Goal:** Handle the `Membership Renewal` button click from the staff membership registration page.
 - **Scope:**
   - Add navigation behavior for the `Membership Renewal` button on `/dashboard/membership-registration`
