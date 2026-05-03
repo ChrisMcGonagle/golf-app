@@ -2,38 +2,160 @@
  * Tests for NewMemberPage (PBI-008)
  *
  * Acceptance Criteria:
- * 1. Page renders without errors
- * 2. Heading displays "New Member"
- * 3. Placeholder text "Placeholder for new member registration form" is visible
- * 4. Back link points to "/dashboard/membership-registration"
+ * 1. Staff users can click "New Membership" on /dashboard/membership-registration
+ * 2. The click navigates to /dashboard/new-member
+ * 3. The destination page displays placeholder text
+ * 4. The route is accessible to staff users
+ * 5. Admin users can also access /dashboard/new-member
  */
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { unsealData } from 'iron-session';
+import { NextRequest, NextResponse } from 'next/server';
+
+import MembershipRegistrationPage from '@/app/(authenticated)/dashboard/membership-registration/page';
 import NewMemberPage from '@/app/(authenticated)/dashboard/new-member/page';
+import { middleware } from '@/middleware';
+
+jest.mock('next/server', () => ({
+  NextRequest: jest.fn(),
+  NextResponse: {
+    next: jest.fn(() => ({ status: 200 })),
+    redirect: jest.fn((url: URL) => ({
+      status: 307,
+      redirectUrl: url.toString(),
+    })),
+  },
+}))
+
+jest.mock('iron-session', () => ({
+  unsealData: jest.fn(),
+}))
+
+const mockedUnsealData = jest.mocked(unsealData)
+
+function createMockRequest(pathname: string, cookieValue?: string): NextRequest {
+  const url = new URL(`http://localhost:3000${pathname}`)
+
+  return {
+    nextUrl: url,
+    url: url.toString(),
+    cookies: {
+      get: (name: string) => {
+        if (name !== 'activeUser' || !cookieValue) {
+          return undefined
+        }
+
+        return { value: cookieValue }
+      },
+    },
+  } as NextRequest
+}
+
+const adminSession = {
+  activeUser: {
+    profileId: 'admin-123',
+    displayName: 'Alex Admin',
+    role: 'admin' as const,
+    expiresAt: Date.now() + 8 * 60 * 60 * 1000,
+  },
+}
+
+const staffSession = {
+  activeUser: {
+    profileId: 'staff-456',
+    displayName: 'Sam Staff',
+    role: 'staff' as const,
+    expiresAt: Date.now() + 8 * 60 * 60 * 1000,
+  },
+}
 
 describe('PBI-008: NewMemberPage', () => {
+  let consoleErrorSpy: jest.SpyInstance
+
   beforeEach(() => {
-    render(<NewMemberPage />);
-  });
+    jest.clearAllMocks()
+    process.env.ACTIVE_USER_SECRET = 'test-secret-key'
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined)
+  })
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore()
+  })
 
   it('renders without errors', () => {
-    expect(document.body).toBeTruthy();
-  });
+    render(<NewMemberPage />)
+
+    expect(document.body).toBeTruthy()
+  })
 
   it('displays the "New Member" heading', () => {
+    render(<NewMemberPage />)
+
     expect(
       screen.getByRole('heading', { name: /new member/i })
-    ).toBeInTheDocument();
-  });
+    ).toBeInTheDocument()
+  })
 
   it('displays the placeholder text', () => {
-    expect(screen.getByText(/placeholder for new member registration form/i)).toBeInTheDocument();
-  });
+    render(<NewMemberPage />)
+
+    expect(screen.getByText(/placeholder for new member registration form/i)).toBeInTheDocument()
+  })
 
   it('has a back link to /dashboard/membership-registration', () => {
-    const backLink = screen.getByRole('link', { name: /back to membership registration/i });
-    expect(backLink).toBeInTheDocument();
-    expect(backLink).toHaveAttribute('href', '/dashboard/membership-registration');
-  });
-});
+    render(<NewMemberPage />)
+
+    const backLink = screen.getByRole('link', { name: /back to membership registration/i })
+
+    expect(backLink).toBeInTheDocument()
+    expect(backLink).toHaveAttribute('href', '/dashboard/membership-registration')
+  })
+
+  it('shows the New Membership entry link to /dashboard/new-member', () => {
+    render(<MembershipRegistrationPage />)
+
+    const entryLink = screen.getByRole('link', { name: /new membership/i })
+
+    expect(entryLink).toBeInTheDocument()
+    expect(entryLink).toHaveAttribute('href', '/dashboard/new-member')
+  })
+
+  it('renders without console errors', () => {
+    render(<NewMemberPage />)
+
+    expect(consoleErrorSpy).not.toHaveBeenCalled()
+  })
+
+  it('redirects unauthenticated users from /dashboard/new-member to /select-user', async () => {
+    const request = createMockRequest('/dashboard/new-member')
+
+    await middleware(request)
+
+    expect(NextResponse.redirect).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: '/select-user' })
+    )
+    expect(mockedUnsealData).not.toHaveBeenCalled()
+  })
+
+  it('allows staff users to access /dashboard/new-member via middleware', async () => {
+    mockedUnsealData.mockResolvedValueOnce(staffSession)
+    const request = createMockRequest('/dashboard/new-member', 'valid-staff-cookie')
+
+    const response = await middleware(request)
+
+    expect(response).toEqual({ status: 200 })
+    expect(NextResponse.redirect).not.toHaveBeenCalled()
+  })
+
+  it('allows admin users to access /dashboard/new-member via middleware', async () => {
+    mockedUnsealData.mockResolvedValueOnce(adminSession)
+    const request = createMockRequest('/dashboard/new-member', 'valid-admin-cookie')
+
+    const response = await middleware(request)
+
+    expect(response).toEqual({ status: 200 })
+    expect(NextResponse.redirect).not.toHaveBeenCalled()
+  })
+})
