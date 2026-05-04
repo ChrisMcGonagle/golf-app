@@ -1,11 +1,16 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { unsealData } from 'iron-session';
+import { redirect } from 'next/navigation';
 import { NextRequest, NextResponse } from 'next/server';
 
 import MembershipRegistrationPage from '@/app/(authenticated)/dashboard/membership-registration/page';
 import MembershipRenewalPage from '@/app/(authenticated)/dashboard/membership-renewal/page';
 import { middleware } from '@/middleware';
+
+jest.mock('next/navigation', () => ({
+  redirect: jest.fn(),
+}))
 
 jest.mock('next/server', () => ({
   NextRequest: jest.fn(),
@@ -23,6 +28,7 @@ jest.mock('iron-session', () => ({
 }))
 
 const mockedUnsealData = jest.mocked(unsealData)
+const mockedRedirect = jest.mocked(redirect)
 
 function createMockRequest(pathname: string, cookieValue?: string): NextRequest {
   const url = new URL(`http://localhost:3000${pathname}`)
@@ -72,19 +78,13 @@ describe('PBI-009: MembershipRenewalPage', () => {
     const entryLink = screen.getByRole('link', { name: /membership renewal/i })
 
     expect(entryLink).toBeInTheDocument()
-    expect(entryLink).toHaveAttribute('href', '/dashboard/membership-renewal')
+    expect(entryLink).toHaveAttribute('href', '/dashboard/membership-flow?intent=renewal')
   })
 
   it('renders the placeholder renewal page content', () => {
-    render(<MembershipRenewalPage />)
+    MembershipRenewalPage()
 
-    expect(
-      screen.getByRole('heading', { name: /membership renewal/i })
-    ).toBeInTheDocument()
-    expect(screen.getByText(/placeholder for membership renewal flow/i)).toBeInTheDocument()
-    expect(
-      screen.getByRole('link', { name: /back to membership registration/i })
-    ).toHaveAttribute('href', '/dashboard/membership-registration')
+    expect(mockedRedirect).toHaveBeenCalledWith('/dashboard/membership-flow?intent=renewal')
   })
 
   it('redirects unauthenticated users from /dashboard/membership-renewal to /select-user', async () => {

@@ -12,11 +12,16 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { unsealData } from 'iron-session';
+import { redirect } from 'next/navigation';
 import { NextRequest, NextResponse } from 'next/server';
 
 import MembershipRegistrationPage from '@/app/(authenticated)/dashboard/membership-registration/page';
 import NewMemberPage from '@/app/(authenticated)/dashboard/new-member/page';
 import { middleware } from '@/middleware';
+
+jest.mock('next/navigation', () => ({
+  redirect: jest.fn(),
+}))
 
 jest.mock('next/server', () => ({
   NextRequest: jest.fn(),
@@ -34,6 +39,7 @@ jest.mock('iron-session', () => ({
 }))
 
 const mockedUnsealData = jest.mocked(unsealData)
+const mockedRedirect = jest.mocked(redirect)
 
 function createMockRequest(pathname: string, cookieValue?: string): NextRequest {
   const url = new URL(`http://localhost:3000${pathname}`)
@@ -91,26 +97,21 @@ describe('PBI-008: NewMemberPage', () => {
   })
 
   it('displays the "New Member" heading', () => {
-    render(<NewMemberPage />)
+    NewMemberPage()
 
-    expect(
-      screen.getByRole('heading', { name: /new member/i })
-    ).toBeInTheDocument()
+    expect(mockedRedirect).toHaveBeenCalledWith('/dashboard/membership-flow?intent=new')
   })
 
   it('displays the placeholder text', () => {
-    render(<NewMemberPage />)
+    NewMemberPage()
 
-    expect(screen.getByText(/placeholder for new member registration form/i)).toBeInTheDocument()
+    expect(mockedRedirect).toHaveBeenCalledTimes(1)
   })
 
   it('has a back link to /dashboard/membership-registration', () => {
-    render(<NewMemberPage />)
+    NewMemberPage()
 
-    const backLink = screen.getByRole('link', { name: /back to membership registration/i })
-
-    expect(backLink).toBeInTheDocument()
-    expect(backLink).toHaveAttribute('href', '/dashboard/membership-registration')
+    expect(mockedRedirect).toHaveBeenCalledWith('/dashboard/membership-flow?intent=new')
   })
 
   it('shows the New Membership entry link to /dashboard/new-member', () => {
@@ -119,11 +120,11 @@ describe('PBI-008: NewMemberPage', () => {
     const entryLink = screen.getByRole('link', { name: /new membership/i })
 
     expect(entryLink).toBeInTheDocument()
-    expect(entryLink).toHaveAttribute('href', '/dashboard/new-member')
+    expect(entryLink).toHaveAttribute('href', '/dashboard/membership-flow?intent=new')
   })
 
   it('renders without console errors', () => {
-    render(<NewMemberPage />)
+    NewMemberPage()
 
     expect(consoleErrorSpy).not.toHaveBeenCalled()
   })

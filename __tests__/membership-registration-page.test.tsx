@@ -41,13 +41,13 @@ describe('PBI-006: MembershipRegistrationPage', () => {
   it('shows a "New Membership" link that navigates to /dashboard/new-member', () => {
     const link = screen.getByRole('link', { name: /new membership/i });
     expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute('href', '/dashboard/new-member');
+    expect(link).toHaveAttribute('href', '/dashboard/membership-flow?intent=new');
   });
 
   it('shows a "Membership Renewal" link that navigates to /dashboard/membership-renewal', () => {
     const link = screen.getByRole('link', { name: /membership renewal/i });
     expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute('href', '/dashboard/membership-renewal');
+    expect(link).toHaveAttribute('href', '/dashboard/membership-flow?intent=renewal');
   });
 
   it('does NOT render DashboardSidebar', () => {
