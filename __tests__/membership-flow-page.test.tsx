@@ -12,8 +12,11 @@ describe('PBI-011: MembershipFlowPage', () => {
 
     render(page);
 
-    expect(screen.getByRole('heading', { name: /choose next step/i })).toBeInTheDocument();
-    expect(screen.getByText(/you are starting: new membership/i)).toBeInTheDocument();
+    expect(screen.getByText(/^choose a$/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /^membership form$/i, level: 1 }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/you are starting:/i)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /membership form/i })).toHaveAttribute(
       'href',
       '/dashboard/membership-flow/next?intent=new&action=form',
@@ -22,6 +25,9 @@ describe('PBI-011: MembershipFlowPage', () => {
       'href',
       '/dashboard/membership-flow/next?intent=new&action=email',
     );
+    expect(
+      screen.getByRole('link', { name: /back to membership registration/i }),
+    ).toHaveAttribute('href', '/dashboard/membership-registration');
   });
 
   it('renders the shared choice step for membership renewal intent', async () => {
@@ -31,7 +37,7 @@ describe('PBI-011: MembershipFlowPage', () => {
 
     render(page);
 
-    expect(screen.getByText(/you are starting: membership renewal/i)).toBeInTheDocument();
+    expect(screen.queryByText(/you are starting:/i)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /membership form/i })).toHaveAttribute(
       'href',
       '/dashboard/membership-flow/next?intent=renewal&action=form',
@@ -49,7 +55,7 @@ describe('PBI-011: MembershipFlowPage', () => {
 
     render(page);
 
-    expect(screen.getByText(/you are starting: new membership/i)).toBeInTheDocument();
+    expect(screen.queryByText(/you are starting:/i)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /membership form/i })).toHaveAttribute(
       'href',
       '/dashboard/membership-flow/next?intent=new&action=form',
@@ -63,7 +69,7 @@ describe('PBI-011: MembershipFlowPage', () => {
 
     render(page);
 
-    expect(screen.getByText(/you are starting: new membership/i)).toBeInTheDocument();
+    expect(screen.queryByText(/you are starting:/i)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /generate email form/i })).toHaveAttribute(
       'href',
       '/dashboard/membership-flow/next?intent=new&action=email',
