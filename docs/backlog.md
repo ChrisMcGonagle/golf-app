@@ -681,7 +681,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-020: Membership Type Selection Grid
 
-- **Status:** READY
+- **Status:** IN_PROGRESS
 - **Goal:** Design and implement a membership type selection screen with a clean, grid-based card layout that displays 10 membership type options as independently clickable buttons matching the finalized design system from PBI-018 and PBI-019.
 - **Scope:**
   - Create `/dashboard/membership-type` page (or appropriate route based on membership flow)

@@ -28,26 +28,10 @@ jest.mock('@/components/MemberSearchAutocomplete', () => ({
     );
   },
 }));
-jest.mock('@/components/MembershipTypeSelector', () => ({
-  __esModule: true,
-  default: ({ types, preSelectedType, intent, action, memberId }: {
-    types: string[]; preSelectedType: string | null; intent: string; action: string; memberId: string | undefined;
-  }) => {
-    const R = require("react");
-    return R.createElement("div", { "data-testid": "membership-type-selector" },
-      R.createElement("span", { "data-testid": "selector-types" }, types.join("|")),
-      preSelectedType ? R.createElement("span", { "data-testid": "selector-preselected" }, preSelectedType) : null,
-      R.createElement("span", { "data-testid": "selector-intent" }, intent),
-      R.createElement("span", { "data-testid": "selector-action" }, action),
-      memberId ? R.createElement("span", { "data-testid": "selector-memberid" }, memberId) : null,
-    );
-  },
-}));
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { searchMembers } from '@/lib/actions/searchMembers';
-import { MEMBERSHIP_TYPES } from '@/lib/constants/membershipTypes';
 import MemberSearchPage from '@/app/(authenticated)/dashboard/membership/member-search/page';
 import MembershipTypePage from '@/app/(authenticated)/dashboard/membership/type/page';
 import MembershipFormPage from '@/app/(authenticated)/dashboard/membership/form/page';
@@ -122,68 +106,61 @@ describe('MemberSearchPage (/dashboard/membership/member-search)', () => {
 
 // MembershipTypePage tests
 describe('MembershipTypePage (/dashboard/membership/type)', () => {
-  it('renders the Select Membership Type heading', async () => {
-    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'new', action: 'form' }) }));
-    expect(screen.getByRole('heading', { name: /select membership type/i })).toBeInTheDocument();
+  it('renders the "Choose a" label and "Membership Type" heading', async () => {
+    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'new' }) }));
+    expect(screen.getByText('Choose a')).toBeInTheDocument();
+    expect(screen.getByText('Membership Type')).toBeInTheDocument();
   });
 
-  it('passes all 10 MEMBERSHIP_TYPES to the selector (AC#5)', async () => {
-    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'new', action: 'form' }) }));
-    const typesEl = screen.getByTestId('selector-types');
-    expect(typesEl.textContent!.split('|')).toHaveLength(10);
-    MEMBERSHIP_TYPES.forEach((type) => expect(typesEl.textContent).toContain(type));
+  it('renders membership type titles (Full, Senior, Student, etc.)', async () => {
+    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'new' }) }));
+    expect(screen.getByText('Full')).toBeInTheDocument();
+    expect(screen.getByText('Senior')).toBeInTheDocument();
+    expect(screen.getByText('Student')).toBeInTheDocument();
+    expect(screen.getByText('Juvenile')).toBeInTheDocument();
+    expect(screen.getByText('Family')).toBeInTheDocument();
+    expect(screen.getByText('Overseas')).toBeInTheDocument();
+    expect(screen.getByText('Beginner (Year 1)')).toBeInTheDocument();
+    expect(screen.getByText('Beginner (Year 2)')).toBeInTheDocument();
   });
 
-  it('passes intent and action through to the selector (AC#8)', async () => {
-    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'email' }) }));
-    expect(screen.getByTestId('selector-intent').textContent).toBe('renewal');
-    expect(screen.getByTestId('selector-action').textContent).toBe('email');
+  it('creates card links with correct navigation URLs for new intent', async () => {
+    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'new' }) }));
+    const seniorLink = screen.getByText('Senior').closest('a');
+    expect(seniorLink).toHaveAttribute('href', '/dashboard/membership/form?intent=new&typeId=senior&step=1');
   });
 
-  it('pre-selects a valid memberType from MEMBERSHIP_TYPES', async () => {
-    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'form', memberType: 'Full Member', memberId: 'id-1' }) }));
-    expect(screen.getByTestId('selector-preselected').textContent).toBe('Full Member');
+  it('creates card links with correct navigation URLs for renewal intent', async () => {
+    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'renewal' }) }));
+    const familyLink = screen.getByText('Family').closest('a');
+    expect(familyLink).toHaveAttribute('href', '/dashboard/membership/form?intent=renewal&typeId=family&step=1');
   });
 
-  it('does not pre-select an invalid memberType not in the list', async () => {
-    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'form', memberType: 'Gold Member', memberId: 'id-1' }) }));
-    expect(screen.queryByTestId('selector-preselected')).not.toBeInTheDocument();
+  it('includes memberId in card links when provided for renewal', async () => {
+    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'renewal', memberId: 'member-123' }) }));
+    const familyLink = screen.getByText('Family').closest('a');
+    expect(familyLink).toHaveAttribute('href', '/dashboard/membership/form?intent=renewal&typeId=family&step=1&memberId=member-123');
   });
 
-  it('passes memberId to the selector for renewal flows (AC#4, AC#8)', async () => {
-    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'form', memberId: 'member-abc' }) }));
-    expect(screen.getByTestId('selector-memberid').textContent).toBe('member-abc');
-  });
-
-  it('does not pass memberId to the selector for new membership flows', async () => {
-    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'new', action: 'form' }) }));
-    expect(screen.queryByTestId('selector-memberid')).not.toBeInTheDocument();
-  });
-
-  it('shows back link to member-search for renewal intent (AC#3)', async () => {
-    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'form' }) }));
-    expect(screen.getByRole('link', { name: /back/i })).toHaveAttribute('href', '/dashboard/membership/member-search?intent=renewal&action=form');
-  });
-
-  it('preserves query in the renewal back link when present', async () => {
-    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'form', query: 'Jane' }) }));
-    expect(screen.getByRole('link', { name: /back/i })).toHaveAttribute('href', '/dashboard/membership/member-search?intent=renewal&action=form&query=Jane');
-  });
-
-  it('shows back link to membership-flow for new intent (AC#1)', async () => {
-    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'new', action: 'form' }) }));
+  it('shows back link to membership-flow for new intent', async () => {
+    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'new' }) }));
     expect(screen.getByRole('link', { name: /back/i })).toHaveAttribute('href', '/dashboard/membership-flow?intent=new');
   });
 
-  it('defaults invalid intent to new and uses correct back link', async () => {
-    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'garbage', action: 'form' }) }));
-    expect(screen.getByTestId('selector-intent').textContent).toBe('new');
-    expect(screen.getByRole('link', { name: /back/i })).toHaveAttribute('href', '/dashboard/membership-flow?intent=new');
+  it('shows back link to membership-flow for renewal intent', async () => {
+    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'renewal' }) }));
+    expect(screen.getByRole('link', { name: /back/i })).toHaveAttribute('href', '/dashboard/membership-flow?intent=renewal');
   });
 
-  it('defaults invalid action to form in selector', async () => {
-    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'new', action: 'invalid' }) }));
-    expect(screen.getByTestId('selector-action').textContent).toBe('form');
+  it('includes memberId in back link when provided', async () => {
+    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'renewal', memberId: 'member-456' }) }));
+    expect(screen.getByRole('link', { name: /back/i })).toHaveAttribute('href', '/dashboard/membership-flow?intent=renewal&memberId=member-456');
+  });
+
+  it('defaults invalid intent to new', async () => {
+    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'invalid' }) }));
+    const seniorLink = screen.getByText('Senior').closest('a');
+    expect(seniorLink).toHaveAttribute('href', expect.stringContaining('intent=new'));
   });
 });
 
