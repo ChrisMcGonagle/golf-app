@@ -630,25 +630,26 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-019: Membership Flow Action Cards UI Refresh
 
-- **Status:** READY
+- **Status:** IN_PROGRESS
 - **Goal:** Redesign the existing shared membership flow choice screen with a clean, modern, card-based layout that presents `Membership Form` and `Generate Email Form` as the two primary actions.
 - **Scope:**
   - Update the visual design of the existing `/dashboard/membership-flow` screen only
   - Preserve the two existing primary actions: `Membership Form` and `Generate Email Form`
-  - Use the same general visual approach as PBI-018 with a clean, minimal, modern light-theme design, generous whitespace, and a soft neutral colour palette
-  - Use a very light grey page background, such as `#f9fafb`
-  - Display a small, light grey label reading `Choose which`
-  - Display a larger dark heading reading `Form`
+  - Use the same finalized colours and design language as PBI-018 with a clean, minimal, modern light-theme design, generous whitespace, and a soft neutral palette
+  - Use page background `#f5f6f5`
+  - Display label text `Choose which` using `#bab9bd`
+  - Display header text `Form` using `#2b2b2b`
+  - Use the same font size for the label and header, with colour as the visual differentiator only
   - Present each action as a vertically stacked card/button with:
     - white background `#ffffff`
-    - very light grey border `#e5e7eb`
+    - very light grey border `#eeeeee`
     - large rounded corners of about `16px`
     - subtle soft shadow
   - Include card content with:
-    - a left-side circular icon container using light grey `#f3f4f6`
+    - a left-side circular icon container using light grey `#f0f0f0`
     - a centred icon inside that container
-    - a right-side title using medium-weight dark text `#111827`
-    - a smaller muted description using grey `#6b7280`
+    - a right-side title using medium-weight dark text `#282828`
+    - a smaller muted description using grey `#969696`
   - Add hover and interaction states with a slightly stronger shadow or a very subtle scale increase around `1.01`, smooth transition, and pointer cursor
   - Centre the content on the page with a max width around `400px` to `500px`
   - Keep the cards stacked vertically with about `16px` spacing between cards and about `24px` to `32px` spacing between the heading area and the cards
@@ -658,6 +659,8 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 - **Acceptance Criteria:**
   - The existing membership-flow page is visually redesigned into a clean, modern card-based layout
   - The page at `/dashboard/membership-flow` shows `Choose which` as small muted label text above the main heading `Form`
+  - The page uses the same finalized PBI-018 palette: background `#f5f6f5`, label `#bab9bd`, header `#2b2b2b`, card background `#ffffff`, card border `#eeeeee`, icon container `#f0f0f0`, card title `#282828`, and card description `#969696`
+  - The label and header use the same font size, with colour as the only visual distinction between them
   - The page displays exactly two vertically stacked action cards: `Membership Form` and `Generate Email Form`
   - Each card uses a white surface, light border, large rounded corners, and a subtle soft shadow
   - Each card includes an icon container on the left plus title and description content on the right
