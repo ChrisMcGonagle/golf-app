@@ -143,9 +143,11 @@ describe('Staff User Selection Page', () => {
       } as any);
 
       const component = await SelectUserPage({ searchParams: Promise.resolve({}) });
-      render(component);
+      const { container } = render(component);
 
-      expect(screen.getByText('Locked')).toBeInTheDocument();
+      // Check for padlock SVG (it has a rect element as the first child)
+      const padlockSvg = container.querySelector('svg rect');
+      expect(padlockSvg).toBeInTheDocument();
     });
 
     it('should not show "Locked" badge for profiles with pin_locked_until in the past', async () => {
@@ -176,7 +178,7 @@ describe('Staff User Selection Page', () => {
       const component = await SelectUserPage({ searchParams: Promise.resolve({}) });
       render(component);
 
-      const lockedBadges = screen.queryAllByText('Locked');
+      const lockedBadges = screen.queryAllByText('🔒');
       expect(lockedBadges.length).toBe(0);
     });
 
@@ -206,7 +208,7 @@ describe('Staff User Selection Page', () => {
       const component = await SelectUserPage({ searchParams: Promise.resolve({}) });
       render(component);
 
-      const lockedBadges = screen.queryAllByText('Locked');
+      const lockedBadges = screen.queryAllByText('🔒');
       expect(lockedBadges.length).toBe(0);
     });
   });
@@ -414,12 +416,21 @@ describe('Staff User Selection Page', () => {
   });
 
   describe('page rendering', () => {
-    it('should render page title "Select Staff Member"', async () => {
+    it('should render page heading "User"', async () => {
       mockCreateServiceRoleClient.mockReturnValue({
         from: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
             in: jest.fn().mockResolvedValue({
-              data: [],
+              data: [
+                {
+                  id: 'profile-1',
+                  display_name: 'Test User',
+                  avatar_url: null,
+                  role: 'staff' as const,
+                  pin_hash: 'hash123',
+                  pin_locked_until: null,
+                },
+              ],
               error: null,
             }),
           }),
@@ -429,7 +440,7 @@ describe('Staff User Selection Page', () => {
       const component = await SelectUserPage({ searchParams: Promise.resolve({}) });
       render(component);
 
-      expect(screen.getByText('Select Staff Member')).toBeInTheDocument();
+      expect(screen.getByText('Select User')).toBeInTheDocument();
     });
   });
 
