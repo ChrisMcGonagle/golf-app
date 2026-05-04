@@ -586,7 +586,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-018: Membership Registration Action Cards UI Refresh
 
-- **Status:** DEV_DONE
+- **Status:** DONE
 - **Goal:** Redesign the existing membership-registration dashboard view with a clean, modern, card-based layout that presents `New Member` and `Membership Renewal` as the two primary actions.
 - **Scope:**
   - Update the visual design of the existing `/dashboard/membership-registration` screen only
