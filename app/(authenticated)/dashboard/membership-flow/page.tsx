@@ -8,10 +8,6 @@ type MembershipFlowPageProps = {
   }>;
 };
 
-function getIntentLabel(intent: MembershipIntent) {
-  return intent === 'renewal' ? 'Membership Renewal' : 'New Membership';
-}
-
 const actionCards = [
   {
     action: 'form',
@@ -31,10 +27,11 @@ function ActionIcon({ action }: { action: (typeof actionCards)[number]['action']
       <svg
         aria-hidden="true"
         viewBox="0 0 24 24"
-        className="h-6 w-6"
+        className="h-8 w-8"
+        style={{ color: '#969696' }}
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
@@ -48,10 +45,11 @@ function ActionIcon({ action }: { action: (typeof actionCards)[number]['action']
     <svg
       aria-hidden="true"
       viewBox="0 0 24 24"
-      className="h-6 w-6"
+      className="h-8 w-8"
+      style={{ color: '#969696' }}
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
@@ -68,50 +66,63 @@ export default async function MembershipFlowPage({
 }: MembershipFlowPageProps) {
   const { intent } = await searchParams;
   const resolvedIntent: MembershipIntent = intent === 'renewal' ? 'renewal' : 'new';
-  const intentLabel = getIntentLabel(resolvedIntent);
 
   return (
-    <div className="min-h-[80vh] bg-[#f5f6f5] px-6 py-10 sm:px-8 sm:py-16">
-      <div className="mx-auto flex min-h-[calc(80vh-5rem)] w-full max-w-[460px] flex-col justify-center gap-8">
-        <div className="space-y-3">
-          <div className="space-y-1 leading-none">
-            <p className="text-[2.6rem] font-medium tracking-[-0.05em] text-[#bab9bd]">
-              Choose a
-            </p>
-            <h1 className="text-[2.6rem] font-medium tracking-[-0.05em] text-[#2b2b2b]">
-              Membership Form
-            </h1>
-          </div>
-          <p className="text-sm text-[#969696]">You are starting: {intentLabel}</p>
+    <div
+      className="relative flex min-h-screen flex-col items-center justify-center px-8 py-16"
+      style={{ backgroundColor: '#f5f6f5' }}
+    >
+      <div className="w-full max-w-[800px]">
+        <div className="mb-16 w-full max-w-[800px]">
+          <p style={{ color: '#bab9bd' }} className="text-6xl font-normal">
+            Choose a
+          </p>
+          <h1 style={{ color: '#2b2b2b' }} className="mt-2 text-6xl font-normal">
+            Membership Form
+          </h1>
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex w-full max-w-[800px] flex-col gap-8">
           {actionCards.map((card) => (
             <Link
               key={card.action}
               href={`/dashboard/membership-flow/next?intent=${resolvedIntent}&action=${card.action}`}
-              className="group flex items-center gap-4 rounded-[24px] border border-[#eeeeee] bg-[#ffffff] px-5 py-5 shadow-[0_12px_30px_rgba(43,43,43,0.04)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(43,43,43,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2b2b2b] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f5f6f5]"
+              className="flex cursor-pointer flex-col items-start justify-start rounded-3xl p-10 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
+              style={{
+                backgroundColor: '#ffffff',
+                border: '1px solid #eeeeee',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+              }}
             >
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#f0f0f0] text-[#282828]">
+              <div
+                className="mb-6 flex h-16 w-16 items-center justify-center rounded-full"
+                style={{ backgroundColor: '#f0f0f0' }}
+              >
                 <ActionIcon action={card.action} />
               </div>
-              <div className="min-w-0 flex-1 space-y-1">
-                <p className="text-lg font-medium text-[#282828]">{card.title}</p>
-                <p className="text-sm leading-6 text-[#969696]">{card.description}</p>
+
+              <div className="flex flex-col items-start justify-start">
+                <h2 style={{ color: '#282828' }} className="text-4xl font-semibold">
+                  {card.title}
+                </h2>
+                <p style={{ color: '#969696' }} className="mt-2 text-xl font-normal">
+                  {card.description}
+                </p>
               </div>
             </Link>
           ))}
         </div>
+      </div>
 
-        <div className="pt-1">
-          <Link
-            href="/dashboard/membership-registration"
-            className="inline-flex items-center gap-2 text-sm font-medium text-[#969696] transition-colors hover:text-[#2b2b2b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2b2b2b] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f5f6f5]"
-          >
-            <span aria-hidden="true">&larr;</span>
-            <span>Back to Membership Registration</span>
-          </Link>
-        </div>
+      <div className="fixed bottom-10 left-8 z-10">
+        <Link
+          href="/dashboard/membership-registration"
+          aria-label="Back to membership registration"
+          className="inline-flex items-center gap-2 text-sm font-medium text-[#969696] transition-colors hover:text-[#2b2b2b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2b2b2b] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f5f6f5]"
+        >
+          <span aria-hidden="true">&larr;</span>
+          <span>Back</span>
+        </Link>
       </div>
     </div>
   );
