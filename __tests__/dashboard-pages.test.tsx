@@ -34,11 +34,11 @@ describe('DashboardPage', () => {
 
       expect(screen.getByRole('link', { name: /new member/i })).toHaveAttribute(
         'href',
-        '/dashboard/new-member',
+        '/dashboard/membership-flow?intent=new',
       );
       expect(screen.getByRole('link', { name: /membership renewal/i })).toHaveAttribute(
         'href',
-        '/dashboard/membership-renewal',
+        '/dashboard/membership-flow?intent=renewal',
       );
     });
 

@@ -16,13 +16,13 @@ export default function DashboardPage() {
         </h2>
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link
-            href="/dashboard/new-member"
+            href="/dashboard/membership-flow?intent=new"
             className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow transition hover:bg-blue-700"
           >
             New Member
           </Link>
           <Link
-            href="/dashboard/membership-renewal"
+            href="/dashboard/membership-flow?intent=renewal"
             className="inline-flex items-center justify-center rounded-lg bg-white px-4 py-3 text-sm font-semibold text-blue-600 shadow ring-1 ring-inset ring-blue-200 transition hover:bg-blue-50"
           >
             Membership Renewal

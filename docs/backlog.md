@@ -365,7 +365,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-011: Shared Membership Flow Choice Step With Preserved Flow Context
 
-- **Status:** READY
+- **Status:** TESTING
 - **Goal:** Introduce one shared intermediate step for membership flow entry that asks the user to choose between `Membership Form` and `Generate Email Form`, while preserving the original membership intent for the next step in the flow.
 - **Scope:**
   - Create a shared membership-flow choice screen used by all supported entry journeys

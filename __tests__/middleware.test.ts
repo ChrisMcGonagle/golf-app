@@ -83,6 +83,28 @@ describe('middleware role-based protection without database access', () => {
     expect(mockedUnsealData).not.toHaveBeenCalled()
   })
 
+  it('redirects /dashboard/membership-flow without a cookie to /select-user', async () => {
+    const request = createMockRequest('/dashboard/membership-flow')
+
+    await middleware(request)
+
+    expect(NextResponse.redirect).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: '/select-user' })
+    )
+    expect(mockedUnsealData).not.toHaveBeenCalled()
+  })
+
+  it('redirects /dashboard/membership-flow/next without a cookie to /select-user', async () => {
+    const request = createMockRequest('/dashboard/membership-flow/next')
+
+    await middleware(request)
+
+    expect(NextResponse.redirect).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: '/select-user' })
+    )
+    expect(mockedUnsealData).not.toHaveBeenCalled()
+  })
+
   it('redirects an invalid cookie on a protected route to /select-user', async () => {
     mockedUnsealData.mockRejectedValueOnce(new Error('invalid cookie'))
     const request = createMockRequest('/staff/members', 'tampered-cookie')
@@ -205,6 +227,26 @@ describe('middleware role-based protection without database access', () => {
   it('allows a staff cookie to access /dashboard/new-member', async () => {
     mockedUnsealData.mockResolvedValueOnce(staffSession)
     const request = createMockRequest('/dashboard/new-member', 'valid-staff-cookie')
+
+    await middleware(request)
+
+    expect(NextResponse.next).toHaveBeenCalledTimes(1)
+    expect(NextResponse.redirect).not.toHaveBeenCalled()
+  })
+
+  it('allows a staff cookie to access /dashboard/membership-flow', async () => {
+    mockedUnsealData.mockResolvedValueOnce(staffSession)
+    const request = createMockRequest('/dashboard/membership-flow', 'valid-staff-cookie')
+
+    await middleware(request)
+
+    expect(NextResponse.next).toHaveBeenCalledTimes(1)
+    expect(NextResponse.redirect).not.toHaveBeenCalled()
+  })
+
+  it('allows a staff cookie to access /dashboard/membership-flow/next', async () => {
+    mockedUnsealData.mockResolvedValueOnce(staffSession)
+    const request = createMockRequest('/dashboard/membership-flow/next', 'valid-staff-cookie')
 
     await middleware(request)
 
