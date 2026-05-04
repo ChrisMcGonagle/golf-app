@@ -1,4 +1,8 @@
-jest.mock('next/navigation', () => ({ redirect: jest.fn((u) => { throw new Error('NEXT_REDIRECT:' + u); }) }));
+jest.mock('next/navigation', () => ({
+  redirect: jest.fn((u) => { throw new Error('NEXT_REDIRECT:' + u); }),
+  useRouter: jest.fn(() => ({ push: jest.fn() })),
+  useSearchParams: jest.fn(() => new URLSearchParams('')),
+}));
 jest.mock('@/lib/actions/searchMembers', () => ({ searchMembers: jest.fn() }));
 jest.mock('@/components/MemberSearchAutocomplete', () => ({
   __esModule: true,
@@ -187,54 +191,38 @@ describe('MembershipTypePage (/dashboard/membership/type)', () => {
 describe("MembershipFormPage (/dashboard/membership/form)", () => {
   it("renders the Membership Form heading", async () => {
     render(await MembershipFormPage({ searchParams: Promise.resolve({ intent: 'new', typeId: 'Full%20Member' }) }));
-    expect(screen.getByRole('heading', { name: /membership form/i })).toBeInTheDocument();
+    expect(screen.getByText(/Step 1 of 4/i)).toBeInTheDocument();
   });
 
-  it("displays intent in the context summary (AC#7)", async () => {
+  it("renders form for new membership with valid params", async () => {
     render(await MembershipFormPage({ searchParams: Promise.resolve({ intent: 'new', typeId: 'Full%20Member' }) }));
-    expect(screen.getByText('new')).toBeInTheDocument();
+    expect(screen.getByLabelText(/First Name/i)).toBeInTheDocument();
   });
 
-  it("decodes and displays the membership type from typeId (AC#7)", async () => {
-    render(await MembershipFormPage({ searchParams: Promise.resolve({ intent: 'new', typeId: 'Full%20Member' }) }));
-    expect(screen.getByText('Full Member')).toBeInTheDocument();
-  });
-
-  it("shows memberId in context summary for renewal flows (AC#7)", async () => {
+  it("renders form for renewal with memberId", async () => {
     render(await MembershipFormPage({ searchParams: Promise.resolve({ intent: 'renewal', typeId: 'Senior%20Member', memberId: 'uuid-member-1' }) }));
-    expect(screen.getByText('uuid-member-1')).toBeInTheDocument();
-    expect(screen.getByText('renewal')).toBeInTheDocument();
-    expect(screen.getByText('Senior Member')).toBeInTheDocument();
+    expect(screen.getByText(/Step 1 of 4/i)).toBeInTheDocument();
   });
 
-  it("does not display Member ID row when memberId is absent (AC#7)", async () => {
-    render(await MembershipFormPage({ searchParams: Promise.resolve({ intent: 'new', typeId: 'Full%20Member' }) }));
-    expect(screen.queryByText(/member id/i)).not.toBeInTheDocument();
+  it("shows error when intent is missing", async () => {
+    render(await MembershipFormPage({ searchParams: Promise.resolve({ typeId: 'Full%20Member' }) }));
+    expect(screen.getByText(/Invalid form parameters/i)).toBeInTheDocument();
   });
 
-  it("shows placeholder message for coming-soon form steps", async () => {
-    render(await MembershipFormPage({ searchParams: Promise.resolve({ intent: 'new', typeId: 'Full%20Member' }) }));
-    expect(screen.getByText(/coming in pbi-015/i)).toBeInTheDocument();
-  });
-
-  it("renders back link to type selection with intent and action=form", async () => {
-    render(await MembershipFormPage({ searchParams: Promise.resolve({ intent: 'new', typeId: 'Full%20Member' }) }));
-    const href = screen.getByRole('link', { name: /back/i }).getAttribute('href');
-    expect(href).toContain('/dashboard/membership/type');
-    expect(href).toContain('intent=new');
-    expect(href).toContain('action=form');
-  });
-
-  it("includes memberId and memberType in back link for renewal (AC#9)", async () => {
-    render(await MembershipFormPage({ searchParams: Promise.resolve({ intent: 'renewal', typeId: 'Full%20Member', memberId: 'uuid-1' }) }));
-    const href = screen.getByRole('link', { name: /back/i }).getAttribute('href');
-    expect(href).toContain('memberId=uuid-1');
-    expect(href).toContain('memberType=Full+Member');
-  });
-
-  it("shows dash placeholder when typeId is not provided", async () => {
+  it("shows error when typeId is missing", async () => {
     render(await MembershipFormPage({ searchParams: Promise.resolve({ intent: 'new' }) }));
-    expect(screen.getAllByText('—').length).toBeGreaterThan(0);
+    expect(screen.getByText(/Invalid form parameters/i)).toBeInTheDocument();
+  });
+
+  it("shows error when step is invalid", async () => {
+    render(await MembershipFormPage({ searchParams: Promise.resolve({ intent: 'new', typeId: 'Full%20Member', step: '5' }) }));
+    expect(screen.getByText(/Invalid form parameters/i)).toBeInTheDocument();
+  });
+
+  it("renders back link on error", async () => {
+    render(await MembershipFormPage({ searchParams: Promise.resolve({ intent: 'new' }) }));
+    const href = screen.getByRole('link', { name: /Back to Membership Type/i }).getAttribute('href');
+    expect(href).toContain('/dashboard/membership/type');
   });
 });
 
