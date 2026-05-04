@@ -1,5 +1,29 @@
 jest.mock('next/navigation', () => ({ redirect: jest.fn((u) => { throw new Error('NEXT_REDIRECT:' + u); }) }));
 jest.mock('@/lib/actions/searchMembers', () => ({ searchMembers: jest.fn() }));
+jest.mock('@/components/MemberSearchAutocomplete', () => ({
+  __esModule: true,
+  default: ({
+    intent,
+    action,
+    initialQuery,
+    initialMembers,
+  }: {
+    intent: string;
+    action: string;
+    initialQuery: string;
+    initialMembers: Array<{ id: string }>;
+  }) => {
+    const R = require('react');
+    return R.createElement(
+      'div',
+      { 'data-testid': 'member-search-autocomplete' },
+      R.createElement('span', { 'data-testid': 'member-search-intent' }, intent),
+      R.createElement('span', { 'data-testid': 'member-search-action' }, action),
+      R.createElement('span', { 'data-testid': 'member-search-query' }, initialQuery),
+      R.createElement('span', { 'data-testid': 'member-search-count' }, String(initialMembers.length)),
+    );
+  },
+}));
 jest.mock('@/components/MembershipTypeSelector', () => ({
   __esModule: true,
   default: ({ types, preSelectedType, intent, action, memberId }: {
@@ -31,32 +55,32 @@ describe('MemberSearchPage (/dashboard/membership/member-search)', () => {
   beforeEach(() => { mockSearchMembers.mockResolvedValue([]); });
   afterEach(() => { jest.clearAllMocks(); });
 
-  it('renders the heading and search form', async () => {
+  it('renders the heading and live search component', async () => {
     render(await MemberSearchPage({ searchParams: Promise.resolve({}) }));
     expect(screen.getByRole('heading', { name: /find member/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/search by name or member number/i)).toBeInTheDocument();
+    expect(screen.getByTestId('member-search-autocomplete')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /search/i })).not.toBeInTheDocument();
   });
 
-  it('preserves intent=renewal and action=form as hidden inputs', async () => {
+  it('passes intent=renewal and action=form to the live search component', async () => {
     render(await MemberSearchPage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'form' }) }));
-    expect((document.querySelector('input[name="intent"]') as HTMLInputElement).value).toBe('renewal');
-    expect((document.querySelector('input[name="action"]') as HTMLInputElement).value).toBe('form');
+    expect(screen.getByTestId('member-search-intent').textContent).toBe('renewal');
+    expect(screen.getByTestId('member-search-action').textContent).toBe('form');
   });
 
-  it('preserves action=email as hidden input', async () => {
+  it('passes action=email to the live search component', async () => {
     render(await MemberSearchPage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'email' }) }));
-    expect((document.querySelector('input[name="action"]') as HTMLInputElement).value).toBe('email');
+    expect(screen.getByTestId('member-search-action').textContent).toBe('email');
   });
 
-  it('defaults invalid intent to new in hidden input', async () => {
+  it('defaults invalid intent to new in the live search component', async () => {
     render(await MemberSearchPage({ searchParams: Promise.resolve({ intent: 'invalid', action: 'form' }) }));
-    expect((document.querySelector('input[name="intent"]') as HTMLInputElement).value).toBe('new');
+    expect(screen.getByTestId('member-search-intent').textContent).toBe('new');
   });
 
-  it('defaults invalid action to form in hidden input', async () => {
+  it('defaults invalid action to form in the live search component', async () => {
     render(await MemberSearchPage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'print' }) }));
-    expect((document.querySelector('input[name="action"]') as HTMLInputElement).value).toBe('form');
+    expect(screen.getByTestId('member-search-action').textContent).toBe('form');
   });
 
   it('does not call searchMembers when no query is provided', async () => {
@@ -74,44 +98,20 @@ describe('MemberSearchPage (/dashboard/membership/member-search)', () => {
     expect(mockSearchMembers).toHaveBeenCalledWith('Sm');
   });
 
-  it('shows No members found when search returns empty results', async () => {
+  it('passes the current query through to the live search component', async () => {
     render(await MemberSearchPage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'form', query: 'Smith' }) }));
-    expect(screen.getByText(/no members found/i)).toBeInTheDocument();
+    expect(screen.getByTestId('member-search-query').textContent).toBe('Smith');
   });
 
-  it('renders member result with correct link to type selection (AC#3)', async () => {
-    mockSearchMembers.mockResolvedValue([{ id: "uuid-1", member_number: "M001", first_name: "Jane", last_name: "Smith", membership_type: "Full Member" }]);
+  it('passes initial member results to the live search component', async () => {
+    mockSearchMembers.mockResolvedValue([{ id: "uuid-1", MEMBER_NUMBER: "M001", FIRST_NAME: "Jane", LAST_NAME: "Smith", MEMBERSHIP_TYPE: "Full Member" }]);
     render(await MemberSearchPage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'form', query: 'Jane' }) }));
-    expect(screen.getByText('Jane Smith')).toBeInTheDocument();
-    const link = screen.getByRole('link', { name: /jane smith/i });
-    expect(link).toHaveAttribute('href', '/dashboard/membership/type?intent=renewal&action=form&memberId=uuid-1&memberType=Full%20Member');
-  });
-
-  it('renders multiple members from search results', async () => {
-    mockSearchMembers.mockResolvedValue([
-      { id: "id-1", member_number: "M001", first_name: "Alice", last_name: "Brown", membership_type: "Full Member" },
-      { id: "id-2", member_number: "M002", first_name: "Bob", last_name: "Brown", membership_type: "Senior Member" },
-    ]);
-    render(await MemberSearchPage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'email', query: 'Brown' }) }));
-    expect(screen.getByText('Alice Brown')).toBeInTheDocument();
-    expect(screen.getByText('Bob Brown')).toBeInTheDocument();
-  });
-
-  it('passes action=email through member links when action is email', async () => {
-    mockSearchMembers.mockResolvedValue([{ id: "id-1", member_number: "M001", first_name: "Alice", last_name: "Brown", membership_type: "Full Member" }]);
-    render(await MemberSearchPage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'email', query: 'Alice' }) }));
-    expect(screen.getByRole('link', { name: /alice brown/i }).getAttribute('href')).toContain('action=email');
+    expect(screen.getByTestId('member-search-count').textContent).toBe('1');
   });
 
   it('renders back link to membership-flow with renewal intent', async () => {
     render(await MemberSearchPage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'form' }) }));
     expect(screen.getByRole('link', { name: /back/i })).toHaveAttribute('href', '/dashboard/membership-flow?intent=renewal');
-  });
-
-  it('does not show member list when no search was performed', async () => {
-    render(await MemberSearchPage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'form' }) }));
-    expect(screen.queryByText(/no members found/i)).not.toBeInTheDocument();
-    expect(screen.queryByRole('list')).not.toBeInTheDocument();
   });
 });
 
@@ -159,6 +159,11 @@ describe('MembershipTypePage (/dashboard/membership/type)', () => {
   it('shows back link to member-search for renewal intent (AC#3)', async () => {
     render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'form' }) }));
     expect(screen.getByRole('link', { name: /back/i })).toHaveAttribute('href', '/dashboard/membership/member-search?intent=renewal&action=form');
+  });
+
+  it('preserves query in the renewal back link when present', async () => {
+    render(await MembershipTypePage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'form', query: 'Jane' }) }));
+    expect(screen.getByRole('link', { name: /back/i })).toHaveAttribute('href', '/dashboard/membership/member-search?intent=renewal&action=form&query=Jane');
   });
 
   it('shows back link to membership-flow for new intent (AC#1)', async () => {

@@ -8,11 +8,12 @@ type MembershipTypePageProps = {
     action?: string;
     memberId?: string;
     memberType?: string;
+    query?: string;
   }>;
 };
 
 export default async function MembershipTypePage({ searchParams }: MembershipTypePageProps) {
-  const { intent, action, memberId, memberType } = await searchParams;
+  const { intent, action, memberId, memberType, query } = await searchParams;
 
   const safeIntent = intent === 'renewal' ? 'renewal' : 'new';
   const safeAction = action === 'email' ? 'email' : 'form';
@@ -22,9 +23,12 @@ export default async function MembershipTypePage({ searchParams }: MembershipTyp
       ? memberType
       : null;
 
+  const trimmedQuery = query?.trim() ?? '';
+  const querySuffix = trimmedQuery ? `&query=${encodeURIComponent(trimmedQuery)}` : '';
+
   const backHref =
     safeIntent === 'renewal'
-      ? `/dashboard/membership/member-search?intent=renewal&action=${safeAction}`
+      ? `/dashboard/membership/member-search?intent=renewal&action=${safeAction}${querySuffix}`
       : `/dashboard/membership-flow?intent=new`;
 
   return (
