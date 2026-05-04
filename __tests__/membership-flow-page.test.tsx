@@ -70,36 +70,39 @@ describe('PBI-011: MembershipFlowPage', () => {
     );
   });
 
-  it('preserves both intent and selected action on the next handoff page', async () => {
-    const page = await MembershipFlowNextPage({
-      searchParams: Promise.resolve({ intent: 'renewal', action: 'email' }),
-    });
-
-    render(page);
-
-    expect(screen.getByText(/intent: renewal/i)).toBeInTheDocument();
-    expect(screen.getByText(/action: email/i)).toBeInTheDocument();
+  it('redirects renewal intent to member-search on the next handoff page', async () => {
+    await expect(
+      MembershipFlowNextPage({
+        searchParams: Promise.resolve({ intent: 'renewal', action: 'email' }),
+      }),
+    ).rejects.toThrow();
   });
 
-  it('defaults the handoff page to new intent and form action when params are missing', async () => {
+  it('redirects new intent to membership type selection on the next handoff page', async () => {
+    await expect(
+      MembershipFlowNextPage({
+        searchParams: Promise.resolve({ intent: 'new', action: 'form' }),
+      }),
+    ).rejects.toThrow();
+  });
+
+  it('renders an error when handoff page params are missing', async () => {
     const page = await MembershipFlowNextPage({
       searchParams: Promise.resolve({}),
     });
 
     render(page);
 
-    expect(screen.getByText(/intent: new/i)).toBeInTheDocument();
-    expect(screen.getByText(/action: form/i)).toBeInTheDocument();
+    expect(screen.getByText(/invalid flow parameters/i)).toBeInTheDocument();
   });
 
-  it('preserves a valid intent and defaults an invalid action to form', async () => {
+  it('renders an error when handoff page has an invalid action', async () => {
     const page = await MembershipFlowNextPage({
       searchParams: Promise.resolve({ intent: 'renewal', action: 'print' }),
     });
 
     render(page);
 
-    expect(screen.getByText(/intent: renewal/i)).toBeInTheDocument();
-    expect(screen.getByText(/action: form/i)).toBeInTheDocument();
+    expect(screen.getByText(/invalid flow parameters/i)).toBeInTheDocument();
   });
 });

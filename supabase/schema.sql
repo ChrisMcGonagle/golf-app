@@ -19,3 +19,89 @@ alter table public.profiles enable row level security;
 revoke all on table public.profiles from public;
 revoke all on table public.profiles from anon;
 revoke all on table public.profiles from authenticated;
+
+-- ============================================================
+-- PBI-013: Members table
+-- Supports membership renewal search by first_name, last_name,
+-- and member_number. Full member fields (address, DOB, phone,
+-- etc.) will be added in PBI-015/016/017.
+-- ============================================================
+
+create table if not exists public.members (
+    id uuid primary key default gen_random_uuid(),
+    member_number text not null unique,
+    first_name text not null,
+    last_name text not null,
+    membership_type text not null,
+    created_at timestamptz not null default now(),
+    constraint members_membership_type_check check (
+        membership_type in (
+            'Full Member',
+            'Senior Member',
+            'Student Member',
+            'Beginner (Year 1)',
+            'Beginner (Year 2)',
+            'Juvenile',
+            'Country Member',
+            'Overseas Life Member',
+            'Life Member',
+            'Family Member'
+        )
+    )
+);
+
+-- Indexes to support renewal lookup search performance
+create index if not exists members_member_number_idx on public.members (member_number);
+create index if not exists members_last_name_idx on public.members (last_name);
+
+alter table public.members enable row level security;
+
+-- Deny all access to anon and authenticated roles.
+-- All reads/writes are performed server-side via the service role key,
+-- which bypasses RLS by design.
+revoke all on table public.members from public;
+revoke all on table public.members from anon;
+revoke all on table public.members from authenticated;
+
+-- ============================================================
+-- Members table: full profile field expansion
+-- Additive migration — no existing columns removed or renamed.
+--
+-- PO spec names the PK "membership_id" (user-defined member number,
+-- not uuid). The existing `member_number` column already satisfies
+-- this contract (text, not null, unique). The internal `id uuid`
+-- primary key is retained for FK integrity.
+--
+-- `dob` is added nullable for migration safety: existing rows have
+-- no date-of-birth value. Application-layer validation enforces
+-- not-null on new inserts.
+-- ============================================================
+
+alter table public.members
+    add column if not exists dob              date,
+    add column if not exists address_line1    text,
+    add column if not exists address_line2    text,
+    add column if not exists address_line3    text,
+    add column if not exists city             text,
+    add column if not exists county           text,
+    add column if not exists postal_code      text,
+    add column if not exists country          text,
+    add column if not exists email            text,
+    add column if not exists mobile_phone     text,
+    add column if not exists status           text not null default 'pending',
+    add column if not exists membership_category text,
+    add column if not exists home_club        text,
+    add column if not exists secondary_club   text,
+    add column if not exists handicap_index   numeric(4,1),
+    add column if not exists updated_at       timestamptz default now();
+
+-- Status check constraint (idempotent)
+alter table public.members drop constraint if exists members_status_check;
+alter table public.members add constraint members_status_check
+    check (status in ('active', 'inactive', 'pending'));
+
+-- Compound btree index for case-insensitive name search
+create index if not exists members_name_lower_idx
+    on public.members (lower(first_name), lower(last_name));
+
+-- membership_id (member_number) index already exists as members_member_number_idx
