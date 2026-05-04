@@ -64,10 +64,8 @@ export async function middleware(request: NextRequest) {
     const isSharedDashboardRoute =
       pathname === '/dashboard/membership-registration' ||
       pathname.startsWith('/dashboard/membership-registration/') ||
-      pathname === '/dashboard/new-member' ||
-      pathname.startsWith('/dashboard/new-member/') ||
-      pathname === '/dashboard/membership-renewal' ||
-      pathname.startsWith('/dashboard/membership-renewal/')
+      pathname === '/dashboard/membership-flow' ||
+      pathname.startsWith('/dashboard/membership-flow/')
 
     if (role === 'admin') {
       return NextResponse.next()
