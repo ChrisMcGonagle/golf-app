@@ -445,7 +445,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-014: Shared Four-Step Membership Form Shell And Context Handoff
 
-- **Status:** TESTING
+- **Status:** DONE
 - **Goal:** Introduce one shared 4-step membership form shell for the `Membership Form` path, used by both `New Membership` and `Membership Renewal` after membership type selection is confirmed, while preserving all required flow context.
 - **Scope:**
   - Route the `Membership Form` journey from the PBI-013 handoff into one shared 4-step form
@@ -481,7 +481,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-015: Personal Details Step With Validation
 
-- **Status:** READY
+- **Status:** DONE
 - **Goal:** Implement Step 1 of the shared membership form with the required Personal Details fields and step-level validation.
 - **Scope:**
   - Implement Step 1 fields:
@@ -518,7 +518,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-016: Membership Details Step With Conditional Field Behaviour
 
-- **Status:** READY
+- **Status:** DONE
 - **Goal:** Implement Step 2 of the shared membership form with the required Membership Details fields and the explicitly defined enable/disable and prefill behaviour.
 - **Scope:**
   - Implement Step 2 fields:
@@ -555,7 +555,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-017: Safeguarding And Medical Step Plus Final Placeholder Step
 
-- **Status:** READY
+- **Status:** DONE
 - **Goal:** Complete the remaining form journey by implementing Step 3 fields, keeping Step 4 as a placeholder, and validating navigation through to the end of the shared form.
 - **Scope:**
   - Implement Step 3 fields:
