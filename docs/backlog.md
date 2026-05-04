@@ -581,3 +581,94 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 - **Systems Affected:** frontend, tests
 - **Risk Level:** Low
 - **Estimated Effort:** S
+
+---
+
+## PBI-018: Membership Registration Action Cards UI Refresh
+
+- **Status:** READY
+- **Goal:** Redesign the existing membership-registration dashboard view with a clean, modern, card-based layout that presents `New Member` and `Membership Renewal` as the two primary actions.
+- **Scope:**
+  - Update the visual design of the existing `/dashboard/membership-registration` screen only
+  - Preserve the two existing primary actions: `New Member` and `Membership Renewal`
+  - Use a clean, minimal, modern light-theme design with generous whitespace and a soft neutral colour palette
+  - Use a very light grey page background, such as `#f9fafb`
+  - Display a small, light grey label reading `Choose an`
+  - Display a larger dark heading reading `Membership Action`
+  - Present each action as a vertically stacked card/button with:
+    - white background `#ffffff`
+    - very light grey border `#e5e7eb`
+    - large rounded corners of about `16px`
+    - subtle soft shadow
+  - Include card content with:
+    - a left-side circular icon container using light grey `#f3f4f6`
+    - a centred icon inside that container
+    - a right-side title using medium-weight dark text `#111827`
+    - a smaller muted description using grey `#6b7280`
+  - Add hover and interaction states with a slightly stronger shadow or a very subtle scale increase around `1.01`, smooth transition, and pointer cursor
+  - Centre the content on the page with a max width around `400px` to `500px`
+  - Keep the cards stacked vertically with about `16px` spacing between cards and about `24px` to `32px` spacing between the heading area and the cards
+  - Ensure the layout remains touch-friendly and works well on tablet and kiosk screens while staying vertically stacked
+- **Out of Scope:** Any routing changes, navigation changes, click-handler changes, flow logic changes, data changes, schema changes, or backend work
+- **Acceptance Criteria:**
+  - The existing membership-registration page is visually redesigned into a clean, modern card-based layout
+  - The page shows `Choose an` as small muted label text above the main heading `Membership Action`
+  - The page displays exactly two vertically stacked action cards: `New Member` and `Membership Renewal`
+  - Each card uses a white surface, light border, large rounded corners, and a subtle soft shadow
+  - Each card includes an icon container on the left plus title and description content on the right
+  - Hovering an action card gives clear but subtle visual feedback through shadow and/or very slight scale change
+  - The content is centred and constrained to an appropriate narrow width for a focused dashboard action screen
+  - The screen remains touch-friendly and visually usable on tablet and kiosk-sized displays
+  - Existing routes, navigation targets, and handlers for both actions remain unchanged
+  - The change is limited to the visual UI layer only
+- **Dependencies:** PBI-006
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** S
+
+---
+
+## PBI-019: Membership Flow Action Cards UI Refresh
+
+- **Status:** READY
+- **Goal:** Redesign the existing shared membership flow choice screen with a clean, modern, card-based layout that presents `Membership Form` and `Generate Email Form` as the two primary actions.
+- **Scope:**
+  - Update the visual design of the existing `/dashboard/membership-flow` screen only
+  - Preserve the two existing primary actions: `Membership Form` and `Generate Email Form`
+  - Use the same general visual approach as PBI-018 with a clean, minimal, modern light-theme design, generous whitespace, and a soft neutral colour palette
+  - Use a very light grey page background, such as `#f9fafb`
+  - Display a small, light grey label reading `Choose which`
+  - Display a larger dark heading reading `Form`
+  - Present each action as a vertically stacked card/button with:
+    - white background `#ffffff`
+    - very light grey border `#e5e7eb`
+    - large rounded corners of about `16px`
+    - subtle soft shadow
+  - Include card content with:
+    - a left-side circular icon container using light grey `#f3f4f6`
+    - a centred icon inside that container
+    - a right-side title using medium-weight dark text `#111827`
+    - a smaller muted description using grey `#6b7280`
+  - Add hover and interaction states with a slightly stronger shadow or a very subtle scale increase around `1.01`, smooth transition, and pointer cursor
+  - Centre the content on the page with a max width around `400px` to `500px`
+  - Keep the cards stacked vertically with about `16px` spacing between cards and about `24px` to `32px` spacing between the heading area and the cards
+  - Ensure the layout remains touch-friendly and works well on tablet and kiosk screens while staying vertically stacked
+  - Add a subtle back button in the bottom-left area of the page, visually secondary and consistent with the minimal design
+- **Out of Scope:** Any routing changes, navigation changes, click-handler changes, flow logic changes, state-handling changes, data changes, schema changes, or backend work
+- **Acceptance Criteria:**
+  - The existing membership-flow page is visually redesigned into a clean, modern card-based layout
+  - The page at `/dashboard/membership-flow` shows `Choose which` as small muted label text above the main heading `Form`
+  - The page displays exactly two vertically stacked action cards: `Membership Form` and `Generate Email Form`
+  - Each card uses a white surface, light border, large rounded corners, and a subtle soft shadow
+  - Each card includes an icon container on the left plus title and description content on the right
+  - Hovering an action card gives clear but subtle visual feedback through shadow and/or very slight scale change
+  - The content is centred and constrained to an appropriate narrow width for a focused action screen
+  - The screen remains touch-friendly and visually usable on tablet and kiosk-sized displays
+  - A subtle back button is shown in the bottom-left area of the page using the existing navigation behaviour only
+  - Existing routes, navigation targets, click handlers, flow logic, and state handling for both actions remain unchanged
+  - The back button preserves existing back-navigation behaviour only and does not introduce new routing or logic
+  - The change is limited to the visual UI layer only
+- **Dependencies:** PBI-011
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** S
