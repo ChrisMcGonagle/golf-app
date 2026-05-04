@@ -294,7 +294,7 @@ describe('MemberSearchAutocomplete component', () => {
 
     expect(screen.getByRole('link', { name: /alice brown/i })).toHaveAttribute(
       'href',
-      '/dashboard/membership/type?intent=renewal&action=email&memberId=1001&memberType=Full+Member&query=Alice',
+      '/dashboard/membership/type?intent=renewal&action=email&memberId=1001&memberType=Full+Member',
     );
   });
 });

@@ -34,7 +34,6 @@ function buildMemberTypeUrl(
   member: MemberFlowSearchResult,
   intent: MembershipIntent,
   action: MembershipAction,
-  query: string,
 ) {
   const params = new URLSearchParams({
     intent,
@@ -42,10 +41,6 @@ function buildMemberTypeUrl(
     memberId: member.MEMBER_NUMBER.toString(),
     memberType: member.MEMBERSHIP_TYPE ?? '',
   });
-
-  if (query.trim()) {
-    params.set('query', query.trim());
-  }
 
   return `/dashboard/membership/type?${params.toString()}`;
 }
@@ -148,7 +143,7 @@ export default function MemberSearchAutocomplete({
                 {results.map((member) => (
                   <li key={member.MEMBER_NUMBER}>
                     <Link
-                      href={buildMemberTypeUrl(member, intent, action, query)}
+                      href={buildMemberTypeUrl(member, intent, action)}
                       className="block px-4 py-3 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
                     >
                       <div className="flex items-center justify-between gap-4">
