@@ -676,3 +676,55 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 - **Systems Affected:** frontend
 - **Risk Level:** Low
 - **Estimated Effort:** S
+
+---
+
+## PBI-020: Membership Type Selection Grid
+
+- **Status:** READY
+- **Goal:** Design and implement a membership type selection screen with a clean, grid-based card layout that displays 10 membership type options as independently clickable buttons matching the finalized design system from PBI-018 and PBI-019.
+- **Scope:**
+  - Create `/dashboard/membership-type` page (or appropriate route based on membership flow)
+  - Use the same finalized colour palette and design language as PBI-018/019:
+    - Page background: `#f5f6f5`
+    - Label text: `#bab9bd`
+    - Header text: `#2b2b2b`
+    - Card background: `#ffffff`
+    - Card border: `#eeeeee`
+    - Card icon container: `#f0f0f0`
+    - Card title text: `#282828`
+    - Card description text: `#969696`
+  - Display a heading area with:
+    - Label: `Choose a` (colour `#bab9bd`, same font size as heading)
+    - Heading: `Membership Type` (colour `#2b2b2b`, same font size as label)
+  - Create a 2-column grid of membership type option cards:
+    - 10 cards total arranged in 2 columns (5 rows)
+    - Each card is a clickable button using the same card design: white background, light border, rounded corners (~16px), subtle shadow
+    - Each card includes:
+      - A left-side icon container (circular, light grey background `#f0f0f0`)
+      - A right-side title and description area
+      - Title: membership type name (dark text `#282828`)
+      - Description: brief membership type description (grey text `#969696`)
+    - Cards are smaller than the PBI-018/019 action cards to fit the grid while filling the available space
+    - Hover state: subtle shadow increase and/or scale, smooth transition, pointer cursor
+  - Clicking any membership type card directly navigates to the next step in the flow with that membership type selected (no separate `Continue` button required)
+  - The grid fills the same vertical space as the 2 action buttons do on the membership flow page
+  - Preserve the finalized kiosk-friendly, touch-friendly design from PBI-018/019
+  - The page is responsive: remains readable and touch-friendly on tablet and kiosk screens
+- **Out of Scope:** Form validation, backend persistence, membership type data source, membership type definitions, any routing or logic changes beyond direct selection navigation
+- **Acceptance Criteria:**
+  - The membership-type page is visually redesigned with a clean, modern grid-based card layout
+  - The page shows `Choose a` as muted label text and `Membership Type` as the main heading, using the exact finalized colours
+  - The page displays exactly 10 membership type option cards in a 2-column grid (5 rows)
+  - Each card uses white background, light border, rounded corners, and subtle shadow consistent with PBI-018/019
+  - Each card includes an icon container on the left and title/description on the right
+  - Hovering a card provides clear but subtle visual feedback through shadow and/or scale
+  - Each card is independently clickable and navigates directly to the next step with that membership type selected
+  - The grid fills the available space proportional to the 2-button layout on the membership flow page
+  - The screen remains touch-friendly and visually usable on tablet and kiosk-sized displays
+  - No separate `Continue` or `Next` button is required; selection via card click is the only navigation method
+  - The change is limited to the visual UI layer and direct card-selection routing only
+- **Dependencies:** PBI-018, PBI-019
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** M
