@@ -733,7 +733,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-021: Select User UI Refresh
 
-- **Status:** IN_PROGRESS
+- **Status:** DONE
 - **Goal:** Redesign the existing `/select-user` screen to match the finalized design system from PBI-018, PBI-019, and PBI-020 while preserving all existing navigation, routing, and business logic exactly as-is.
 - **Scope:**
   - Update the visual design of the existing `/select-user` page only
