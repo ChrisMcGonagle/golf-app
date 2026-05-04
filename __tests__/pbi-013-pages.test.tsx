@@ -11,7 +11,7 @@ jest.mock('@/components/MemberSearchAutocomplete', () => ({
     intent: string;
     action: string;
     initialQuery: string;
-    initialMembers: Array<{ id: string }>;
+    initialMembers: Array<{ MEMBER_NUMBER: number }>;
   }) => {
     const R = require('react');
     return R.createElement(
@@ -104,7 +104,7 @@ describe('MemberSearchPage (/dashboard/membership/member-search)', () => {
   });
 
   it('passes initial member results to the live search component', async () => {
-    mockSearchMembers.mockResolvedValue([{ id: "uuid-1", MEMBER_NUMBER: "M001", FIRST_NAME: "Jane", LAST_NAME: "Smith", MEMBERSHIP_TYPE: "Full Member" }]);
+    mockSearchMembers.mockResolvedValue([{ MEMBER_NUMBER: 1001, FIRST_NAME: "Jane", LAST_NAME: "Smith", MEMBERSHIP_TYPE: "Full Member" }]);
     render(await MemberSearchPage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'form', query: 'Jane' }) }));
     expect(screen.getByTestId('member-search-count').textContent).toBe('1');
   });

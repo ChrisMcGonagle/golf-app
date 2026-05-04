@@ -10,18 +10,23 @@ export async function searchMembers(query: string): Promise<MemberFlowSearchResu
 
   try {
     const supabase = createServiceRoleClient();
+    const nameFilter = `"FIRST_NAME".ilike.%${q}%,"LAST_NAME".ilike.%${q}%`;
+    const filter = /^\d+$/.test(q) ? `${nameFilter},"MEMBER_NUMBER".eq.${parseInt(q, 10)}` : nameFilter;
+
     const { data, error } = await supabase
       .from('members')
-      .select('id, MEMBER_NUMBER, FIRST_NAME, LAST_NAME, MEMBERSHIP_TYPE')
-      .or(`FIRST_NAME.ilike.%${q}%,LAST_NAME.ilike.%${q}%,MEMBER_NUMBER.ilike.%${q}%`)
+      .select('"MEMBER_NUMBER", "FIRST_NAME", "LAST_NAME", "MEMBERSHIP_TYPE"')
+      .or(filter)
       .limit(20);
 
     if (error) {
+      console.error('[searchMembers] Supabase error:', error.message, error.code);
       return [];
     }
 
     return (data as MemberFlowSearchResult[]) ?? [];
-  } catch {
+  } catch (err) {
+    console.error('[searchMembers] Unexpected error:', err);
     return [];
   }
 }

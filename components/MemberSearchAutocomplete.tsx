@@ -39,7 +39,7 @@ function buildMemberTypeUrl(
   const params = new URLSearchParams({
     intent,
     action,
-    memberId: member.id,
+    memberId: member.MEMBER_NUMBER.toString(),
     memberType: member.MEMBERSHIP_TYPE ?? '',
   });
 
@@ -146,7 +146,7 @@ export default function MemberSearchAutocomplete({
             {!isLoading && results.length > 0 && (
               <ul className="max-h-80 overflow-y-auto py-2">
                 {results.map((member) => (
-                  <li key={member.id}>
+                  <li key={member.MEMBER_NUMBER}>
                     <Link
                       href={buildMemberTypeUrl(member, intent, action, query)}
                       className="block px-4 py-3 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"

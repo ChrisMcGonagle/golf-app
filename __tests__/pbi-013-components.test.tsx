@@ -182,8 +182,7 @@ describe('MemberSearchAutocomplete component', () => {
       json: async () => ({
         members: [
           {
-            id: 'member-1',
-            MEMBER_NUMBER: 'M001',
+            MEMBER_NUMBER: 1001,
             FIRST_NAME: 'Alice',
             LAST_NAME: 'Brown',
             MEMBERSHIP_TYPE: 'Full Member',
@@ -211,7 +210,7 @@ describe('MemberSearchAutocomplete component', () => {
     });
 
     expect(screen.getByText('Alice Brown')).toBeInTheDocument();
-    expect(screen.getByText(/member no: M001/i)).toBeInTheDocument();
+    expect(screen.getByText(/member no: 1001/i)).toBeInTheDocument();
   });
 
   it('renders a no-results state for a valid query with no matches', async () => {
@@ -249,8 +248,7 @@ describe('MemberSearchAutocomplete component', () => {
         initialQuery="Alice"
         initialMembers={[
           {
-            id: 'member-1',
-            MEMBER_NUMBER: 'M001',
+            MEMBER_NUMBER: 1001,
             FIRST_NAME: 'Alice',
             LAST_NAME: 'Brown',
             MEMBERSHIP_TYPE: 'Full Member',
@@ -285,8 +283,7 @@ describe('MemberSearchAutocomplete component', () => {
         initialQuery="Alice"
         initialMembers={[
           {
-            id: 'member-1',
-            MEMBER_NUMBER: 'M001',
+            MEMBER_NUMBER: 1001,
             FIRST_NAME: 'Alice',
             LAST_NAME: 'Brown',
             MEMBERSHIP_TYPE: 'Full Member',
@@ -297,7 +294,7 @@ describe('MemberSearchAutocomplete component', () => {
 
     expect(screen.getByRole('link', { name: /alice brown/i })).toHaveAttribute(
       'href',
-      '/dashboard/membership/type?intent=renewal&action=email&memberId=member-1&memberType=Full+Member&query=Alice',
+      '/dashboard/membership/type?intent=renewal&action=email&memberId=1001&memberType=Full+Member&query=Alice',
     );
   });
 });
@@ -328,7 +325,7 @@ describe('searchMembers action', () => {
 
   it('returns members from Supabase for valid query', async () => {
     const mockMembers = [
-      { id: 'id-1', MEMBER_NUMBER: 'M001', FIRST_NAME: 'Alice', LAST_NAME: 'Brown', MEMBERSHIP_TYPE: 'Full Member' },
+      { MEMBER_NUMBER: 1001, FIRST_NAME: 'Alice', LAST_NAME: 'Brown', MEMBERSHIP_TYPE: 'Full Member' },
     ];
     const mockLimit = jest.fn().mockResolvedValue({ data: mockMembers, error: null });
     const mockOr = jest.fn().mockReturnValue({ limit: mockLimit });
@@ -341,8 +338,8 @@ describe('searchMembers action', () => {
     const result = await searchMembers('Alice');
     expect(result).toEqual(mockMembers);
     expect(mockFrom).toHaveBeenCalledWith('members');
-    expect(mockSelect).toHaveBeenCalledWith('id, MEMBER_NUMBER, FIRST_NAME, LAST_NAME, MEMBERSHIP_TYPE');
-    expect(mockOr).toHaveBeenCalledWith('FIRST_NAME.ilike.%Alice%,LAST_NAME.ilike.%Alice%,MEMBER_NUMBER.ilike.%Alice%');
+    expect(mockSelect).toHaveBeenCalledWith('"MEMBER_NUMBER", "FIRST_NAME", "LAST_NAME", "MEMBERSHIP_TYPE"');
+    expect(mockOr).toHaveBeenCalledWith('"FIRST_NAME".ilike.%Alice%,"LAST_NAME".ilike.%Alice%');
   });
 
   it('returns empty array when Supabase returns an error', async () => {
