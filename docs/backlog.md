@@ -728,3 +728,49 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 - **Systems Affected:** frontend
 - **Risk Level:** Low
 - **Estimated Effort:** M
+
+---
+
+## PBI-021: Select User UI Refresh
+
+- **Status:** READY
+- **Goal:** Redesign the existing `/select-user` screen to match the finalized design system from PBI-018, PBI-019, and PBI-020 while preserving all existing navigation, routing, and business logic exactly as-is.
+- **Scope:**
+  - Update the visual design of the existing `/select-user` page only
+  - Use the same finalized colour palette as PBI-018/019/020:
+    - Page background: `#f5f6f5`
+    - Label text: `#bab9bd`
+    - Header text: `#2b2b2b`
+    - Card background: `#ffffff`
+    - Card border: `#eeeeee`
+    - Card icon container: `#f0f0f0`
+    - Card title text: `#282828`
+    - Card description text: `#969696`
+  - Display a heading area with:
+    - Label: `Select` in colour `#bab9bd`, same font size as heading (text-6xl)
+    - Heading: `User` in colour `#2b2b2b`, same font size as label
+  - Display user profile cards in a 3-column grid:
+    - All cards the same height
+    - Each card uses white background `#ffffff`, border `#eeeeee`, rounded-3xl corners, and shadow `0 4px 12px rgba(0, 0, 0, 0.1)`
+    - Each card shows the user avatar or initials fallback and the user display name
+    - Locked profiles retain their "Locked" badge visual
+    - Cards fill the available horizontal space evenly (3 across)
+    - Hover state: `scale-[1.02]` and `shadow-lg`, smooth transition, pointer cursor
+  - Ensure the layout is centered vertically and horizontally
+  - Ensure the design is kiosk-friendly and touch-friendly
+- **Out of Scope:** Any routing changes, navigation changes, click-handler changes, lock logic changes, PIN flow changes, session logic, database changes, or backend work. The `?error=locked` query param rendering must remain unchanged.
+- **Acceptance Criteria:**
+  - The `/select-user` page is visually redesigned with the finalized design system
+  - The page shows `Select` as muted label text and `User` as the main heading using the exact finalized colours and same font size
+  - User profiles are displayed in a 3-column grid of equal-height cards
+  - Each card uses the finalized design: white surface, light border, rounded corners, subtle shadow
+  - Locked profiles retain their locked badge and remain non-interactive
+  - The grid is centered and fills available space
+  - Hover states are present on interactive cards
+  - The screen is touch-friendly and kiosk-friendly
+  - All existing routing, navigation, lock logic, PIN flow, and error display behaviour is unchanged
+  - The change is limited to the visual UI layer only
+- **Dependencies:** PBI-003, PBI-018, PBI-019, PBI-020
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** S
