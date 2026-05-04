@@ -445,7 +445,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-014: Shared Four-Step Membership Form Shell And Context Handoff
 
-- **Status:** IN_PROGRESS
+- **Status:** DEV_DONE
 - **Goal:** Introduce one shared 4-step membership form shell for the `Membership Form` path, used by both `New Membership` and `Membership Renewal` after membership type selection is confirmed, while preserving all required flow context.
 - **Scope:**
   - Route the `Membership Form` journey from the PBI-013 handoff into one shared 4-step form

@@ -10,7 +10,7 @@ interface Step1PersonalProps {
 export default function Step1Personal({
   onValidationChange,
 }: Step1PersonalProps) {
-  const { step1, setStep1 } = useFormContext();
+  const { step1, setStep1, flow } = useFormContext();
   const [errors, setErrors] = useState<Partial<Record<keyof Step1Data, string>>>({});
 
   const validateStep = () => {
@@ -68,6 +68,14 @@ export default function Step1Personal({
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold text-gray-900">Personal Details</h3>
+
+      {/* Display flow context to verify it's available */}
+      <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+        <p className="text-xs text-blue-900">
+          <strong>Journey:</strong> {flow.intent === 'renewal' ? 'Renewal' : 'New Membership'} - {flow.typeId}
+          {flow.memberId && ` - Member: ${flow.memberId}`}
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div>

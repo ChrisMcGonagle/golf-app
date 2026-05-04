@@ -21,7 +21,10 @@ export default async function MembershipFormPage({ searchParams }: MembershipFor
   const currentStep = step ? parseInt(step, 10) : 1;
   const isValidStep = currentStep >= 1 && currentStep <= 4;
 
-  if (!isValidIntent || !isValidTypeId || !isValidStep) {
+  // For renewal, memberId is required
+  const isValidRenewal = intent === 'renewal' && memberId ? true : intent === 'new';
+
+  if (!isValidIntent || !isValidTypeId || !isValidStep || !isValidRenewal) {
     const backParams = new URLSearchParams({ intent: intent ?? '', action: 'form' });
     if (memberId) backParams.set('memberId', memberId);
     if (typeId) backParams.set('memberType', decodeURIComponent(typeId));
@@ -42,11 +45,16 @@ export default async function MembershipFormPage({ searchParams }: MembershipFor
     );
   }
 
+  // Decode typeId for display in the form
+  const decodedTypeId = decodeURIComponent(typeId);
+
   return (
-    <FormProvider>
-      <FormShell
-        currentStep={currentStep}
-      />
+    <FormProvider
+      intent={intent as 'new' | 'renewal'}
+      typeId={decodedTypeId}
+      memberId={memberId}
+    >
+      <FormShell currentStep={currentStep} />
     </FormProvider>
   );
 }

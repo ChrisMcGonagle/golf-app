@@ -11,11 +11,8 @@ describe('Step1Personal', () => {
 
   it('renders all 13 personal detail fields', () => {
     render(
-      <FormProvider>
-        <Step1Personal
-          onValidationChange={mockOnValidationChange}
-          intent="new"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <Step1Personal onValidationChange={mockOnValidationChange} />
       </FormProvider>
     );
 
@@ -29,11 +26,8 @@ describe('Step1Personal', () => {
 
   it('shows validation error for empty required fields', async () => {
     render(
-      <FormProvider>
-        <Step1Personal
-          onValidationChange={mockOnValidationChange}
-          intent="new"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <Step1Personal onValidationChange={mockOnValidationChange} />
       </FormProvider>
     );
 
@@ -44,11 +38,8 @@ describe('Step1Personal', () => {
 
   it('validates email format', async () => {
     render(
-      <FormProvider>
-        <Step1Personal
-          onValidationChange={jest.fn()}
-          intent="new"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <Step1Personal onValidationChange={jest.fn()} />
       </FormProvider>
     );
 
@@ -59,16 +50,35 @@ describe('Step1Personal', () => {
       expect(screen.getByText(/Invalid email format/i)).toBeInTheDocument();
     });
   });
+
+  it('displays flow context on step 1', () => {
+    render(
+      <FormProvider intent="new" typeId="Full Member">
+        <Step1Personal onValidationChange={jest.fn()} />
+      </FormProvider>
+    );
+
+    expect(screen.getByText(/New Membership/i)).toBeInTheDocument();
+    expect(screen.getByText(/Full Member/i)).toBeInTheDocument();
+  });
+
+  it('displays renewal member context when present', () => {
+    render(
+      <FormProvider intent="renewal" typeId="Standard Member" memberId="member-789">
+        <Step1Personal onValidationChange={jest.fn()} />
+      </FormProvider>
+    );
+
+    expect(screen.getByText(/Renewal/i)).toBeInTheDocument();
+    expect(screen.getByText(/member-789/i)).toBeInTheDocument();
+  });
 });
 
 describe('Step2Membership', () => {
   it('renders all membership detail fields', () => {
     const { container } = render(
-      <FormProvider>
-        <Step2Membership
-          onValidationChange={jest.fn()}
-          intent="new"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <Step2Membership onValidationChange={jest.fn()} />
       </FormProvider>
     );
 
@@ -80,11 +90,8 @@ describe('Step2Membership', () => {
 
   it('shows validation errors for missing required fields', async () => {
     render(
-      <FormProvider>
-        <Step2Membership
-          onValidationChange={jest.fn()}
-          intent="new"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <Step2Membership onValidationChange={jest.fn()} />
       </FormProvider>
     );
 
@@ -95,11 +102,8 @@ describe('Step2Membership', () => {
 
   it('disables homeClub when isCruitHome is Yes', async () => {
     const { container } = render(
-      <FormProvider>
-        <Step2Membership
-          onValidationChange={jest.fn()}
-          intent="new"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <Step2Membership onValidationChange={jest.fn()} />
       </FormProvider>
     );
 
@@ -114,11 +118,8 @@ describe('Step2Membership', () => {
 
   it('disables ghinNumber when homeClub is empty', () => {
     const { container } = render(
-      <FormProvider>
-        <Step2Membership
-          onValidationChange={jest.fn()}
-          intent="new"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <Step2Membership onValidationChange={jest.fn()} />
       </FormProvider>
     );
 
@@ -130,11 +131,8 @@ describe('Step2Membership', () => {
 describe('Step3Safeguarding', () => {
   it('renders all safeguarding fields', () => {
     render(
-      <FormProvider>
-        <Step3Safeguarding
-          onValidationChange={jest.fn()}
-          intent="new"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <Step3Safeguarding onValidationChange={jest.fn()} />
       </FormProvider>
     );
 
@@ -145,11 +143,8 @@ describe('Step3Safeguarding', () => {
 
   it('validates required emergency contact fields', async () => {
     render(
-      <FormProvider>
-        <Step3Safeguarding
-          onValidationChange={jest.fn()}
-          intent="new"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <Step3Safeguarding onValidationChange={jest.fn()} />
       </FormProvider>
     );
 
@@ -160,11 +155,8 @@ describe('Step3Safeguarding', () => {
 
   it('validates phone format', async () => {
     const { container } = render(
-      <FormProvider>
-        <Step3Safeguarding
-          onValidationChange={jest.fn()}
-          intent="new"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <Step3Safeguarding onValidationChange={jest.fn()} />
       </FormProvider>
     );
 
@@ -180,12 +172,24 @@ describe('Step3Safeguarding', () => {
 describe('Step4Placeholder', () => {
   it('renders placeholder content', () => {
     render(
-      <FormProvider>
-        <Step4Placeholder intent="new" />
+      <FormProvider intent="new" typeId="Full Member">
+        <Step4Placeholder />
       </FormProvider>
     );
 
     expect(screen.getByText(/Additional Info and Consent/i)).toBeInTheDocument();
     expect(screen.getByText(/Consent information/i)).toBeInTheDocument();
+  });
+
+  it('displays flow context on step 4', () => {
+    render(
+      <FormProvider intent="renewal" typeId="Standard Member" memberId="member-456">
+        <Step4Placeholder />
+      </FormProvider>
+    );
+
+    expect(screen.getByText(/Renewal/i)).toBeInTheDocument();
+    expect(screen.getByText(/Standard Member/i)).toBeInTheDocument();
+    expect(screen.getByText(/member-456/i)).toBeInTheDocument();
   });
 });

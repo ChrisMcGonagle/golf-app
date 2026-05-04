@@ -26,12 +26,8 @@ describe('FormShell', () => {
 
   it('renders step 1 indicator', () => {
     render(
-      <FormProvider>
-        <FormShell
-          currentStep={1}
-          intent="new"
-          typeId="Full Member"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <FormShell currentStep={1} />
       </FormProvider>
     );
     expect(screen.getByText(/Step 1 of 4:/i)).toBeInTheDocument();
@@ -39,12 +35,8 @@ describe('FormShell', () => {
 
   it('renders back button disabled on step 1', () => {
     render(
-      <FormProvider>
-        <FormShell
-          currentStep={1}
-          intent="new"
-          typeId="Full Member"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <FormShell currentStep={1} />
       </FormProvider>
     );
     const backButton = screen.getByRole('button', { name: /Back/i });
@@ -53,12 +45,8 @@ describe('FormShell', () => {
 
   it('renders back button enabled on step 2', () => {
     render(
-      <FormProvider>
-        <FormShell
-          currentStep={2}
-          intent="new"
-          typeId="Full Member"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <FormShell currentStep={2} />
       </FormProvider>
     );
     const backButton = screen.getByRole('button', { name: /Back/i });
@@ -68,12 +56,8 @@ describe('FormShell', () => {
   it('renders next button on steps 1-3', () => {
     for (let step = 1; step <= 3; step++) {
       const { unmount } = render(
-        <FormProvider>
-          <FormShell
-            currentStep={step}
-            intent="new"
-            typeId="Full Member"
-          />
+        <FormProvider intent="new" typeId="Full Member">
+          <FormShell currentStep={step} />
         </FormProvider>
       );
       expect(screen.getByRole('button', { name: /Next/i })).toBeInTheDocument();
@@ -83,12 +67,8 @@ describe('FormShell', () => {
 
   it('renders complete button on step 4', () => {
     render(
-      <FormProvider>
-        <FormShell
-          currentStep={4}
-          intent="new"
-          typeId="Full Member"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <FormShell currentStep={4} />
       </FormProvider>
     );
     expect(screen.getByRole('button', { name: /Complete/i })).toBeInTheDocument();
@@ -97,12 +77,8 @@ describe('FormShell', () => {
 
   it('disables next button when step is invalid', () => {
     render(
-      <FormProvider>
-        <FormShell
-          currentStep={1}
-          intent="new"
-          typeId="Full Member"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <FormShell currentStep={1} />
       </FormProvider>
     );
     const nextButton = screen.getByRole('button', { name: /Next/i });
@@ -112,12 +88,8 @@ describe('FormShell', () => {
 
   it('renders step 1 content', () => {
     render(
-      <FormProvider>
-        <FormShell
-          currentStep={1}
-          intent="new"
-          typeId="Full Member"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <FormShell currentStep={1} />
       </FormProvider>
     );
     expect(screen.getByLabelText(/First Name/i)).toBeInTheDocument();
@@ -126,12 +98,8 @@ describe('FormShell', () => {
 
   it('renders step 2 content', () => {
     render(
-      <FormProvider>
-        <FormShell
-          currentStep={2}
-          intent="new"
-          typeId="Full Member"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <FormShell currentStep={2} />
       </FormProvider>
     );
     expect(screen.getByLabelText(/Will Cruit Island/i)).toBeInTheDocument();
@@ -139,12 +107,8 @@ describe('FormShell', () => {
 
   it('renders step 3 content', () => {
     render(
-      <FormProvider>
-        <FormShell
-          currentStep={3}
-          intent="new"
-          typeId="Full Member"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <FormShell currentStep={3} />
       </FormProvider>
     );
     expect(screen.getByLabelText(/Emergency Contact Name/i)).toBeInTheDocument();
@@ -152,12 +116,8 @@ describe('FormShell', () => {
 
   it('renders step 4 placeholder content', () => {
     render(
-      <FormProvider>
-        <FormShell
-          currentStep={4}
-          intent="new"
-          typeId="Full Member"
-        />
+      <FormProvider intent="new" typeId="Full Member">
+        <FormShell currentStep={4} />
       </FormProvider>
     );
     expect(screen.getByText(/Consent information/i)).toBeInTheDocument();
@@ -166,17 +126,32 @@ describe('FormShell', () => {
   it('renders step indicator for each step', () => {
     for (let step = 1; step <= 4; step++) {
       const { unmount } = render(
-        <FormProvider>
-          <FormShell
-            currentStep={step}
-            intent="new"
-            typeId="Full Member"
-          />
+        <FormProvider intent="new" typeId="Full Member">
+          <FormShell currentStep={step} />
         </FormProvider>
       );
       expect(screen.getByText(new RegExp(`Step ${step} of 4`))).toBeInTheDocument();
       unmount();
     }
+  });
+
+  it('displays flow context (journey type) on step 1', () => {
+    render(
+      <FormProvider intent="new" typeId="Full Member">
+        <FormShell currentStep={1} />
+      </FormProvider>
+    );
+    expect(screen.getByText(/New Membership/i)).toBeInTheDocument();
+  });
+
+  it('displays flow context for renewal journey', () => {
+    render(
+      <FormProvider intent="renewal" typeId="Standard Member" memberId="member-123">
+        <FormShell currentStep={1} />
+      </FormProvider>
+    );
+    expect(screen.getByText(/Renewal/i)).toBeInTheDocument();
+    expect(screen.getByText(/member-123/i)).toBeInTheDocument();
   });
 });
 
@@ -189,13 +164,8 @@ describe('FormShell with memberId (renewal)', () => {
 
   it('renders form with memberId for renewal flow', () => {
     render(
-      <FormProvider>
-        <FormShell
-          currentStep={1}
-          intent="renewal"
-          typeId="Full Member"
-          memberId="member-123"
-        />
+      <FormProvider intent="renewal" typeId="Full Member" memberId="member-123">
+        <FormShell currentStep={1} />
       </FormProvider>
     );
     expect(screen.getByText(/Step 1 of 4:/i)).toBeInTheDocument();

@@ -37,13 +37,22 @@ export interface Step3Data {
   additionalAssistance: string;
 }
 
+export interface FlowContext {
+  intent: 'new' | 'renewal';
+  typeId: string;
+  memberId?: string;
+}
+
 export interface FormContextType {
+  // Form data
   step1: Step1Data;
   step2: Step2Data;
   step3: Step3Data;
   setStep1: (data: Partial<Step1Data>) => void;
   setStep2: (data: Partial<Step2Data>) => void;
   setStep3: (data: Partial<Step3Data>) => void;
+  // Flow context
+  flow: FlowContext;
 }
 
 const FormContext = createContext<FormContextType | undefined>(undefined);
@@ -83,7 +92,19 @@ const initialStep3: Step3Data = {
   additionalAssistance: '',
 };
 
-export function FormProvider({ children }: { children: ReactNode }) {
+interface FormProviderProps {
+  children: ReactNode;
+  intent: 'new' | 'renewal';
+  typeId: string;
+  memberId?: string;
+}
+
+export function FormProvider({
+  children,
+  intent,
+  typeId,
+  memberId,
+}: FormProviderProps) {
   const [step1, setStep1State] = useState<Step1Data>(initialStep1);
   const [step2, setStep2State] = useState<Step2Data>(initialStep2);
   const [step3, setStep3State] = useState<Step3Data>(initialStep3);
@@ -100,6 +121,12 @@ export function FormProvider({ children }: { children: ReactNode }) {
     setStep3State((prev) => ({ ...prev, ...data }));
   };
 
+  const flow: FlowContext = {
+    intent,
+    typeId,
+    memberId,
+  };
+
   const value: FormContextType = {
     step1,
     step2,
@@ -107,6 +134,7 @@ export function FormProvider({ children }: { children: ReactNode }) {
     setStep1,
     setStep2,
     setStep3,
+    flow,
   };
 
   return <FormContext.Provider value={value}>{children}</FormContext.Provider>;

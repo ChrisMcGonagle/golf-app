@@ -33,7 +33,7 @@ describe('Membership Form Page - Integration', () => {
     );
 
     const searchParams = Promise.resolve({
-      typeId: 'Full+Member',
+      typeId: 'Full Member',
       step: '1',
     });
 
@@ -48,7 +48,7 @@ describe('Membership Form Page - Integration', () => {
 
     const searchParams = Promise.resolve({
       intent: 'new',
-      typeId: 'Full+Member',
+      typeId: 'Full Member',
       step: '1',
     });
 
@@ -65,7 +65,7 @@ describe('Membership Form Page - Integration', () => {
 
     const searchParams = Promise.resolve({
       intent: 'renewal',
-      typeId: 'Full+Member',
+      typeId: 'Full Member',
       memberId: 'member-123',
       step: '1',
     });
@@ -83,7 +83,7 @@ describe('Membership Form Page - Integration', () => {
 
     const searchParams = Promise.resolve({
       intent: 'new',
-      typeId: 'Full+Member',
+      typeId: 'Full Member',
     });
 
     render(await MembershipFormPage({ searchParams }));
@@ -99,7 +99,7 @@ describe('Membership Form Page - Integration', () => {
 
     const searchParams = Promise.resolve({
       intent: 'new',
-      typeId: 'Standard+Member',
+      typeId: 'Standard Member',
       step: '1',
     });
 
@@ -116,7 +116,7 @@ describe('Membership Form Page - Integration', () => {
 
     const searchParams = Promise.resolve({
       intent: 'renewal',
-      typeId: 'Full+Member',
+      typeId: 'Full Member',
       memberId: 'member-789',
       step: '2',
     });
@@ -134,11 +134,64 @@ describe('Membership Form Page - Integration', () => {
 
     const searchParams = Promise.resolve({
       intent: 'new',
-      typeId: 'Full+Member',
+      typeId: 'Full Member',
       step: '5',
     });
 
     render(await MembershipFormPage({ searchParams }));
     expect(screen.getByText(/Invalid form parameters/i)).toBeInTheDocument();
+  });
+
+  it('shows error when renewal missing memberId', async () => {
+    (useSearchParams as jest.Mock).mockReturnValue(
+      new URLSearchParams('intent=renewal&typeId=Full+Member&step=1')
+    );
+
+    const searchParams = Promise.resolve({
+      intent: 'renewal',
+      typeId: 'Full Member',
+      step: '1',
+    });
+
+    render(await MembershipFormPage({ searchParams }));
+    expect(screen.getByText(/Invalid form parameters/i)).toBeInTheDocument();
+  });
+
+  it('displays flow context for new membership flow', async () => {
+    (useSearchParams as jest.Mock).mockReturnValue(
+      new URLSearchParams('intent=new&typeId=Full+Member&step=1')
+    );
+
+    const searchParams = Promise.resolve({
+      intent: 'new',
+      typeId: 'Full Member',
+      step: '1',
+    });
+
+    render(await MembershipFormPage({ searchParams }));
+    await waitFor(() => {
+      expect(screen.getByText(/New Membership/i)).toBeInTheDocument();
+      expect(screen.getByText(/Full Member/i)).toBeInTheDocument();
+    });
+  });
+
+  it('displays flow context for renewal flow with selected member', async () => {
+    (useSearchParams as jest.Mock).mockReturnValue(
+      new URLSearchParams('intent=renewal&typeId=Standard+Member&memberId=member-456&step=4')
+    );
+
+    const searchParams = Promise.resolve({
+      intent: 'renewal',
+      typeId: 'Standard Member',
+      memberId: 'member-456',
+      step: '4',
+    });
+
+    render(await MembershipFormPage({ searchParams }));
+    await waitFor(() => {
+      expect(screen.getByText(/Renewal/i)).toBeInTheDocument();
+      expect(screen.getByText(/Standard Member/i)).toBeInTheDocument();
+      expect(screen.getByText(/member-456/i)).toBeInTheDocument();
+    });
   });
 });
