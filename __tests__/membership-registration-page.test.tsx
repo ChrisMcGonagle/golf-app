@@ -38,13 +38,13 @@ describe('PBI-006: MembershipRegistrationPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows a "New Membership" link that navigates to /dashboard/new-member', () => {
+  it('shows a "New Membership" link that navigates to /dashboard/membership-flow?intent=new', () => {
     const link = screen.getByRole('link', { name: /new membership/i });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute('href', '/dashboard/membership-flow?intent=new');
   });
 
-  it('shows a "Membership Renewal" link that navigates to /dashboard/membership-renewal', () => {
+  it('shows a "Membership Renewal" link that navigates to /dashboard/membership-flow?intent=renewal', () => {
     const link = screen.getByRole('link', { name: /membership renewal/i });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute('href', '/dashboard/membership-flow?intent=renewal');

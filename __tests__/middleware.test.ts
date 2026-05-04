@@ -224,16 +224,6 @@ describe('middleware role-based protection without database access', () => {
     )
   })
 
-  it('allows a staff cookie to access /dashboard/new-member', async () => {
-    mockedUnsealData.mockResolvedValueOnce(staffSession)
-    const request = createMockRequest('/dashboard/new-member', 'valid-staff-cookie')
-
-    await middleware(request)
-
-    expect(NextResponse.next).toHaveBeenCalledTimes(1)
-    expect(NextResponse.redirect).not.toHaveBeenCalled()
-  })
-
   it('allows a staff cookie to access /dashboard/membership-flow', async () => {
     mockedUnsealData.mockResolvedValueOnce(staffSession)
     const request = createMockRequest('/dashboard/membership-flow', 'valid-staff-cookie')
@@ -254,13 +244,4 @@ describe('middleware role-based protection without database access', () => {
     expect(NextResponse.redirect).not.toHaveBeenCalled()
   })
 
-  it('allows an admin cookie to access /dashboard/new-member', async () => {
-    mockedUnsealData.mockResolvedValueOnce(adminSession)
-    const request = createMockRequest('/dashboard/new-member', 'valid-admin-cookie')
-
-    await middleware(request)
-
-    expect(NextResponse.next).toHaveBeenCalledTimes(1)
-    expect(NextResponse.redirect).not.toHaveBeenCalled()
-  })
 })
