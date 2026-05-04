@@ -390,7 +390,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-012: Unify Entry-Point Routing To Shared Choice Step
 
-- **Status:** DEV_DONE
+- **Status:** TESTING
 - **Goal:** Refactor all supported membership entry points so they route into the shared choice-step flow instead of using separate per-entry navigation logic.
 - **Scope:**
   - Update the membership-registration entry buttons to use the shared flow
