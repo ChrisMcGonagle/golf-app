@@ -1,12 +1,12 @@
 /**
- * Tests for MembershipRegistrationPage (PBI-006)
+ * Tests for MembershipRegistrationPage (PBI-006, updated for PBI-018)
  *
  * Acceptance Criteria:
  * 1. Page renders without errors
- * 2. "New Membership" button is visible
- * 3. "Membership Renewal" button is visible
+ * 2. "New Member" link is visible
+ * 3. "Membership Renewal" link is visible
  * 4. DashboardSidebar is NOT rendered on this page
- * 5. Page has appropriate heading ("Membership Registration")
+ * 5. Page has the updated heading stack ("Choose a" + "Membership")
  */
 
 import React from 'react';
@@ -32,14 +32,13 @@ describe('PBI-006: MembershipRegistrationPage', () => {
     expect(document.body).toBeTruthy();
   });
 
-  it('displays the "Membership Registration" heading', () => {
-    expect(
-      screen.getByRole('heading', { name: /membership registration/i })
-    ).toBeInTheDocument();
+  it('displays the updated heading stack', () => {
+    expect(screen.getByText(/choose a/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^membership$/i })).toBeInTheDocument();
   });
 
-  it('shows a "New Membership" link that navigates to /dashboard/membership-flow?intent=new', () => {
-    const link = screen.getByRole('link', { name: /new membership/i });
+  it('shows a "New Member" link that navigates to /dashboard/membership-flow?intent=new', () => {
+    const link = screen.getByRole('link', { name: /new member/i });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute('href', '/dashboard/membership-flow?intent=new');
   });
