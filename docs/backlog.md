@@ -631,7 +631,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-019: Membership Flow Action Cards UI Refresh
 
-- **Status:** IN_PROGRESS
+- **Status:** DONE
 - **Goal:** Redesign the existing shared membership flow choice screen with a clean, modern, card-based layout that presents `Membership Form` and `Generate Email Form` as the two primary actions.
 - **Scope:**
   - Update the visual design of the existing `/dashboard/membership-flow` screen only
