@@ -926,3 +926,32 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 - **Systems Affected:** frontend, backend
 - **Risk Level:** Medium
 - **Estimated Effort:** S
+
+## PBI-026: Hide Sign-Off Header Within Membership Flow Screens
+
+- **Status:** READY
+- **Goal:** Remove the existing sign-off header/button from membership-flow screens so the user stays in a focused, uninterrupted flow, while keeping the same sign-off control available on general dashboard screens outside that flow.
+- **Scope:**
+  - Update the existing authenticated layout/header visibility behavior so the sign-off header/button is hidden when the current screen is part of the membership flow
+  - Apply this behavior to the existing `choosing the form` screen
+  - Apply this behavior to the existing `choosing the membership type` screen
+  - Apply this behavior to the existing multi-step membership form screens
+  - Keep the sign-off header/button visible on dashboard screens that are not part of the membership flow
+  - Preserve existing sign-off behavior and session-clearing behavior where the control remains visible
+  - Keep the change limited to UI/layout/routing-context behavior only
+- **Out of Scope:**
+  - Any change to authentication, PIN validation, session creation, inactivity timeout, or sign-off server-side logic
+  - Any redesign of the membership flow pages beyond removing the sign-off header/button in the specified contexts
+  - Any change to dashboard information architecture, membership-flow business logic, or route access control
+- **Acceptance Criteria:**
+  - On the `choosing the form` screen, the sign-off header/button is not rendered
+  - On the `choosing the membership type` screen, the sign-off header/button is not rendered
+  - On all steps of the existing multi-step membership form, the sign-off header/button is not rendered
+  - On general dashboard screens outside the membership flow, the sign-off header/button remains rendered and usable
+  - The visibility rule is determined by the user being inside the membership flow context, not by changes to authentication state
+  - Existing sign-off behavior continues to work unchanged everywhere the sign-off control remains available
+  - No membership-flow screen shows the sign-off header/button during normal navigation through that flow
+- **Dependencies:** PBI-003d, PBI-011, PBI-020, PBI-023
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** S
