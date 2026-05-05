@@ -817,7 +817,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-023: Membership Form Stepper Layout Refresh
 
-- **Status:** DEV_DONE
+- **Status:** DONE
 - **Goal:** Introduce a horizontal step progress indicator at the top of the existing multi-step membership form, wizard-style, while keeping the styling consistent with the current UI refreshes.
 - **Scope:**
   - Add a horizontal row of steps at the top of the form
@@ -863,3 +863,95 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 - **Systems Affected:** frontend
 - **Risk Level:** Medium
 - **Estimated Effort:** M
+
+## PBI-024: Membership Form Signature Capture
+
+- **Status:** READY
+- **Goal:** Add a signature capture field to the existing golf club membership form so applicants must provide a handwritten signature before final submission.
+- **Scope:**
+  - Add a signature input area to the existing membership form flow, aligned with the current completion/consent experience
+  - Use a React-compatible signature pad library such as `react-signature-canvas`
+  - Support drawing with mouse input on desktop and touch input on tablet
+  - Add label text: `Please sign to confirm your membership`
+  - Add a `Clear` button that resets the captured signature and allows re-entry
+  - Match the existing form design, styling, spacing, and component layout patterns already used in the refreshed multi-step form
+  - Capture the signature as an image in base64 format
+  - Include the signature image data in the existing form submission payload
+  - Validate that a signature is present before allowing final submission
+  - Keep the implementation aligned with the current React context, form state, and submission flow patterns
+- **Out of Scope:**
+  - Any new database schema or storage mechanism beyond the existing form submission flow
+  - Any redesign of the broader membership form layout, stepper, or navigation
+  - Any handwritten signature verification, audit workflow, or legal compliance workflow beyond required capture
+  - Any changes to unrelated form fields, validation rules, or membership business logic
+- **Acceptance Criteria:**
+  - The signature box renders correctly within the existing membership form UI on desktop and tablet layouts
+  - Users can draw a signature using mouse on desktop and touch on tablet
+  - Users can clear the signature and re-enter a new one without refreshing the form
+  - The form cannot be submitted while the signature field is empty
+  - A clear validation message or blocked submit state is shown using existing form UX patterns when no signature is provided
+  - The captured signature is converted to base64 image data and included in the submitted form payload
+  - The signature field, label, and clear action are visually consistent with the current form styling and component patterns
+- **Dependencies:** PBI-023
+- **Systems Affected:** frontend, backend
+- **Risk Level:** Medium
+- **Estimated Effort:** M
+
+## PBI-025: Membership Form Operator Attribution
+
+- **Status:** READY
+- **Goal:** Track the authenticated staff/admin operator who unlocked the shared device with their PIN, carry that operator identity through the full membership form flow, and show their name only in the final confirmation/completion area as the person accepting the form.
+- **Scope:**
+  - Derive the operator from the currently authenticated shared-device session established after successful PIN entry
+  - Capture the operator identity at membership form flow start using the same session/auth source already used by the app for shared-device access
+  - Persist the operator identity through the full multi-step membership form journey using the existing form context/state patterns
+  - Include the operator identity in the final membership form submission payload using the existing payload-construction pattern
+  - Keep the operator identity available through the intermediate form steps without requiring it to be displayed there, and display the operator's name only in the final confirmation/completion area with wording that clearly indicates they are the staff/admin user accepting the form
+  - Keep the tracked operator distinct from all member/applicant identity fields and renewal member selection data
+  - Preserve the existing membership form UX and navigation patterns while adding the operator attribution
+- **Out of Scope:**
+  - Any change to member identity capture, member account ownership, or applicant-facing personal details
+  - Any new PIN flow, user-selection flow, or authentication model beyond reading the already-authenticated operator session
+  - Any staff/admin reassignment flow mid-form, impersonation flow, or manual operator override UI
+  - Any schema redesign or unrelated changes to form steps, validation rules, or submission business logic
+- **Acceptance Criteria:**
+  - When a staff/admin user unlocks the shared device with their PIN and starts a membership form, that same authenticated user is captured as the operator for the form session
+  - The operator identity remains available across all form steps and is not lost during normal step navigation within the existing form flow, without needing to be visible in the intermediate form-step UI
+  - The operator identity is sourced from the shared-device authenticated user whose PIN was entered, not from any member/applicant data entered in the form
+  - The final confirmation/completion area shows the operator's display name as the person accepting the form, and this is the point in the flow where the operator attribution is displayed
+  - The submitted membership form payload includes the operator identity using the same context-to-payload flow used for the rest of the form data
+  - Existing membership form UX patterns, step navigation, and validation behaviour remain unchanged apart from the added operator attribution
+  - If no valid authenticated operator session is present, the membership form flow does not proceed in a way that would allow a submission without operator attribution
+- **Dependencies:** PBI-003b, PBI-014, PBI-023, PBI-024
+- **Systems Affected:** frontend, backend
+- **Risk Level:** Medium
+- **Estimated Effort:** S
+
+## PBI-026: Hide Sign-Off Header Within Membership Flow Screens
+
+- **Status:** READY
+- **Goal:** Remove the existing sign-off header/button from membership-flow screens so the user stays in a focused, uninterrupted flow, while keeping the same sign-off control available on general dashboard screens outside that flow.
+- **Scope:**
+  - Update the existing authenticated layout/header visibility behavior so the sign-off header/button is hidden when the current screen is part of the membership flow
+  - Apply this behavior to the existing `choosing the form` screen
+  - Apply this behavior to the existing `choosing the membership type` screen
+  - Apply this behavior to the existing multi-step membership form screens
+  - Keep the sign-off header/button visible on dashboard screens that are not part of the membership flow
+  - Preserve existing sign-off behavior and session-clearing behavior where the control remains visible
+  - Keep the change limited to UI/layout/routing-context behavior only
+- **Out of Scope:**
+  - Any change to authentication, PIN validation, session creation, inactivity timeout, or sign-off server-side logic
+  - Any redesign of the membership flow pages beyond removing the sign-off header/button in the specified contexts
+  - Any change to dashboard information architecture, membership-flow business logic, or route access control
+- **Acceptance Criteria:**
+  - On the `choosing the form` screen, the sign-off header/button is not rendered
+  - On the `choosing the membership type` screen, the sign-off header/button is not rendered
+  - On all steps of the existing multi-step membership form, the sign-off header/button is not rendered
+  - On general dashboard screens outside the membership flow, the sign-off header/button remains rendered and usable
+  - The visibility rule is determined by the user being inside the membership flow context, not by changes to authentication state
+  - Existing sign-off behavior continues to work unchanged everywhere the sign-off control remains available
+  - No membership-flow screen shows the sign-off header/button during normal navigation through that flow
+- **Dependencies:** PBI-003d, PBI-011, PBI-020, PBI-023
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** S
