@@ -866,7 +866,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-024: Membership Form Signature Capture
 
-- **Status:** IN_PROGRESS
+- **Status:** DONE
 - **Goal:** Add a signature capture field to the existing golf club membership form so applicants must provide a handwritten signature before final submission.
 - **Scope:**
   - Add a signature input area to the existing membership form flow, aligned with the current completion/consent experience
@@ -899,14 +899,14 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-025: Membership Form Operator Attribution
 
-- **Status:** READY
-- **Goal:** Track the authenticated staff/admin operator who unlocked the shared device with their PIN, carry that operator identity through the full membership form flow, and show their name only in the final confirmation/completion area as the person accepting the form.
+- **Status:** IN_PROGRESS
+- **Goal:** Track the authenticated staff/admin operator who unlocked the shared device with their PIN, carry that operator identity through the full membership form flow, and include it in the submitted form payload without displaying the operator anywhere in the form UI.
 - **Scope:**
   - Derive the operator from the currently authenticated shared-device session established after successful PIN entry
   - Capture the operator identity at membership form flow start using the same session/auth source already used by the app for shared-device access
   - Persist the operator identity through the full multi-step membership form journey using the existing form context/state patterns
   - Include the operator identity in the final membership form submission payload using the existing payload-construction pattern
-  - Keep the operator identity available through the intermediate form steps without requiring it to be displayed there, and display the operator's name only in the final confirmation/completion area with wording that clearly indicates they are the staff/admin user accepting the form
+  - Keep the operator identity available through the full form journey without displaying it in any form step, confirmation screen, or completion UI
   - Keep the tracked operator distinct from all member/applicant identity fields and renewal member selection data
   - Preserve the existing membership form UX and navigation patterns while adding the operator attribution
 - **Out of Scope:**
@@ -916,10 +916,9 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
   - Any schema redesign or unrelated changes to form steps, validation rules, or submission business logic
 - **Acceptance Criteria:**
   - When a staff/admin user unlocks the shared device with their PIN and starts a membership form, that same authenticated user is captured as the operator for the form session
-  - The operator identity remains available across all form steps and is not lost during normal step navigation within the existing form flow, without needing to be visible in the intermediate form-step UI
+  - The operator identity remains available across all form steps and is not lost during normal step navigation within the existing form flow, while remaining hidden from all form-step, confirmation, and completion UI
   - The operator identity is sourced from the shared-device authenticated user whose PIN was entered, not from any member/applicant data entered in the form
-  - The final confirmation/completion area shows the operator's display name as the person accepting the form, and this is the point in the flow where the operator attribution is displayed
-  - The submitted membership form payload includes the operator identity using the same context-to-payload flow used for the rest of the form data
+  - The submitted membership form payload includes the operator identity using the same context-to-payload flow used for the rest of the form data, and the operator attribution is not displayed anywhere in the form UI
   - Existing membership form UX patterns, step navigation, and validation behaviour remain unchanged apart from the added operator attribution
   - If no valid authenticated operator session is present, the membership form flow does not proceed in a way that would allow a submission without operator attribution
 - **Dependencies:** PBI-003b, PBI-014, PBI-023, PBI-024
