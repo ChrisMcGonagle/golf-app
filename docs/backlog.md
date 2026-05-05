@@ -833,6 +833,16 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
   - Card-style container uses white background, rounded corners, subtle border, and shadow
   - Include step title, form fields for that step, and `Next` / `Back` buttons
   - Use the same colours, spacing, and typography as the refreshed PIN screen and Select User screen
+- **Form Styling Alignment:**
+  - The form layout should follow a structured, desktop-style data entry layout rather than a simple stacked mobile form
+  - Use a two-column grid layout for fields where space allows
+  - Inputs should use a minimal style (underline or light border, not heavy boxed inputs)
+  - Group fields into clearly labeled sections (e.g. `Personal Details`, `Contact Information`)
+  - Labels should be:
+    - consistently positioned (above or aligned)
+    - clearly associated with inputs
+  - The form container should be wider than previous card layouts to support multi-column input
+  - Primary action (`Next` / `Submit`) should be aligned to the bottom right
 - **Out of Scope:**
   - Any changes to existing form logic, validation, conditional field behavior, or preserved flow context
   - Any new colour scheme or visual system divergent from current refreshed UI
