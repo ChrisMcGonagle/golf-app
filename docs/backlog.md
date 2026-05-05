@@ -866,7 +866,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-024: Membership Form Signature Capture
 
-- **Status:** READY
+- **Status:** IN_PROGRESS
 - **Goal:** Add a signature capture field to the existing golf club membership form so applicants must provide a handwritten signature before final submission.
 - **Scope:**
   - Add a signature input area to the existing membership form flow, aligned with the current completion/consent experience
