@@ -22,11 +22,15 @@ const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 const SESSION_DURATION_MS = 8 * 60 * 60 * 1000; // 8 hours
 const SESSION_MAX_AGE_SECONDS = 8 * 60 * 60; // 8 hours in seconds
 
-export async function validatePin(formData: FormData): Promise<never> {
+export async function validatePin(
+  formData: FormData
+): Promise<{ success: boolean; error?: string; remaining?: number } | undefined> {
   // Dynamically import bcryptjs to avoid native module issues on Vercel
   const bcryptjs = await import('bcryptjs');
   
   const profileId = formData.get('profileId');
+  const attemptParam = formData.get('attempt');
+  const attempt = attemptParam ? parseInt(attemptParam as string, 10) : 0;
 
   // Validate profileId is a string
   if (typeof profileId !== 'string') {
@@ -47,14 +51,14 @@ export async function validatePin(formData: FormData): Promise<never> {
     typeof d2 !== 'string' ||
     typeof d3 !== 'string'
   ) {
-    redirect(`/pin?userId=${trimmedProfileId}&error=invalid&remaining=5`);
+    redirect(`/pin?userId=${trimmedProfileId}&error=invalid&remaining=5&attempt=${attempt + 1}`);
   }
 
   const pin = `${d0}${d1}${d2}${d3}`;
 
   // Validate PIN is exactly 4 numeric digits — never expose the raw value in redirects or logs
   if (!/^\d{4}$/.test(pin)) {
-    redirect(`/pin?userId=${trimmedProfileId}&error=invalid&remaining=5`);
+    redirect(`/pin?userId=${trimmedProfileId}&error=invalid&remaining=5&attempt=${attempt + 1}`);
   }
 
   const supabase = createServiceRoleClient();
@@ -106,7 +110,7 @@ export async function validatePin(formData: FormData): Promise<never> {
 
     await session.save();
 
-    redirect('/dashboard');
+    return { success: true };
   }
 
   // PIN incorrect — increment fail count
@@ -128,5 +132,5 @@ export async function validatePin(formData: FormData): Promise<never> {
     .update({ pin_fail_count: newFailCount })
     .eq('id', trimmedProfileId);
 
-  redirect(`/pin?userId=${trimmedProfileId}&error=invalid&remaining=${MAX_FAIL_COUNT - newFailCount}`);
+  return { success: false, error: 'invalid', remaining: MAX_FAIL_COUNT - newFailCount };
 }

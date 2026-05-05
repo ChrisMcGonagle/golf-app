@@ -36,20 +36,15 @@ jest.mock('@/lib/supabase/server', () => ({
 // ─── Imports (after mocks) ────────────────────────────────────────────────────
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { redirect } from 'next/navigation';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { getIronSession } from 'iron-session';
 import bcryptjs from 'bcryptjs';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { validatePin } from '@/app/pin/actions';
+import PinEntryForm from '@/app/pin/components/PinEntryForm';
+import PinEntryScreen from '@/app/pin/components/PinEntryScreen';
 import PinPage from '@/app/pin/page';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type MockedFn<T extends (...args: unknown[]) => unknown> = jest.MockedFunction<T>;
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _mockRedirect = redirect as MockedFn<typeof redirect>;
 const mockGetIronSession = getIronSession as jest.MockedFunction<typeof getIronSession>;
 const mockBcryptCompare = bcryptjs.compare as jest.MockedFunction<typeof bcryptjs.compare>;
 const mockCreateServiceRoleClient = createServiceRoleClient as jest.MockedFunction<
@@ -79,7 +74,9 @@ function makeSupabaseMock(profile: Record<string, unknown> | null, updateError =
   const eqMockSelect = jest.fn().mockReturnValue({ single: singleMock });
   const selectMock = jest.fn().mockReturnValue({ eq: eqMockSelect });
 
-  const eqMockUpdate = jest.fn().mockResolvedValue({ error: updateError ? { message: 'err' } : null });
+  const eqMockUpdate = jest
+    .fn()
+    .mockResolvedValue({ error: updateError ? { message: 'err' } : null });
   const updateMock = jest.fn().mockReturnValue({ eq: eqMockUpdate });
 
   const fromMock = jest.fn().mockReturnValue({
@@ -90,11 +87,28 @@ function makeSupabaseMock(profile: Record<string, unknown> | null, updateError =
   return { from: fromMock };
 }
 
-function getRedirectUrl(e: unknown): string {
-  if (e instanceof Error && e.message.startsWith('NEXT_REDIRECT:')) {
-    return e.message.replace('NEXT_REDIRECT:', '');
+function setSupabaseMock(profile: Record<string, unknown> | null, updateError = false) {
+  const supabaseMock = makeSupabaseMock(profile, updateError);
+
+  mockCreateServiceRoleClient.mockReturnValue(
+    supabaseMock as unknown as ReturnType<typeof createServiceRoleClient>
+  );
+
+  return supabaseMock;
+}
+
+function getRedirectUrl(error: unknown): string {
+  if (error instanceof Error && error.message.startsWith('NEXT_REDIRECT:')) {
+    return error.message.replace('NEXT_REDIRECT:', '');
   }
-  throw e;
+  throw error;
+}
+
+function getSubmittedDigits(container: HTMLElement): string[] {
+  return [0, 1, 2, 3].map((index) => {
+    const input = container.querySelector(`input[name="digit_${index}"]`) as HTMLInputElement | null;
+    return input?.value ?? '';
+  });
 }
 
 // ─── Page-level guard tests ────────────────────────────────────────────────────
@@ -106,7 +120,6 @@ describe('/pin page guards', () => {
       if (typeof message === 'string' && message.includes('Invalid value for prop `action`')) {
         return;
       }
-      // Allow other errors through
     });
   });
 
@@ -115,14 +128,13 @@ describe('/pin page guards', () => {
   });
 
   it('redirects to /select-user when no userId is provided in searchParams', async () => {
-    const supabaseMock = makeSupabaseMock(null);
-    mockCreateServiceRoleClient.mockReturnValue(supabaseMock as ReturnType<typeof createServiceRoleClient>);
+    setSupabaseMock(null);
 
     let redirectUrl = '';
     try {
       await PinPage({ searchParams: {} });
-    } catch (e) {
-      redirectUrl = getRedirectUrl(e);
+    } catch (error) {
+      redirectUrl = getRedirectUrl(error);
     }
 
     expect(redirectUrl).toBe('/select-user');
@@ -137,14 +149,13 @@ describe('/pin page guards', () => {
       pin_locked_until: futureDate,
     };
 
-    const supabaseMock = makeSupabaseMock(lockedProfile);
-    mockCreateServiceRoleClient.mockReturnValue(supabaseMock as ReturnType<typeof createServiceRoleClient>);
+    setSupabaseMock(lockedProfile);
 
     let redirectUrl = '';
     try {
       await PinPage({ searchParams: { userId: 'profile-1' } });
-    } catch (e) {
-      redirectUrl = getRedirectUrl(e);
+    } catch (error) {
+      redirectUrl = getRedirectUrl(error);
     }
 
     expect(redirectUrl).toBe('/select-user?error=locked');
@@ -158,20 +169,19 @@ describe('/pin page guards', () => {
       pin_locked_until: null,
     };
 
-    const supabaseMock = makeSupabaseMock(noPinProfile);
-    mockCreateServiceRoleClient.mockReturnValue(supabaseMock as ReturnType<typeof createServiceRoleClient>);
+    setSupabaseMock(noPinProfile);
 
     let redirectUrl = '';
     try {
       await PinPage({ searchParams: { userId: 'profile-2' } });
-    } catch (e) {
-      redirectUrl = getRedirectUrl(e);
+    } catch (error) {
+      redirectUrl = getRedirectUrl(error);
     }
 
     expect(redirectUrl).toBe('/setup-pin?userId=profile-2');
   });
 
-  it('renders 4 digit input boxes when the profile is valid and unlocked', async () => {
+  it('renders the refreshed keypad UI when the profile is valid and unlocked', async () => {
     const validProfile = {
       id: 'profile-3',
       display_name: 'Alice',
@@ -179,14 +189,94 @@ describe('/pin page guards', () => {
       pin_locked_until: null,
     };
 
-    const supabaseMock = makeSupabaseMock(validProfile);
-    mockCreateServiceRoleClient.mockReturnValue(supabaseMock as ReturnType<typeof createServiceRoleClient>);
+    setSupabaseMock(validProfile);
 
     const pageElement = await PinPage({ searchParams: { userId: 'profile-3' } });
-    render(React.createElement(() => pageElement as React.ReactElement));
+    const { container } = render(React.createElement(() => pageElement as React.ReactElement));
 
-    const digitInputs = screen.getAllByRole('textbox');
-    expect(digitInputs.length).toBe(4);
+    expect(screen.getByRole('heading', { name: /hi alice, enter your pin/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /cancel/i })).toHaveAttribute('href', '/select-user');
+    expect(screen.getAllByRole('button', { name: /^\d$/ })).toHaveLength(10);
+    expect(screen.getByRole('button', { name: /delete digit/i })).toBeInTheDocument();
+    expect(getSubmittedDigits(container)).toEqual(['', '', '', '']);
+  });
+});
+
+describe('PinEntryForm interactions', () => {
+  it('updates the submitted digits from keypad taps and delete', () => {
+    const { container } = render(
+      React.createElement(PinEntryForm, { action: '/pin', profileId: 'profile-3' })
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '1' }));
+    fireEvent.click(screen.getByRole('button', { name: '2' }));
+    fireEvent.click(screen.getByRole('button', { name: '3' }));
+    fireEvent.click(screen.getByRole('button', { name: '4' }));
+
+    expect(getSubmittedDigits(container)).toEqual(['1', '2', '3', '4']);
+
+    fireEvent.click(screen.getByRole('button', { name: /delete digit/i }));
+
+    expect(getSubmittedDigits(container)).toEqual(['1', '2', '3', '']);
+  });
+
+  it('accepts keyboard digits and backspace into the same submitted state', () => {
+    const { container } = render(
+      React.createElement(PinEntryForm, { action: '/pin', profileId: 'profile-4' })
+    );
+    const input = screen.getByLabelText(/pin input/i);
+
+    fireEvent.change(input, { target: { value: '4278' } });
+    expect(getSubmittedDigits(container)).toEqual(['4', '2', '7', '8']);
+
+    fireEvent.keyDown(input, { key: 'Backspace' });
+    expect(getSubmittedDigits(container)).toEqual(['4', '2', '7', '']);
+
+    fireEvent.change(input, { target: { value: '42789' } });
+    expect(getSubmittedDigits(container)).toEqual(['4', '2', '7', '8']);
+  });
+});
+
+describe('PinEntryScreen alert state', () => {
+  it('renders a single bottom alert and clears it when the user starts a new PIN entry', () => {
+    render(
+      React.createElement(PinEntryScreen, {
+        action: '/pin',
+        profileId: 'profile-5',
+        error: 'invalid',
+        remaining: 3,
+        attempt: 1,
+      })
+    );
+
+    expect(screen.getAllByText(/incorrect pin/i)).toHaveLength(1);
+    expect(screen.getByRole('alert')).toHaveTextContent('Incorrect PIN. 3 attempts remaining.');
+
+    fireEvent.click(screen.getByRole('button', { name: '1' }));
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('clears the bottom alert as soon as a successful PIN submission starts', async () => {
+    const action = jest.fn().mockResolvedValue({ success: true });
+
+    render(
+      React.createElement(PinEntryScreen, {
+        action,
+        profileId: 'profile-6',
+        error: 'invalid',
+        remaining: 2,
+        attempt: 2,
+      })
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '1' }));
+    fireEvent.click(screen.getByRole('button', { name: '2' }));
+    fireEvent.click(screen.getByRole('button', { name: '3' }));
+    fireEvent.click(screen.getByRole('button', { name: '4' }));
+
+    await waitFor(() => expect(action).toHaveBeenCalledTimes(1));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
 
@@ -195,7 +285,7 @@ describe('/pin page guards', () => {
 describe('validatePin server action', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it('redirects to /staff and sets cookie when the correct PIN is entered', async () => {
+  it('returns success response and sets cookie when the correct PIN is entered', async () => {
     const profile = {
       id: 'profile-10',
       display_name: 'Bob',
@@ -205,8 +295,7 @@ describe('validatePin server action', () => {
       pin_locked_until: null,
     };
 
-    const supabaseMock = makeSupabaseMock(profile);
-    mockCreateServiceRoleClient.mockReturnValue(supabaseMock as ReturnType<typeof createServiceRoleClient>);
+    const supabaseMock = setSupabaseMock(profile);
     (mockBcryptCompare as jest.Mock).mockResolvedValue(true);
 
     const saveMock = jest.fn().mockResolvedValue(undefined);
@@ -217,20 +306,17 @@ describe('validatePin server action', () => {
 
     const fd = buildFormData('profile-10', ['1', '2', '3', '4']);
 
-    let redirectUrl = '';
-    try {
-      await validatePin(fd);
-    } catch (e) {
-      redirectUrl = getRedirectUrl(e);
-    }
+    const response = await validatePin(fd);
 
-    expect(redirectUrl).toBe('/dashboard');
+    expect(response).toEqual({ success: true });
     expect(saveMock).toHaveBeenCalled();
-    // Ensure fail count is reset and lockout timestamp is cleared
-    expect(supabaseMock.from('profiles').update).toHaveBeenCalledWith({ pin_fail_count: 0, pin_locked_until: null });
+    expect(supabaseMock.from('profiles').update).toHaveBeenCalledWith({
+      pin_fail_count: 0,
+      pin_locked_until: null,
+    });
   });
 
-  it('increments pin_fail_count when an incorrect PIN is entered', async () => {
+  it('returns error response when an incorrect PIN is entered', async () => {
     const profile = {
       id: 'profile-11',
       display_name: 'Carol',
@@ -240,21 +326,14 @@ describe('validatePin server action', () => {
       pin_locked_until: null,
     };
 
-    const supabaseMock = makeSupabaseMock(profile);
-    mockCreateServiceRoleClient.mockReturnValue(supabaseMock as ReturnType<typeof createServiceRoleClient>);
+    const supabaseMock = setSupabaseMock(profile);
     (mockBcryptCompare as jest.Mock).mockResolvedValue(false);
 
     const fd = buildFormData('profile-11', ['9', '9', '9', '9']);
 
-    let redirectUrl = '';
-    try {
-      await validatePin(fd);
-    } catch (e) {
-      redirectUrl = getRedirectUrl(e);
-    }
+    const response = await validatePin(fd);
 
-    // Fail count should become 2, 3 remaining
-    expect(redirectUrl).toBe('/pin?userId=profile-11&error=invalid&remaining=3');
+    expect(response).toEqual({ success: false, error: 'invalid', remaining: 3 });
     expect(supabaseMock.from('profiles').update).toHaveBeenCalledWith({ pin_fail_count: 2 });
   });
 
@@ -268,8 +347,7 @@ describe('validatePin server action', () => {
       pin_locked_until: null,
     };
 
-    const supabaseMock = makeSupabaseMock(profile);
-    mockCreateServiceRoleClient.mockReturnValue(supabaseMock as ReturnType<typeof createServiceRoleClient>);
+    const supabaseMock = setSupabaseMock(profile);
     (mockBcryptCompare as jest.Mock).mockResolvedValue(false);
 
     const fd = buildFormData('profile-12', ['0', '0', '0', '0']);
@@ -277,13 +355,12 @@ describe('validatePin server action', () => {
     let redirectUrl = '';
     try {
       await validatePin(fd);
-    } catch (e) {
-      redirectUrl = getRedirectUrl(e);
+    } catch (error) {
+      redirectUrl = getRedirectUrl(error);
     }
 
     expect(redirectUrl).toBe('/select-user?error=locked');
 
-    // Verify lockout update was called with pin_locked_until and pin_fail_count: 0
     const updateCall = supabaseMock.from('profiles').update.mock.calls[0][0] as Record<string, unknown>;
     expect(updateCall).toMatchObject({ pin_fail_count: 0 });
     expect(typeof updateCall.pin_locked_until).toBe('string');
@@ -301,20 +378,17 @@ describe('validatePin server action', () => {
       pin_locked_until: null,
     };
 
-    const supabaseMock = makeSupabaseMock(profile);
-    mockCreateServiceRoleClient.mockReturnValue(supabaseMock as ReturnType<typeof createServiceRoleClient>);
+    setSupabaseMock(profile);
 
-    // Non-numeric input
     const fd = buildFormData('profile-13', ['a', 'b', 'c', 'd']);
 
     let redirectUrl = '';
     try {
       await validatePin(fd);
-    } catch (e) {
-      redirectUrl = getRedirectUrl(e);
+    } catch (error) {
+      redirectUrl = getRedirectUrl(error);
     }
 
-    // Should redirect with error but NOT call bcrypt.compare
     expect(mockBcryptCompare).not.toHaveBeenCalled();
     expect(redirectUrl).toContain('/pin?userId=profile-13&error=invalid');
   });
@@ -329,8 +403,7 @@ describe('validatePin server action', () => {
       pin_locked_until: null,
     };
 
-    const supabaseMock = makeSupabaseMock(profile);
-    mockCreateServiceRoleClient.mockReturnValue(supabaseMock as ReturnType<typeof createServiceRoleClient>);
+    setSupabaseMock(profile);
     (mockBcryptCompare as jest.Mock).mockResolvedValue(false);
 
     const sensitivePin = '7391';
@@ -339,11 +412,10 @@ describe('validatePin server action', () => {
     let redirectUrl = '';
     try {
       await validatePin(fd);
-    } catch (e) {
-      redirectUrl = getRedirectUrl(e);
+    } catch (error) {
+      redirectUrl = getRedirectUrl(error);
     }
 
-    // The raw PIN must never appear in the redirect URL
     expect(redirectUrl).not.toContain(sensitivePin);
   });
 });
