@@ -147,15 +147,26 @@ export default function PinEntryForm({
           window.location.href = '/dashboard';
         }, 600);
       } else if (response && response.success === false) {
-        const errorParam = response.error || 'invalid';
-        const remainingParam = response.remaining ?? 5;
-        window.location.href = `/pin?userId=${profileId}&error=${errorParam}&remaining=${remainingParam}&attempt=${attempt + 1}`;
+        // Immediately trigger red flash to avoid black-dot gap
+        setIsPending(false);
+        setIsFlashing(true);
+        setDigits('');
+
+        // Delay redirect to allow red flash to animate before page transition
+        setTimeout(() => {
+          const errorParam = response.error || 'invalid';
+          const remainingParam = response.remaining ?? 5;
+          window.location.href = `/pin?userId=${profileId}&error=${errorParam}&remaining=${remainingParam}&attempt=${attempt + 1}`;
+        }, 600);
       }
     } catch (err) {
       // If there's an error in the submission, keep the form as is
       console.error('PIN validation error:', err);
     } finally {
-      setIsPending(false);
+      // Only clear pending if not already cleared by error handler
+      if (isPending) {
+        setIsPending(false);
+      }
     }
   };
 
