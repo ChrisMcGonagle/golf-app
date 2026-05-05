@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { validatePin } from './actions';
+import PinEntryScreen from './components/PinEntryScreen';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,11 +17,12 @@ interface PinPageProps {
     userId?: string;
     error?: string;
     remaining?: string;
+    attempt?: string;
   };
 }
 
 export default async function PinPage({ searchParams }: PinPageProps): Promise<JSX.Element> {
-  const { userId, error, remaining } = searchParams;
+  const { userId, error, remaining, attempt } = searchParams;
 
   // Guard: no userId → redirect to select-user
   if (!userId) {
@@ -57,56 +59,28 @@ export default async function PinPage({ searchParams }: PinPageProps): Promise<J
   }
 
   const remainingCount = remaining ? parseInt(remaining, 10) : null;
+  const attemptCount = attempt ? parseInt(attempt, 10) : 0;
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
-        <h1 className="mb-2 text-center text-2xl font-bold text-gray-900">Enter PIN</h1>
-        <p className="mb-6 text-center text-sm text-gray-600">{profile.display_name}</p>
+    <main
+      className="flex min-h-screen flex-col items-center justify-center px-4 py-8 sm:px-6"
+      style={{ backgroundColor: '#f5f6f5' }}
+    >
+      <div className="w-full max-w-md">
+        <h1 className="text-center text-3xl font-semibold tracking-[-0.02em] text-[#2b2b2b] sm:text-[2rem]">
+          Hi {profile.display_name}, enter your PIN
+        </h1>
+        <p className="mb-6 mt-3 text-center text-sm leading-6" style={{ color: '#969696' }}>
+          Please enter your 4-digit PIN code to verify it&apos;s you.
+        </p>
 
-        {error === 'invalid' && (
-          <div
-            role="alert"
-            className="mb-4 rounded bg-red-50 px-4 py-3 text-sm text-red-700"
-          >
-            Incorrect PIN.{' '}
-            {remainingCount !== null && remainingCount > 0
-              ? `${remainingCount} attempt${remainingCount === 1 ? '' : 's'} remaining.`
-              : ''}
-          </div>
-        )}
-
-        {error && error !== 'invalid' && (
-          <div role="alert" className="mb-4 rounded bg-red-50 px-4 py-3 text-sm text-red-700">
-            An error occurred. Please try again.
-          </div>
-        )}
-
-        <form action={validatePin}>
-          <input type="hidden" name="profileId" value={profile.id} />
-
-          <div className="mb-6 flex justify-center gap-3">
-            {[0, 1, 2, 3].map((index) => (
-              <input
-                key={index}
-                type="text"
-                inputMode="numeric"
-                maxLength={1}
-                name={`digit_${index}`}
-                aria-label={`PIN digit ${index + 1}`}
-                className="h-14 w-14 rounded-lg border-2 border-gray-300 text-center text-2xl font-bold text-gray-900 focus:border-blue-500 focus:outline-none"
-                autoComplete="off"
-              />
-            ))}
-          </div>
-
-          <button
-            type="submit"
-            className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Confirm PIN
-          </button>
-        </form>
+        <PinEntryScreen
+          action={validatePin}
+          profileId={profile.id}
+          error={error}
+          remaining={remainingCount}
+          attempt={attemptCount}
+        />
       </div>
     </main>
   );
