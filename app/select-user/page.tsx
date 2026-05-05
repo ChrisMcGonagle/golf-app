@@ -1,7 +1,7 @@
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import Image from 'next/image';
-import BaffieBrand from '@/components/BaffieBrand';
+import BaffyBrand from '@/components/BaffyBrand';
 
 // Mark as dynamic since it requires environment variables and real-time profile data
 export const dynamic = 'force-dynamic';
@@ -189,7 +189,7 @@ export default async function SelectUserPage({
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen px-8 py-16" style={{ backgroundColor: '#f5f6f5' }}>
       <div className="absolute top-0 left-0 px-8 py-8">
-        <BaffieBrand />
+        <BaffyBrand />
       </div>
       {/* Outer wrapper to contain and align heading with grid */}
       <div className="w-full max-w-[800px]">
