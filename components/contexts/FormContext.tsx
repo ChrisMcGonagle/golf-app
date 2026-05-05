@@ -44,6 +44,7 @@ export interface Step3Data {
 export interface Step4Data {
   acceptedTerms: string;
   acceptedGdpr: string;
+  signature: string;
 }
 
 export interface FlowContext {
@@ -110,6 +111,7 @@ const initialStep3: Step3Data = {
 const initialStep4: Step4Data = {
   acceptedTerms: '',
   acceptedGdpr: '',
+  signature: '',
 };
 
 interface FormProviderProps {

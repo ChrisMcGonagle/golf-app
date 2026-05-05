@@ -6,6 +6,61 @@ import Step3Safeguarding from '@/app/(authenticated)/dashboard/membership/form/c
 import Step4Placeholder from '@/app/(authenticated)/dashboard/membership/form/components/Step4Placeholder';
 import { FormProvider } from '@/components/contexts/FormContext';
 
+jest.mock('react-signature-canvas', () => {
+  const React = require('react');
+
+  return React.forwardRef(function MockSignatureCanvas(
+    {
+      onEnd,
+      canvasProps,
+    }: {
+      onEnd?: () => void;
+      canvasProps?: React.CanvasHTMLAttributes<HTMLCanvasElement>;
+    },
+    ref: React.ForwardedRef<{
+      clear: () => void;
+      isEmpty: () => boolean;
+      fromDataURL: (value: string) => void;
+      getTrimmedCanvas: () => { toDataURL: () => string };
+    }>
+  ) {
+    const [dataUrl, setDataUrl] = React.useState('');
+    const dataUrlRef = React.useRef('');
+
+    React.useImperativeHandle(ref, () => ({
+      clear: () => {
+        dataUrlRef.current = '';
+        setDataUrl('');
+      },
+      isEmpty: () => !dataUrlRef.current,
+      fromDataURL: (value: string) => {
+        dataUrlRef.current = value;
+        setDataUrl(value);
+      },
+      getTrimmedCanvas: () => ({
+        toDataURL: () => dataUrlRef.current || 'data:image/png;base64,mock-signature',
+      }),
+      toDataURL: () => dataUrlRef.current || 'data:image/png;base64,mock-signature',
+    }), []);
+
+    return (
+      <div>
+        <canvas {...canvasProps} data-testid="signature-canvas" />
+        <button
+          type="button"
+          onClick={() => {
+            dataUrlRef.current = 'data:image/png;base64,mock-signature';
+            setDataUrl('data:image/png;base64,mock-signature');
+            onEnd?.();
+          }}
+        >
+          Mock draw signature
+        </button>
+      </div>
+    );
+  });
+});
+
 describe('Step1Personal', () => {
   const mockOnValidationChange = jest.fn();
 
@@ -200,6 +255,17 @@ describe('Step4Placeholder', () => {
     expect(screen.getByText(/I confirm that I have read and accept the GDPR and data-processing terms/i)).toBeInTheDocument();
   });
 
+  it('renders signature label and clear button', () => {
+    render(
+      <FormProvider intent="new" typeId="Full Member">
+        <Step4Placeholder onValidationChange={jest.fn()} />
+      </FormProvider>
+    );
+
+    expect(screen.getByText(/Please provide your signature/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Clear/i })).toBeInTheDocument();
+  });
+
   it('calls onValidationChange when acceptedTerms is checked', async () => {
     const onValidationChange = jest.fn();
     const { container } = render(
@@ -209,23 +275,70 @@ describe('Step4Placeholder', () => {
     );
 
     const acceptedTermsCheckbox = container.querySelector('#acceptedTerms') as HTMLInputElement;
-    fireEvent.change(acceptedTermsCheckbox, { target: { checked: true } });
+    fireEvent.click(acceptedTermsCheckbox);
 
     await waitFor(() => {
       expect(onValidationChange).toHaveBeenCalled();
     });
   });
 
-  it('shows validation error when both checkboxes are required but not checked', async () => {
+  it('is invalid without a signature even when both checkboxes are checked', async () => {
     const onValidationChange = jest.fn();
-    render(
+    const { container } = render(
       <FormProvider intent="new" typeId="Full Member">
         <Step4Placeholder onValidationChange={onValidationChange} />
       </FormProvider>
     );
 
+    fireEvent.click(container.querySelector('#acceptedTerms') as HTMLInputElement);
+    fireEvent.click(container.querySelector('#acceptedGdpr') as HTMLInputElement);
+
     await waitFor(() => {
       expect(onValidationChange).toHaveBeenCalledWith(false);
     });
+
+    expect(screen.getByText(/Please provide your signature/i)).toBeInTheDocument();
+  });
+
+  it('becomes valid when both checkboxes and a signature are present', async () => {
+    const onValidationChange = jest.fn();
+    const { container } = render(
+      <FormProvider intent="new" typeId="Full Member">
+        <Step4Placeholder onValidationChange={onValidationChange} />
+      </FormProvider>
+    );
+
+    fireEvent.click(container.querySelector('#acceptedTerms') as HTMLInputElement);
+    fireEvent.click(container.querySelector('#acceptedGdpr') as HTMLInputElement);
+    fireEvent.click(screen.getByRole('button', { name: /Mock draw signature/i }));
+
+    await waitFor(() => {
+      expect(onValidationChange).toHaveBeenLastCalledWith(true);
+    });
+  });
+
+  it('clear resets signature and returns the step to an invalid state', async () => {
+    const onValidationChange = jest.fn();
+    const { container } = render(
+      <FormProvider intent="new" typeId="Full Member">
+        <Step4Placeholder onValidationChange={onValidationChange} />
+      </FormProvider>
+    );
+
+    fireEvent.click(container.querySelector('#acceptedTerms') as HTMLInputElement);
+    fireEvent.click(container.querySelector('#acceptedGdpr') as HTMLInputElement);
+    fireEvent.click(screen.getByRole('button', { name: /Mock draw signature/i }));
+
+    await waitFor(() => {
+      expect(onValidationChange).toHaveBeenLastCalledWith(true);
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /^Clear$/i }));
+
+    await waitFor(() => {
+      expect(onValidationChange).toHaveBeenLastCalledWith(false);
+    });
+
+    expect(screen.getByText(/Please provide your signature/i)).toBeInTheDocument();
   });
 });
