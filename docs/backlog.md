@@ -774,3 +774,39 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 - **Systems Affected:** frontend
 - **Risk Level:** Low
 - **Estimated Effort:** S
+---
+
+## PBI-022: PIN Entry Screen UI Refresh
+
+- **Status:** READY
+- **Goal:** Redesign the existing PIN entry screen to use a clean, modern keypad-style layout similar to a mobile PIN entry screen, consistent with the updated membership dashboard design system. This is a UI update only.
+- **Scope:**
+  - Update the visual design of the existing PIN entry screen only
+  - Use the established visual language from the updated membership dashboard pages so the PIN screen feels consistent with the rest of the refreshed flow
+  - Display a clear heading and short instruction text above the PIN input area
+  - Present a 4-digit PIN indicator using visual dots or circles that reflect entered digits
+  - Add a numeric keypad with buttons for digits `0` through `9`
+  - Include a delete or backspace control within the keypad layout
+  - Include optional secondary actions such as `Reset PIN` and `Cancel`
+  - Ensure users can enter the PIN using both physical keyboard input and the on-screen keypad
+  - Ensure the layout is responsive, touch-friendly, and suitable for kiosk and tablet use
+- **Out of Scope:** Any authentication changes, validation changes, PIN submission logic changes, lockout behaviour changes, routing changes, session changes, backend work, or database work. No existing authentication or validation logic changes are included in this PBI; UI update only.
+- **Acceptance Criteria:**
+  - The existing PIN entry screen is visually redesigned into a clean, modern keypad-style layout
+  - The screen includes a heading and short instruction text that match the style of the refreshed membership pages
+  - The screen displays a 4-digit PIN indicator using clear visual dots or circles
+  - The screen displays an on-screen numeric keypad with digits `0` through `9` plus a delete or backspace action
+  - Users can enter the PIN using either keyboard input or the on-screen keypad, and both input methods work together on the same screen
+  - Optional secondary actions for `Reset PIN` and `Cancel` are present and visually secondary to PIN entry
+  - The layout is visually consistent with the existing refreshed dashboard and membership flow pages
+  - The keypad and supporting controls are touch-friendly and remain usable on mobile, tablet, and kiosk-sized screens
+  - The change is limited to the UI layer only and preserves all existing authentication, validation, and related PIN logic as-is
+- **Definition of Done:**
+  - The redesigned screen matches the current dashboard design language in spacing, surface treatment, typography, and interaction states
+  - On-screen keypad interaction works correctly alongside existing keyboard entry behaviour
+  - The layout is responsive and comfortably usable for touch interaction across supported screen sizes
+  - No existing authentication or validation logic is changed as part of implementation
+- **Dependencies:** PBI-018, PBI-019, PBI-021
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** S
