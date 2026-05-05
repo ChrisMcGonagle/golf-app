@@ -779,7 +779,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-022: PIN Entry Screen UI Refresh
 
-- **Status:** READY
+- **Status:** IN_PROGRESS
 - **Goal:** Redesign the existing PIN entry screen to use a clean, modern keypad-style layout similar to a mobile PIN entry screen, consistent with the updated membership dashboard design system. This is a UI update only.
 - **Scope:**
   - Update the visual design of the existing PIN entry screen only
