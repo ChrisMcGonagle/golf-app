@@ -3,6 +3,9 @@ jest.mock('next/navigation', () => ({
   useRouter: jest.fn(() => ({ push: jest.fn() })),
   useSearchParams: jest.fn(() => new URLSearchParams('')),
 }));
+jest.mock('@/lib/auth/activeUserSession', () => ({
+  getActiveUserSession: jest.fn(),
+}));
 jest.mock('@/lib/actions/searchMembers', () => ({ searchMembers: jest.fn() }));
 jest.mock('@/components/MemberSearchAutocomplete', () => ({
   __esModule: true,
@@ -31,6 +34,7 @@ jest.mock('@/components/MemberSearchAutocomplete', () => ({
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { getActiveUserSession } from '@/lib/auth/activeUserSession';
 import { searchMembers } from '@/lib/actions/searchMembers';
 import MemberSearchPage from '@/app/(authenticated)/dashboard/membership/member-search/page';
 import MembershipTypePage from '@/app/(authenticated)/dashboard/membership/type/page';
@@ -38,6 +42,13 @@ import MembershipFormPage from '@/app/(authenticated)/dashboard/membership/form/
 import GenerateEmailFormPage from '@/app/(authenticated)/dashboard/membership/email/page';
 
 const mockSearchMembers = searchMembers as jest.MockedFunction<typeof searchMembers>;
+const mockGetActiveUserSession = jest.mocked(getActiveUserSession);
+const mockOperator = {
+  profileId: 'staff-123',
+  displayName: 'Alex Operator',
+  role: 'staff',
+  expiresAt: Date.now() + 60_000,
+};
 
 describe('MemberSearchPage (/dashboard/membership/member-search)', () => {
   beforeEach(() => { mockSearchMembers.mockResolvedValue([]); });
@@ -166,6 +177,10 @@ describe('MembershipTypePage (/dashboard/membership/type)', () => {
 
 // MembershipFormPage tests
 describe("MembershipFormPage (/dashboard/membership/form)", () => {
+  beforeEach(() => {
+    mockGetActiveUserSession.mockResolvedValue(mockOperator);
+  });
+
   it("renders the Membership Form heading", async () => {
     render(await MembershipFormPage({ searchParams: Promise.resolve({ intent: 'new', typeId: 'Full%20Member' }) }));
     expect(screen.getByText(/personal details/i)).toBeInTheDocument();
@@ -200,6 +215,14 @@ describe("MembershipFormPage (/dashboard/membership/form)", () => {
     render(await MembershipFormPage({ searchParams: Promise.resolve({ intent: 'new' }) }));
     const href = screen.getByRole('link', { name: /Back to Membership Type/i }).getAttribute('href');
     expect(href).toContain('/dashboard/membership/type');
+  });
+
+  it('redirects to select-user when no valid operator session is available', async () => {
+    mockGetActiveUserSession.mockResolvedValueOnce(null);
+
+    await expect(
+      MembershipFormPage({ searchParams: Promise.resolve({ intent: 'new', typeId: 'Full%20Member' }) })
+    ).rejects.toThrow('NEXT_REDIRECT:/select-user');
   });
 });
 

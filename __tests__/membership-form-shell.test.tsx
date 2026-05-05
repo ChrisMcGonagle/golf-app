@@ -4,6 +4,16 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import FormShell from '@/app/(authenticated)/dashboard/membership/form/components/FormShell';
 import { FormProvider } from '@/components/contexts/FormContext';
 
+const mockOperator = {
+  profileId: 'staff-123',
+  displayName: 'Alex Operator',
+  role: 'staff',
+  expiresAt: Date.now() + 60_000,
+};
+
+const mockFormCreatedAt = '2026-05-05T10:00:00.000Z';
+const mockFormSubmittedAt = '2026-05-05T10:05:00.000Z';
+
 jest.mock('react-signature-canvas', () => {
   const React = require('react');
 
@@ -75,21 +85,24 @@ const mockSearchParams = new URLSearchParams('step=1&intent=new&typeId=Full+Memb
 
 describe('FormShell', () => {
   let consoleLogSpy: jest.SpyInstance;
+  let dateSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
     (useRouter as jest.Mock).mockReturnValue(mockRouter);
     (useSearchParams as jest.Mock).mockReturnValue(mockSearchParams);
     consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+    dateSpy = jest.spyOn(Date.prototype, 'toISOString').mockReturnValue(mockFormSubmittedAt);
   });
 
   afterEach(() => {
     consoleLogSpy.mockRestore();
+    dateSpy.mockRestore();
   });
 
   it('renders step 1 indicator', () => {
     render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <FormShell currentStep={1} />
       </FormProvider>
     );
@@ -98,7 +111,7 @@ describe('FormShell', () => {
 
   it('renders back button disabled on step 1', () => {
     render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <FormShell currentStep={1} />
       </FormProvider>
     );
@@ -108,7 +121,7 @@ describe('FormShell', () => {
 
   it('renders back button enabled on step 2', () => {
     render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <FormShell currentStep={2} />
       </FormProvider>
     );
@@ -119,7 +132,7 @@ describe('FormShell', () => {
   it('renders next button on steps 1-3', () => {
     for (let step = 1; step <= 3; step++) {
       const { unmount } = render(
-        <FormProvider intent="new" typeId="Full Member">
+        <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
           <FormShell currentStep={step} />
         </FormProvider>
       );
@@ -130,7 +143,7 @@ describe('FormShell', () => {
 
   it('renders complete button on step 4', () => {
     render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <FormShell currentStep={4} />
       </FormProvider>
     );
@@ -140,7 +153,7 @@ describe('FormShell', () => {
 
   it('keeps the complete button disabled until step 4 is fully valid', async () => {
     const { container } = render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <FormShell currentStep={4} />
       </FormProvider>
     );
@@ -161,7 +174,12 @@ describe('FormShell', () => {
 
   it('logs a payload containing the signature when step 4 completes', async () => {
     const { container } = render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider
+        intent="new"
+        typeId="Full Member"
+        operator={mockOperator}
+        formCreatedAt={mockFormCreatedAt}
+      >
         <FormShell currentStep={4} />
       </FormProvider>
     );
@@ -182,6 +200,15 @@ describe('FormShell', () => {
       expect(consoleLogSpy).toHaveBeenCalledWith(
         'Membership form payload:',
         expect.objectContaining({
+          flow: expect.objectContaining({
+            operator: expect.objectContaining({
+              profileId: 'staff-123',
+              displayName: 'Alex Operator',
+              role: 'staff',
+            }),
+            formCreatedAt: mockFormCreatedAt,
+          }),
+          formSubmittedAt: mockFormSubmittedAt,
           consent: expect.objectContaining({
             acceptedTerms: 'true',
             acceptedGdpr: 'true',
@@ -193,13 +220,29 @@ describe('FormShell', () => {
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
       'Membership form payload JSON:',
-      expect.stringContaining('"signature": "data:image/png;base64,mock-signature"')
+      expect.stringContaining('"operator"')
     );
+  });
+
+  it('does not render operator details in the form UI', () => {
+    render(
+      <FormProvider
+        intent="new"
+        typeId="Full Member"
+        operator={mockOperator}
+        formCreatedAt={mockFormCreatedAt}
+      >
+        <FormShell currentStep={1} />
+      </FormProvider>
+    );
+
+    expect(screen.queryByText('Alex Operator')).not.toBeInTheDocument();
+    expect(screen.queryByText('staff-123')).not.toBeInTheDocument();
   });
 
   it('disables next button when step is invalid', () => {
     render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <FormShell currentStep={1} />
       </FormProvider>
     );
@@ -210,7 +253,7 @@ describe('FormShell', () => {
 
   it('renders step 1 content', () => {
     render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <FormShell currentStep={1} />
       </FormProvider>
     );
@@ -220,7 +263,7 @@ describe('FormShell', () => {
 
   it('renders step 2 content', () => {
     render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <FormShell currentStep={2} />
       </FormProvider>
     );
@@ -229,7 +272,7 @@ describe('FormShell', () => {
 
   it('renders step 3 content', () => {
     render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <FormShell currentStep={3} />
       </FormProvider>
     );
@@ -238,7 +281,7 @@ describe('FormShell', () => {
 
   it('renders step 4 placeholder content', () => {
     render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <FormShell currentStep={4} />
       </FormProvider>
     );
@@ -249,7 +292,7 @@ describe('FormShell', () => {
     const stepLabels = ['PERSONAL DETAILS', 'MEMBERSHIP DETAILS', 'SAFEGUARDING & MEDICAL', 'ADDITIONAL INFO & CONSENT'];
     for (let step = 1; step <= 4; step++) {
       const { unmount } = render(
-        <FormProvider intent="new" typeId="Full Member">
+        <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
           <FormShell currentStep={step} />
         </FormProvider>
       );
