@@ -28,6 +28,7 @@ export default function FormShell({
   const searchParams = useSearchParams();
   const { flow, step1, step2, step3, step4 } = useFormContext();
   const [isValid, setIsValid] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
   const membershipType = flow.typeId
     .replace(/[-_]+/g, ' ')
@@ -47,6 +48,7 @@ export default function FormShell({
 
   const handleComplete = () => {
     if (!isValid) return;
+    setCompleting(true);
     const payload = {
       flow,
       personal: step1,
@@ -95,7 +97,7 @@ export default function FormShell({
         <h1 className="mb-5 text-xl font-semibold tracking-[0.04em] text-[#2b2b2b]">
           {membershipTitle}
         </h1>
-        <StepIndicator currentStep={currentStep} />
+        <StepIndicator currentStep={currentStep} completing={completing} />
       </div>
 
       <div className="w-full flex-1 bg-white">
