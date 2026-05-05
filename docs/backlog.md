@@ -817,7 +817,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-023: Membership Form Stepper Layout Refresh
 
-- **Status:** IN_PROGRESS
+- **Status:** DEV_DONE
 - **Goal:** Introduce a horizontal step progress indicator at the top of the existing multi-step membership form, wizard-style, while keeping the styling consistent with the current UI refreshes.
 - **Scope:**
   - Add a horizontal row of steps at the top of the form

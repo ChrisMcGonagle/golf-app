@@ -26,7 +26,7 @@ export default function FormShell({
 }: FormShellProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { flow } = useFormContext();
+  const { flow, step1, step2, step3, step4 } = useFormContext();
   const [isValid, setIsValid] = useState(false);
 
   const membershipType = flow.typeId
@@ -43,6 +43,19 @@ export default function FormShell({
       newParams.set('step', String(currentStep + 1));
       router.push(`?${newParams.toString()}`);
     }
+  };
+
+  const handleComplete = () => {
+    if (!isValid) return;
+    const payload = {
+      flow,
+      personal: step1,
+      membership: step2,
+      safeguarding: step3,
+      consent: step4,
+    };
+    console.log('Membership form payload:', payload);
+    console.log('Membership form payload JSON:', JSON.stringify(payload, null, 2));
   };
 
   const renderStep = () => {
@@ -118,6 +131,7 @@ export default function FormShell({
                 </button>
               ) : (
                 <button
+                  onClick={handleComplete}
                   disabled={!isValid}
                   className="rounded-lg bg-[#2b2b2b] px-6 py-2 font-medium text-white hover:bg-[#1a1a1a] disabled:cursor-not-allowed disabled:opacity-50"
                 >

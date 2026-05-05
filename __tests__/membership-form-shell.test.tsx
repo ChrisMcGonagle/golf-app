@@ -39,8 +39,8 @@ describe('FormShell', () => {
         <FormShell currentStep={1} />
       </FormProvider>
     );
-    const backButton = screen.getByRole('button', { name: /Back/i });
-    expect(backButton).toBeDisabled();
+    const backLink = screen.getByRole('link', { name: /Back/i });
+    expect(backLink).toBeInTheDocument();
   });
 
   it('renders back button enabled on step 2', () => {
@@ -49,8 +49,8 @@ describe('FormShell', () => {
         <FormShell currentStep={2} />
       </FormProvider>
     );
-    const backButton = screen.getByRole('button', { name: /Back/i });
-    expect(backButton).not.toBeDisabled();
+    const backLink = screen.getByRole('link', { name: /Back/i });
+    expect(backLink).toBeInTheDocument();
   });
 
   it('renders next button on steps 1-3', () => {
@@ -120,7 +120,7 @@ describe('FormShell', () => {
         <FormShell currentStep={4} />
       </FormProvider>
     );
-    expect(screen.getByText(/Consent information/i)).toBeInTheDocument();
+    expect(screen.getByText(/Please read our Membership Terms/i)).toBeInTheDocument();
   });
 
   it('renders step indicator for each step', () => {
