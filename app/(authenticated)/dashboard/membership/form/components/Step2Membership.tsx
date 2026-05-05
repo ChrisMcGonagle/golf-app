@@ -54,7 +54,6 @@ export default function Step2Membership({
 
   return (
     <div className="space-y-6">
-      <h3 className="text-xl font-semibold text-[#2b2b2b]">Membership Details</h3>
 
       <div>
         <label htmlFor="isCruitHome" className={labelClasses}>

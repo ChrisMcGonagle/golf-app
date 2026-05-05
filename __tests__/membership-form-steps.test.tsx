@@ -177,7 +177,6 @@ describe('Step4Placeholder', () => {
       </FormProvider>
     );
 
-    expect(screen.getByText(/Additional Info & Consent/i)).toBeInTheDocument();
     expect(screen.getByText(/Consent information/i)).toBeInTheDocument();
   });
 

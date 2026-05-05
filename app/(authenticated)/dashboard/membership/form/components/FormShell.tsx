@@ -2,11 +2,19 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+import { useFormContext } from '@/components/contexts/FormContext';
 import StepIndicator from './StepIndicator';
 import Step1Personal from './Step1Personal';
 import Step2Membership from './Step2Membership';
 import Step3Safeguarding from './Step3Safeguarding';
 import Step4Placeholder from './Step4Placeholder';
+
+const STEP_TITLES = [
+  'PERSONAL DETAILS',
+  'MEMBERSHIP DETAILS',
+  'SAFEGUARDING & MEDICAL',
+  'ADDITIONAL INFO & CONSENT',
+];
 
 interface FormShellProps {
   currentStep: number;
@@ -17,7 +25,15 @@ export default function FormShell({
 }: FormShellProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { flow } = useFormContext();
   const [isValid, setIsValid] = useState(false);
+
+  const membershipType = flow.typeId
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const normalizedType = membershipType.replace(/\b(member|membership)\b\s*$/i, '').trim();
+  const membershipTitle = `${(normalizedType || membershipType).toUpperCase()} MEMBERSHIP`;
 
   const handleNext = () => {
     if (!isValid) return;
@@ -67,39 +83,55 @@ export default function FormShell({
 
   return (
     <div className="min-h-screen bg-[#f5f6f5]">
-      <div className="mx-auto max-w-3xl px-4 py-10">
+      <div className="mx-auto max-w-3xl pt-6 pb-0">
+        <h1 className="mb-5 text-xl font-semibold tracking-[0.04em] text-[#2b2b2b]">
+          {membershipTitle}
+        </h1>
         <StepIndicator currentStep={currentStep} />
-
-      <div className="rounded-2xl border border-[#eeeeee] bg-white p-8 shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
-        {renderStep()}
       </div>
 
-      <div className="mt-8 flex justify-between gap-4">
-        <button
-          onClick={handleBack}
-          disabled={currentStep === 1}
-          className="rounded-lg border border-[#eeeeee] bg-white px-6 py-2 font-medium text-[#2b2b2b] hover:bg-[#f5f5f5] disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Back
-        </button>
+      <div className="w-full bg-white">
+        <div className="mx-auto max-w-3xl pt-4 pb-0">
+          <div className="mb-4 flex items-center">
+            <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#2b2b2b]">
+              {STEP_TITLES[currentStep - 1]}
+            </p>
+            <div className="mx-4 h-3 w-px bg-[#eeeeee]" />
+            <p className="text-xs text-[#ef4444]">* are required fields</p>
+          </div>
+          <div className="border border-[#eeeeee] bg-white p-8">
+            {renderStep()}
+          </div>
 
-        {currentStep < 4 ? (
-          <button
-            onClick={handleNext}
-            disabled={!isValid}
-            className="rounded-lg bg-[#2b2b2b] px-6 py-2 font-medium text-white hover:bg-[#1a1a1a] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Next
-          </button>
-        ) : (
-          <button
-            disabled
-            className="rounded-lg bg-[#969696] px-6 py-2 font-medium text-white cursor-not-allowed"
-          >
-            Complete (Coming Soon)
-          </button>
-        )}
-      </div>
+          <div className="border-x border-b border-[#eeeeee] bg-[#f5f6f5] px-8 py-4">
+            <div className="flex justify-between gap-4">
+              <button
+                onClick={handleBack}
+                disabled={currentStep === 1}
+                className="rounded-lg border border-[#eeeeee] bg-white px-6 py-2 font-medium text-[#2b2b2b] hover:bg-[#f5f5f5] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Back
+              </button>
+
+              {currentStep < 4 ? (
+                <button
+                  onClick={handleNext}
+                  disabled={!isValid}
+                  className="rounded-lg bg-[#2b2b2b] px-6 py-2 font-medium text-white hover:bg-[#1a1a1a] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  disabled
+                  className="rounded-lg cursor-not-allowed bg-[#969696] px-6 py-2 font-medium text-white"
+                >
+                  Complete (Coming Soon)
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

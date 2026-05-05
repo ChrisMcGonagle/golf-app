@@ -67,7 +67,6 @@ export default function Step1Personal({
 
   return (
     <div className="space-y-6">
-      <h3 className="text-xl font-semibold text-[#2b2b2b]">Personal Details</h3>
 
       {/* Display flow context to verify it's available */}
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">

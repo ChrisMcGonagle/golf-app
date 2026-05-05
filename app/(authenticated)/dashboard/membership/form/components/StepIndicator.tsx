@@ -5,59 +5,124 @@ interface StepIndicatorProps {
 }
 
 const STEPS = [
-  { number: 1, label: 'Personal Details' },
-  { number: 2, label: 'Membership Details' },
-  { number: 3, label: 'Safeguarding & Medical' },
-  { number: 4, label: 'Additional Info & Consent' },
+  { number: 1, label: 'Personal' },
+  { number: 2, label: 'Membership' },
+  { number: 3, label: 'Safeguarding' },
+  { number: 4, label: 'Consent' },
 ];
 
 export default function StepIndicator({ currentStep }: StepIndicatorProps) {
   return (
     <div className="mb-12">
-      {/* Labels above the circles */}
-      <div className="mb-6 flex justify-between px-0">
-        {STEPS.map((step) => (
-          <div key={step.number} className="flex flex-1 justify-center">
-            <p
-              className={`text-center text-xs font-medium transition-colors ${
-                step.number <= currentStep ? 'text-[#2b2b2b]' : 'text-[#969696]'
-              }`}
-            >
-              {step.label}
-            </p>
-          </div>
-        ))}
-      </div>
+      {/* Grid layout: 7 columns (4 steps + 3 lines, all equal width) */}
+      <div className="grid grid-cols-7 gap-0">
+        {/* Row 1: Text labels in step columns (0, 2, 4, 6) */}
+        <div className="col-span-1 flex justify-center">
+          <p
+            className={`mb-3 text-center text-xs font-bold uppercase transition-colors ${
+              STEPS[0].number <= currentStep ? 'text-[#2b2b2b]' : 'text-[#969696]'
+            }`}
+          >
+            {STEPS[0].label}
+          </p>
+        </div>
+        <div className="col-span-1" /> {/* Line column spacer */}
+        <div className="col-span-1 flex justify-center">
+          <p
+            className={`mb-3 text-center text-xs font-bold uppercase transition-colors ${
+              STEPS[1].number <= currentStep ? 'text-[#2b2b2b]' : 'text-[#969696]'
+            }`}
+          >
+            {STEPS[1].label}
+          </p>
+        </div>
+        <div className="col-span-1" /> {/* Line column spacer */}
+        <div className="col-span-1 flex justify-center">
+          <p
+            className={`mb-3 text-center text-xs font-bold uppercase transition-colors ${
+              STEPS[2].number <= currentStep ? 'text-[#2b2b2b]' : 'text-[#969696]'
+            }`}
+          >
+            {STEPS[2].label}
+          </p>
+        </div>
+        <div className="col-span-1" /> {/* Line column spacer */}
+        <div className="col-span-1 flex justify-center">
+          <p
+            className={`mb-3 text-center text-xs font-bold uppercase transition-colors ${
+              STEPS[3].number <= currentStep ? 'text-[#2b2b2b]' : 'text-[#969696]'
+            }`}
+          >
+            {STEPS[3].label}
+          </p>
+        </div>
 
-      {/* Circle-line-circle progression */}
-      <div className="flex items-center justify-between">
-        {STEPS.map((step, index) => (
-          <div key={step.number} className="flex flex-1 items-center">
-            {/* Circle */}
-            <div className="flex justify-center flex-shrink-0 w-8">
-              <div
-                className={`h-8 w-8 rounded-full transition-colors ${
-                  step.number < currentStep
-                    ? 'bg-[#2b2b2b]'
-                    : step.number === currentStep
-                    ? 'bg-[#2b2b2b]'
-                    : 'border-2 border-[#969696]'
-                }`}
-              />
-            </div>
-
-            {/* Connecting Line (skip after last step) */}
-            {index < STEPS.length - 1 && (
-              <div className="flex-1 mx-1">
-                <div
-                  className={`h-1 transition-colors ${
-                    step.number < currentStep ? 'bg-[#2b2b2b]' : 'bg-[#e0e0e0]'
-                  }`}
-                />
-              </div>
-            )}
-          </div>
-        ))}
+        {/* Row 2: Circles in step columns, lines in line columns */}
+        <div className="col-span-1 flex justify-center">
+          <div
+            className={`h-6 w-6 rounded-full transition-colors ${
+              STEPS[0].number < currentStep
+                ? 'bg-[#2b2b2b]'
+                : STEPS[0].number === currentStep
+                ? 'bg-[#2b2b2b]'
+                : 'bg-[#e0e0e0]'
+            }`}
+          />
+        </div>
+        <div className="col-span-1 flex items-center">
+          <div
+            className={`h-[0.4rem] w-full transition-colors ${
+              STEPS[0].number < currentStep ? 'bg-[#2b2b2b]' : 'bg-[#e0e0e0]'
+            }`}
+          />
+        </div>
+        <div className="col-span-1 flex justify-center">
+          <div
+            className={`h-6 w-6 rounded-full transition-colors ${
+              STEPS[1].number < currentStep
+                ? 'bg-[#2b2b2b]'
+                : STEPS[1].number === currentStep
+                ? 'bg-[#2b2b2b]'
+                : 'bg-[#e0e0e0]'
+            }`}
+          />
+        </div>
+        <div className="col-span-1 flex items-center">
+          <div
+            className={`h-[0.4rem] w-full transition-colors ${
+              STEPS[1].number < currentStep ? 'bg-[#2b2b2b]' : 'bg-[#e0e0e0]'
+            }`}
+          />
+        </div>
+        <div className="col-span-1 flex justify-center">
+          <div
+            className={`h-6 w-6 rounded-full transition-colors ${
+              STEPS[2].number < currentStep
+                ? 'bg-[#2b2b2b]'
+                : STEPS[2].number === currentStep
+                ? 'bg-[#2b2b2b]'
+                : 'bg-[#e0e0e0]'
+            }`}
+          />
+        </div>
+        <div className="col-span-1 flex items-center">
+          <div
+            className={`h-[0.4rem] w-full transition-colors ${
+              STEPS[2].number < currentStep ? 'bg-[#2b2b2b]' : 'bg-[#e0e0e0]'
+            }`}
+          />
+        </div>
+        <div className="col-span-1 flex justify-center">
+          <div
+            className={`h-6 w-6 rounded-full transition-colors ${
+              STEPS[3].number < currentStep
+                ? 'bg-[#2b2b2b]'
+                : STEPS[3].number === currentStep
+                ? 'bg-[#2b2b2b]'
+                : 'bg-[#e0e0e0]'
+            }`}
+          />
+        </div>
       </div>
     </div>
   );

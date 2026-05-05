@@ -168,7 +168,7 @@ describe('MembershipTypePage (/dashboard/membership/type)', () => {
 describe("MembershipFormPage (/dashboard/membership/form)", () => {
   it("renders the Membership Form heading", async () => {
     render(await MembershipFormPage({ searchParams: Promise.resolve({ intent: 'new', typeId: 'Full%20Member' }) }));
-    expect(screen.getByRole('heading', { level: 3, name: /Personal Details/i })).toBeInTheDocument();
+    expect(screen.getByText(/personal details/i)).toBeInTheDocument();
   });
 
   it("renders form for new membership with valid params", async () => {
@@ -178,7 +178,7 @@ describe("MembershipFormPage (/dashboard/membership/form)", () => {
 
   it("renders form for renewal with memberId", async () => {
     render(await MembershipFormPage({ searchParams: Promise.resolve({ intent: 'renewal', typeId: 'Senior%20Member', memberId: 'uuid-member-1' }) }));
-    expect(screen.getByRole('heading', { level: 3, name: /Personal Details/i })).toBeInTheDocument();
+    expect(screen.getByText(/personal details/i)).toBeInTheDocument();
   });
 
   it("shows error when intent is missing", async () => {

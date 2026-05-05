@@ -57,7 +57,6 @@ export default function Step3Safeguarding({
 
   return (
     <div className="space-y-6">
-      <h3 className="text-xl font-semibold text-[#2b2b2b]">Safeguarding & Medical</h3>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div>

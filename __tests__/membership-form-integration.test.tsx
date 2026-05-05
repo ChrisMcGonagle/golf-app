@@ -54,7 +54,7 @@ describe('Membership Form Page - Integration', () => {
 
     render(await MembershipFormPage({ searchParams }));
     await waitFor(() => {
-      expect(screen.getByRole('heading', { level: 3, name: /Personal Details/i })).toBeInTheDocument();
+      expect(screen.getByText(/personal details/i)).toBeInTheDocument();
     });
   });
 
@@ -72,7 +72,7 @@ describe('Membership Form Page - Integration', () => {
 
     render(await MembershipFormPage({ searchParams }));
     await waitFor(() => {
-      expect(screen.getByRole('heading', { level: 3, name: /Personal Details/i })).toBeInTheDocument();
+      expect(screen.getByText(/personal details/i)).toBeInTheDocument();
     });
   });
 
@@ -88,7 +88,7 @@ describe('Membership Form Page - Integration', () => {
 
     render(await MembershipFormPage({ searchParams }));
     await waitFor(() => {
-      expect(screen.getByRole('heading', { level: 3, name: /Personal Details/i })).toBeInTheDocument();
+      expect(screen.getByText(/personal details/i)).toBeInTheDocument();
     });
   });
 
@@ -123,7 +123,7 @@ describe('Membership Form Page - Integration', () => {
 
     render(await MembershipFormPage({ searchParams }));
     await waitFor(() => {
-      expect(screen.getByRole('heading', { level: 3, name: /Membership Details/i })).toBeInTheDocument();
+      expect(screen.getByText(/membership details/i)).toBeInTheDocument();
     });
   });
 
@@ -171,7 +171,8 @@ describe('Membership Form Page - Integration', () => {
     render(await MembershipFormPage({ searchParams }));
     await waitFor(() => {
       expect(screen.getByText(/New Membership/i)).toBeInTheDocument();
-      expect(screen.getByText(/Full Member/i)).toBeInTheDocument();
+      const journeyText = screen.getByText(/Journey:/i).parentElement;
+      expect(journeyText).toHaveTextContent('New Membership - Full Member');
     });
   });
 
@@ -190,7 +191,8 @@ describe('Membership Form Page - Integration', () => {
     render(await MembershipFormPage({ searchParams }));
     await waitFor(() => {
       expect(screen.getByText(/Renewal/i)).toBeInTheDocument();
-      expect(screen.getByText(/Standard Member/i)).toBeInTheDocument();
+      const summaryText = screen.getByText(/Form Summary:/i).parentElement;
+      expect(summaryText).toHaveTextContent('Renewal - Standard Member');
       expect(screen.getByText(/member-456/i)).toBeInTheDocument();
     });
   });

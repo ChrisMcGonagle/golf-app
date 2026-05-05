@@ -30,7 +30,7 @@ describe('FormShell', () => {
         <FormShell currentStep={1} />
       </FormProvider>
     );
-    expect(screen.getByRole('heading', { level: 3, name: /Personal Details/i })).toBeInTheDocument();
+    expect(screen.getByText(/personal details/i)).toBeInTheDocument();
   });
 
   it('renders back button disabled on step 1', () => {
@@ -124,14 +124,14 @@ describe('FormShell', () => {
   });
 
   it('renders step indicator for each step', () => {
-    const stepLabels = ['Personal Details', 'Membership Details', 'Safeguarding & Medical', 'Additional Info & Consent'];
+    const stepLabels = ['PERSONAL DETAILS', 'MEMBERSHIP DETAILS', 'SAFEGUARDING & MEDICAL', 'ADDITIONAL INFO & CONSENT'];
     for (let step = 1; step <= 4; step++) {
       const { unmount } = render(
         <FormProvider intent="new" typeId="Full Member">
           <FormShell currentStep={step} />
         </FormProvider>
       );
-      expect(screen.getByRole('heading', { level: 3, name: new RegExp(stepLabels[step - 1], 'i') })).toBeInTheDocument();
+      expect(screen.getByText(stepLabels[step - 1])).toBeInTheDocument();
       unmount();
     }
   });
@@ -169,6 +169,6 @@ describe('FormShell with memberId (renewal)', () => {
         <FormShell currentStep={1} />
       </FormProvider>
     );
-    expect(screen.getByRole('heading', { level: 3, name: /Personal Details/i })).toBeInTheDocument();
+    expect(screen.getByText(/personal details/i)).toBeInTheDocument();
   });
 });

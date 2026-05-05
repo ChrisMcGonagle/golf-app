@@ -7,7 +7,6 @@ export default function Step4Placeholder(): React.ReactNode {
 
   return (
     <div className="space-y-6">
-      <h3 className="text-xl font-semibold text-[#2b2b2b]">Additional Info & Consent</h3>
       <p className="text-[#2b2b2b]">
         Consent information and additional details will be available in a future update.
       </p>
