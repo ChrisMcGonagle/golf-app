@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function JiggerBrand() {
+export default function BaffieBrand() {
   return (
     <div className="flex items-center gap-2">
       <svg

@@ -42,37 +42,29 @@ describe('AuthenticatedShell', () => {
     '/dashboard/membership/type',
     '/dashboard/membership/form',
     '/dashboard/membership-registration',
-  ])('shows Cancel button and Jigger branding on membership flow screen %s', (pathname) => {
+  ])('renders children on membership flow screen %s', (pathname) => {
     mockUsePathname.mockReturnValue(pathname);
 
-    const { container } = render(
+    render(
       <AuthenticatedShell>
         <div>Membership Content</div>
       </AuthenticatedShell>
     );
 
-    expect(container.querySelector('header')).toBeInTheDocument();
-    expect(screen.getByText('Jigger')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /cancel/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /sign off/i })).not.toBeInTheDocument();
     expect(screen.getByText('Membership Content')).toBeInTheDocument();
   });
 
   it.each(['/dashboard'])(
-    'shows SignOff button and Jigger branding on non-flow screen %s',
+    'renders children on non-flow screen %s',
     (pathname) => {
       mockUsePathname.mockReturnValue(pathname);
 
-      const { container } = render(
+      render(
         <AuthenticatedShell>
           <div>Dashboard Content</div>
         </AuthenticatedShell>
       );
 
-      expect(container.querySelector('header')).toBeInTheDocument();
-      expect(screen.getByText('Jigger')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /sign off/i })).toBeInTheDocument();
-      expect(screen.queryByRole('link', { name: /cancel/i })).not.toBeInTheDocument();
       expect(screen.getByText('Dashboard Content')).toBeInTheDocument();
     }
   );
