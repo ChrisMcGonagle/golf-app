@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { FormProvider } from '@/components/contexts/FormContext';
+import { getActiveUserSession } from '@/lib/auth/activeUserSession';
 import FormShell from './components/FormShell';
 
 type MembershipFormPageProps = {
@@ -12,6 +14,12 @@ type MembershipFormPageProps = {
 };
 
 export default async function MembershipFormPage({ searchParams }: MembershipFormPageProps) {
+  const operator = await getActiveUserSession();
+
+  if (!operator) {
+    redirect('/select-user');
+  }
+
   const { intent, typeId, memberId, step } = await searchParams;
 
   // Validate required params
@@ -53,6 +61,8 @@ export default async function MembershipFormPage({ searchParams }: MembershipFor
       intent={intent as 'new' | 'renewal'}
       typeId={decodedTypeId}
       memberId={memberId}
+      operator={operator}
+      formCreatedAt={new Date().toISOString()}
     >
       <FormShell currentStep={currentStep} />
     </FormProvider>

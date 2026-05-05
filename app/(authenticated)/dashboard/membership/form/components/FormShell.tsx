@@ -51,6 +51,7 @@ export default function FormShell({
     setCompleting(true);
     const payload = {
       flow,
+      formSubmittedAt: new Date().toISOString(),
       personal: step1,
       membership: step2,
       safeguarding: step3,

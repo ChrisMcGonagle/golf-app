@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import type { ActiveUserSession } from '@/types/activeUser';
 
 export interface Step1Data {
   firstName: string;
@@ -51,6 +52,8 @@ export interface FlowContext {
   intent: 'new' | 'renewal';
   typeId: string;
   memberId?: string;
+  operator?: ActiveUserSession;
+  formCreatedAt: string;
 }
 
 export interface FormContextType {
@@ -119,6 +122,8 @@ interface FormProviderProps {
   intent: 'new' | 'renewal';
   typeId: string;
   memberId?: string;
+  operator?: ActiveUserSession;
+  formCreatedAt: string;
 }
 
 export function FormProvider({
@@ -126,6 +131,8 @@ export function FormProvider({
   intent,
   typeId,
   memberId,
+  operator,
+  formCreatedAt,
 }: FormProviderProps) {
   const [step1, setStep1State] = useState<Step1Data>(initialStep1);
   const [step2, setStep2State] = useState<Step2Data>(initialStep2);
@@ -152,6 +159,8 @@ export function FormProvider({
     intent,
     typeId,
     memberId,
+    operator,
+    formCreatedAt,
   };
 
   const value: FormContextType = {
