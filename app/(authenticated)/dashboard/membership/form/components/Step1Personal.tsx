@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useFormContext, Step1Data } from '@/components/contexts/FormContext';
 
 interface Step1PersonalProps {
@@ -13,6 +13,7 @@ const REQUIRED_FIELDS_ORDER: (keyof Step1Data)[] = [
   'dob',
   'gender',
   'address1',
+  'address2',
   'city',
   'county',
   'postalCode',
@@ -25,6 +26,7 @@ export default function Step1Personal({
   onValidationChange,
 }: Step1PersonalProps) {
   const { step1, setStep1 } = useFormContext();
+  const address2Ref = useRef<HTMLInputElement>(null);
   const [errors, setErrors] = useState<Partial<Record<keyof Step1Data, string>>>({});
   const [blurredFields, setBlurredFields] = useState<Partial<Record<keyof Step1Data, boolean>>>({});
 
@@ -49,6 +51,7 @@ export default function Step1Personal({
       if (firstEmpty === 'dob') newErrors.dob = 'Date of birth is required';
       if (firstEmpty === 'gender') newErrors.gender = 'Gender is required';
       if (firstEmpty === 'address1') newErrors.address1 = 'Address line 1 is required';
+      if (firstEmpty === 'address2') newErrors.address2 = 'Address line 2 is required';
       if (firstEmpty === 'city') newErrors.city = 'City is required';
       if (firstEmpty === 'county') newErrors.county = 'County is required';
       if (firstEmpty === 'postalCode') newErrors.postalCode = 'Postal code is required';
@@ -216,38 +219,43 @@ export default function Step1Personal({
           Contact Information :
         </h3>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div className={fieldRowClasses}>
+          <div className={`${fieldRowClasses} sm:col-span-2`}>
             <label htmlFor="address1" className={labelClasses}>
-              Address Line 1 <span className="text-[#ef4444]">*</span>
+              Address <span className="text-[#ef4444]">*</span>
             </label>
-            <div className="min-w-0">
+            <div className="min-w-0 flex items-center gap-1">
               <input
                 id="address1"
                 type="text"
                 value={step1.address1}
                 onChange={(e) => handleChange('address1', e.target.value)}
-                onBlur={() => handleFieldBlur('address1')}
+                onBlur={() => { handleFieldBlur('address1'); address2Ref.current?.focus(); }}
                 autoComplete="off"
                 className={getFieldClasses('address1', step1.address1, errors.address1)}
-                placeholder="123 Main Street"
+                placeholder="Line 1"
               />
-            </div>
-          </div>
-
-          <div className={fieldRowClasses}>
-            <label htmlFor="address2" className={labelClasses}>
-              Address Line 2
-            </label>
-            <div className="min-w-0">
+              <span className="text-[#969696] text-xs flex-shrink-0">,</span>
               <input
                 id="address2"
+                ref={address2Ref}
                 type="text"
                 value={step1.address2}
                 onChange={(e) => handleChange('address2', e.target.value)}
                 onBlur={() => handleFieldBlur('address2')}
                 autoComplete="off"
-                className={getFieldClasses('address2', step1.address2)}
-                placeholder="Apartment 4B"
+                className={getFieldClasses('address2', step1.address2, errors.address2)}
+                placeholder="Line 2"
+              />
+              <span className="text-[#969696] text-xs flex-shrink-0">,</span>
+              <input
+                id="address3"
+                type="text"
+                value={step1.address3}
+                onChange={(e) => handleChange('address3', e.target.value)}
+                onBlur={() => handleFieldBlur('address3')}
+                autoComplete="off"
+                className={getFieldClasses('address3', step1.address3)}
+                placeholder="Line 3"
               />
             </div>
           </div>

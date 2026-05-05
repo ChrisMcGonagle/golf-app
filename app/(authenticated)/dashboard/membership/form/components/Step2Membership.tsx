@@ -48,7 +48,7 @@ export default function Step2Membership({
   const isPreviousClubsStruckOut = step2.hadOtherClub === 'No';
   const isPreviousClubsRequired = step2.hadOtherClub === 'Yes' && step2.isCurrentMember === 'No';
   const isHandicapIndexRequired = step2.hasHandicap === 'Yes';
-  const isHandicapIndexStruckOut = step2.hasHandicap === 'No';
+  const isHandicapIndexStruckOut = step2.hasHandicap === 'No' || isHandicapStruckOut;
   const showHomeClubOtherInfo = step2.homeClubCountry === 'Other';
 
   // Initialize previousClubsList from previousClubs context
@@ -83,6 +83,10 @@ export default function Step2Membership({
       }
       // Skip homeClubCountry when homeClub is not filled
       if (field === 'homeClubCountry' && !step2.homeClub.trim()) {
+        continue;
+      }
+      // Skip hasHandicap when it is struck out (hadOtherClub is No)
+      if (field === 'hasHandicap' && isHandicapStruckOut) {
         continue;
       }
       if (!step2[field].trim()) {
