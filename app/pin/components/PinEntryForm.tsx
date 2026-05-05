@@ -29,6 +29,7 @@ export default function PinEntryForm({
   onClearError,
 }: PinEntryFormProps): JSX.Element {
   const [digits, setDigits] = useState('');
+  const [isPending, setIsPending] = useState(false);
   const [isFlashing, setIsFlashing] = useState(false);
   const [isFlashingSuccess, setIsFlashingSuccess] = useState(false);
   const captureInputRef = useRef<HTMLInputElement>(null);
@@ -41,6 +42,7 @@ export default function PinEntryForm({
   // Handle error prop changes
   useEffect(() => {
     if (error) {
+      setIsPending(false);
       setIsFlashing(true);
 
       const flashTimeout = setTimeout(() => {
@@ -54,10 +56,18 @@ export default function PinEntryForm({
   }, [error, attempt]);
 
   const focusCaptureInput = (): void => {
+    if (isPending) {
+      return;
+    }
+
     captureInputRef.current?.focus();
   };
 
   const appendDigit = (nextDigit: string): void => {
+    if (isPending) {
+      return;
+    }
+
     onClearError?.();
 
     setDigits((currentDigits) => {
@@ -72,18 +82,31 @@ export default function PinEntryForm({
   };
 
   const removeDigit = (): void => {
+    if (isPending) {
+      return;
+    }
+
     onClearError?.();
     setDigits((currentDigits) => currentDigits.slice(0, -1));
     focusCaptureInput();
   };
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    if (isPending) {
+      return;
+    }
+
     const nextDigits = event.target.value.replace(/\D/g, '').slice(0, PIN_LENGTH);
     onClearError?.();
     setDigits(nextDigits);
   };
 
   const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
+    if (isPending) {
+      event.preventDefault();
+      return;
+    }
+
     if (event.key === 'Backspace' || event.key === 'Delete') {
       event.preventDefault();
       removeDigit();
@@ -98,7 +121,7 @@ export default function PinEntryForm({
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
 
-    if (digits.length !== PIN_LENGTH) {
+    if (digits.length !== PIN_LENGTH || isPending) {
       return;
     }
 
@@ -107,9 +130,11 @@ export default function PinEntryForm({
       return;
     }
 
+    setIsPending(true);
+
     // Create FormData from the form
     const formData = new FormData(formRef.current!);
-    
+
     try {
       // Call the server action
       const response = await action(formData) as { success: boolean; error?: string; remaining?: number } | undefined;
@@ -129,6 +154,8 @@ export default function PinEntryForm({
     } catch (err) {
       // If there's an error in the submission, keep the form as is
       console.error('PIN validation error:', err);
+    } finally {
+      setIsPending(false);
     }
   };
 
@@ -170,6 +197,7 @@ export default function PinEntryForm({
           value={digits}
           onChange={handleInputChange}
           onKeyDown={handleInputKeyDown}
+          disabled={isPending}
           className="sr-only"
         />
 
@@ -177,10 +205,16 @@ export default function PinEntryForm({
           {Array.from({ length: PIN_LENGTH }, (_, index) => {
             const isFilled = index < digits.length;
             let backgroundColor = isFilled ? '#2b2b2b' : 'transparent';
+            let animation = 'none';
+            let opacity = 1;
             if (isFlashingSuccess) {
               backgroundColor = '#22c55e';
             } else if (isFlashing) {
               backgroundColor = '#ef4444';
+            } else if (isPending) {
+              backgroundColor = '#2b2b2b';
+              animation = `pin-dot-wave 0.9s ease-in-out ${index * 0.12}s infinite`;
+              opacity = 0.5;
             }
 
             return (
@@ -188,7 +222,9 @@ export default function PinEntryForm({
                 key={index}
                 className="h-6 w-6 rounded-full border-2 border-[#cccccc] transition-all duration-150"
                 style={{
+                  animation,
                   backgroundColor,
+                  opacity,
                 }}
               />
             );
@@ -202,7 +238,8 @@ export default function PinEntryForm({
             key={digit}
             type="button"
             onClick={() => appendDigit(digit)}
-            className="flex h-20 w-20 items-center justify-center rounded-full bg-[#f0f0f0] text-2xl font-semibold text-[#2b2b2b] transition hover:bg-[#e8e8e8] focus:outline-none focus:ring-2 focus:ring-[#2b2b2b]/15 focus:ring-offset-2"
+            disabled={isPending}
+            className="flex h-20 w-20 items-center justify-center rounded-full bg-[#f0f0f0] text-2xl font-semibold text-[#2b2b2b] transition hover:bg-[#e8e8e8] focus:outline-none focus:ring-2 focus:ring-[#2b2b2b]/15 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-[#f0f0f0]"
           >
             {digit}
           </button>
@@ -213,7 +250,8 @@ export default function PinEntryForm({
         <button
           type="button"
           onClick={() => appendDigit('0')}
-          className="flex h-20 w-20 items-center justify-center rounded-full bg-[#f0f0f0] text-2xl font-semibold text-[#2b2b2b] transition hover:bg-[#e8e8e8] focus:outline-none focus:ring-2 focus:ring-[#2b2b2b]/15 focus:ring-offset-2"
+          disabled={isPending}
+          className="flex h-20 w-20 items-center justify-center rounded-full bg-[#f0f0f0] text-2xl font-semibold text-[#2b2b2b] transition hover:bg-[#e8e8e8] focus:outline-none focus:ring-2 focus:ring-[#2b2b2b]/15 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-[#f0f0f0]"
         >
           0
         </button>
@@ -221,7 +259,8 @@ export default function PinEntryForm({
         <button
           type="button"
           onClick={removeDigit}
-          className="flex h-20 w-20 items-center justify-center text-[#2b2b2b] transition-colors hover:text-[#969696] focus:outline-none"
+          disabled={isPending}
+          className="flex h-20 w-20 items-center justify-center text-[#2b2b2b] transition-colors hover:text-[#969696] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:text-[#2b2b2b]"
           aria-label="Delete digit"
         >
           <svg
@@ -249,6 +288,21 @@ export default function PinEntryForm({
           <span>Cancel</span>
         </Link>
       </div>
+
+      <style jsx>{`
+        @keyframes pin-dot-wave {
+          0%,
+          100% {
+            opacity: 0.45;
+            transform: scale(0.82);
+          }
+
+          50% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
     </form>
   );
 }
