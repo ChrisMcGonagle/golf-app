@@ -899,7 +899,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-025: Membership Form Operator Attribution
 
-- **Status:** IN_PROGRESS
+- **Status:** DONE
 - **Goal:** Track the authenticated staff/admin operator who unlocked the shared device with their PIN, carry that operator identity through the full membership form flow, and include it in the submitted form payload without displaying the operator anywhere in the form UI.
 - **Scope:**
   - Derive the operator from the currently authenticated shared-device session established after successful PIN entry
@@ -928,10 +928,11 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-026: Hide Sign-Off Header Within Membership Flow Screens
 
-- **Status:** READY
+- **Status:** DEV_DONE
 - **Goal:** Remove the existing sign-off header/button from membership-flow screens so the user stays in a focused, uninterrupted flow, while keeping the same sign-off control available on general dashboard screens outside that flow.
 - **Scope:**
   - Update the existing authenticated layout/header visibility behavior so the sign-off header/button is hidden when the current screen is part of the membership flow
+  - Apply this behavior to the existing `Choose a Membership` screen (`/dashboard/membership-registration`)
   - Apply this behavior to the existing `choosing the form` screen
   - Apply this behavior to the existing `choosing the membership type` screen
   - Apply this behavior to the existing multi-step membership form screens
@@ -943,6 +944,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
   - Any redesign of the membership flow pages beyond removing the sign-off header/button in the specified contexts
   - Any change to dashboard information architecture, membership-flow business logic, or route access control
 - **Acceptance Criteria:**
+  - On the `Choose a Membership` screen (`/dashboard/membership-registration`), the sign-off header/button is not rendered
   - On the `choosing the form` screen, the sign-off header/button is not rendered
   - On the `choosing the membership type` screen, the sign-off header/button is not rendered
   - On all steps of the existing multi-step membership form, the sign-off header/button is not rendered
