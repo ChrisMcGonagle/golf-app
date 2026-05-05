@@ -774,3 +774,91 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 - **Systems Affected:** frontend
 - **Risk Level:** Low
 - **Estimated Effort:** S
+
+---
+
+## PBI-022: PIN Entry Screen UI Refresh
+
+- **Status:** READY
+- **Goal:** Redesign the existing PIN entry screen to use a clean, modern keypad-style layout similar to a mobile PIN entry screen, consistent with the updated membership dashboard design system. This is a UI update only.
+- **Scope:**
+  - Update the visual design of the existing PIN entry screen only
+  - Use the established visual language from the updated membership dashboard pages so the PIN screen feels consistent with the rest of the refreshed flow
+  - Display a clear heading and short instruction text above the PIN input area
+  - Present a 4-digit PIN indicator using visual dots or circles that reflect entered digits
+  - Add a numeric keypad with buttons for digits `0` through `9`
+  - Include a delete or backspace control within the keypad layout
+  - Include optional secondary actions such as `Reset PIN` and `Cancel`
+  - Ensure users can enter the PIN using both physical keyboard input and the on-screen keypad
+  - Ensure the layout is responsive, touch-friendly, and suitable for kiosk and tablet use
+- **Out of Scope:** Any authentication changes, validation changes, PIN submission logic changes, lockout behaviour changes, routing changes, session changes, backend work, or database work. No existing authentication or validation logic changes are included in this PBI; UI update only.
+- **Acceptance Criteria:**
+  - The existing PIN entry screen is visually redesigned into a clean, modern keypad-style layout
+  - The screen includes a heading and short instruction text that match the style of the refreshed membership pages
+  - The screen displays a 4-digit PIN indicator using clear visual dots or circles
+  - The screen displays an on-screen numeric keypad with digits `0` through `9` plus a delete or backspace action
+  - Users can enter the PIN using either keyboard input or the on-screen keypad, and both input methods work together on the same screen
+  - Optional secondary actions for `Reset PIN` and `Cancel` are present and visually secondary to PIN entry
+  - The layout is visually consistent with the existing refreshed dashboard and membership flow pages
+  - The keypad and supporting controls are touch-friendly and remain usable on mobile, tablet, and kiosk-sized screens
+  - The change is limited to the UI layer only and preserves all existing authentication, validation, and related PIN logic as-is
+- **Definition of Done:**
+  - The redesigned screen matches the current dashboard design language in spacing, surface treatment, typography, and interaction states
+  - On-screen keypad interaction works correctly alongside existing keyboard entry behaviour
+  - The layout is responsive and comfortably usable for touch interaction across supported screen sizes
+  - No existing authentication or validation logic is changed as part of implementation
+- **Dependencies:** PBI-018, PBI-019, PBI-021
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** S
+
+---
+
+## PBI-023: Membership Form Stepper Layout Refresh
+
+- **Status:** READY
+- **Goal:** Introduce a horizontal step progress indicator at the top of the existing multi-step membership form, wizard-style, while keeping the styling consistent with the current UI refreshes.
+- **Scope:**
+  - Add a horizontal row of steps at the top of the form
+  - Each step includes a circular indicator and a label
+  - Steps are exactly:
+    - `Personal Details`
+    - `Membership Details`
+    - `Safeguarding & Medical`
+    - `Additional Info & Consent`
+  - Step states must distinguish current, completed, and upcoming steps visually
+  - Steps are connected by a thin line with active/inactive treatment
+  - Even horizontal spacing and responsive tablet/kiosk-friendly scaling
+  - Show one form step at a time inside a card-style container
+  - Card-style container uses white background, rounded corners, subtle border, and shadow
+  - Include step title, form fields for that step, and `Next` / `Back` buttons
+  - Use the same colours, spacing, and typography as the refreshed PIN screen and Select User screen
+- **Form Styling Alignment:**
+  - The form layout should follow a structured, desktop-style data entry layout rather than a simple stacked mobile form
+  - Use a two-column grid layout for fields where space allows
+  - Inputs should use a minimal style (underline or light border, not heavy boxed inputs)
+  - Group fields into clearly labeled sections (e.g. `Personal Details`, `Contact Information`)
+  - Labels should be:
+    - consistently positioned (above or aligned)
+    - clearly associated with inputs
+  - The form container should be wider than previous card layouts to support multi-column input
+  - Primary action (`Next` / `Submit`) should be aligned to the bottom right
+- **Out of Scope:**
+  - Any changes to existing form logic, validation, conditional field behavior, or preserved flow context
+  - Any new colour scheme or visual system divergent from current refreshed UI
+- **Acceptance Criteria:**
+  - A visible horizontal stepper is shown across the top of the membership form
+  - The stepper visually distinguishes current, completed, and upcoming steps
+  - The form displays one step at a time inside a card-style container with a white surface, rounded corners, subtle border, and shadow
+  - The stepper and card layout are visually consistent with the refreshed PIN screen and Select User screen
+  - The layout remains responsive, touch-friendly, and usable on tablet and kiosk-sized displays
+  - Existing form logic, validation, and conditional field behavior remain unchanged
+  - The full flow context remains preserved throughout the form, including `new/renewal`, selected member, and membership type
+- **Definition of Done:**
+  - Implementation is completed for the horizontal stepper and card-based single-step form presentation
+  - Relevant UI tests and validation coverage are updated for the refreshed layout without changing existing form behavior expectations
+  - Visual and interaction behaviour are verified across supported responsive and touch-friendly screen sizes
+- **Dependencies:** PBI-014, PBI-015, PBI-016, PBI-017, PBI-021, PBI-022
+- **Systems Affected:** frontend
+- **Risk Level:** Medium
+- **Estimated Effort:** M
