@@ -50,7 +50,7 @@ export default function StepIndicator({ currentStep }: StepIndicatorProps) {
             {index < STEPS.length - 1 && (
               <div className="flex-1 mx-1">
                 <div
-                  className={`h-0.5 transition-colors ${
+                  className={`h-1 transition-colors ${
                     step.number < currentStep ? 'bg-[#2b2b2b]' : 'bg-[#e0e0e0]'
                   }`}
                 />
