@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import MembershipFormPage from '@/app/(authenticated)/dashboard/membership/form/page.tsx';
+import MembershipFormPage from '@/app/(authenticated)/dashboard/membership/form/page';
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
