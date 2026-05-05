@@ -200,6 +200,17 @@ After PIN validation, the server creates a signed `activeUser` cookie using `ACT
 | `/dashboard/membership/form` | `SharedMembershipFormPage` | Yes | staff/admin |
 | `/dashboard/membership/email` | `MembershipEmailFlowPage` | Yes | staff/admin |
 
+### Branding and Layout
+
+The Baffy golf club branding (icon + text) appears consistently across the app:
+
+- **Select User page** (`/select-user`): Branding positioned fixed top-left, over the profile grid
+- **PIN Entry page** (`/pin`): Branding positioned fixed top-left, over the PIN form
+- **Dashboard header** (`/dashboard` and subpages): Branding displayed in a full-width header above the sidebar
+- **Membership flow screens** (form, stepper, type, registration): No branding or header displayed — user stays focused on the form
+
+The Baffy branding component is defined in `components/BaffyBrand.tsx` and imported where needed. It renders a golf club SVG icon (#2b2b2b) followed by "Baffy" text.
+
 ---
 
 ## 8. Environment Variables

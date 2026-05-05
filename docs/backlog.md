@@ -928,7 +928,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-026: Hide Sign-Off Header Within Membership Flow Screens
 
-- **Status:** DEV_DONE
+- **Status:** DONE
 - **Goal:** Remove the existing sign-off header/button from membership-flow screens so the user stays in a focused, uninterrupted flow, while keeping the same sign-off control available on general dashboard screens outside that flow.
 - **Scope:**
   - Update the existing authenticated layout/header visibility behavior so the sign-off header/button is hidden when the current screen is part of the membership flow
