@@ -774,6 +774,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 - **Systems Affected:** frontend
 - **Risk Level:** Low
 - **Estimated Effort:** S
+
 ---
 
 ## PBI-022: PIN Entry Screen UI Refresh
@@ -810,3 +811,44 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 - **Systems Affected:** frontend
 - **Risk Level:** Low
 - **Estimated Effort:** S
+
+---
+
+## PBI-023: Membership Form Stepper Layout Refresh
+
+- **Status:** READY
+- **Goal:** Introduce a horizontal step progress indicator at the top of the existing multi-step membership form, wizard-style, while keeping the styling consistent with the current UI refreshes.
+- **Scope:**
+  - Add a horizontal row of steps at the top of the form
+  - Each step includes a circular indicator and a label
+  - Steps are exactly:
+    - `Personal Details`
+    - `Membership Details`
+    - `Safeguarding & Medical`
+    - `Additional Info & Consent`
+  - Step states must distinguish current, completed, and upcoming steps visually
+  - Steps are connected by a thin line with active/inactive treatment
+  - Even horizontal spacing and responsive tablet/kiosk-friendly scaling
+  - Show one form step at a time inside a card-style container
+  - Card-style container uses white background, rounded corners, subtle border, and shadow
+  - Include step title, form fields for that step, and `Next` / `Back` buttons
+  - Use the same colours, spacing, and typography as the refreshed PIN screen and Select User screen
+- **Out of Scope:**
+  - Any changes to existing form logic, validation, conditional field behavior, or preserved flow context
+  - Any new colour scheme or visual system divergent from current refreshed UI
+- **Acceptance Criteria:**
+  - A visible horizontal stepper is shown across the top of the membership form
+  - The stepper visually distinguishes current, completed, and upcoming steps
+  - The form displays one step at a time inside a card-style container with a white surface, rounded corners, subtle border, and shadow
+  - The stepper and card layout are visually consistent with the refreshed PIN screen and Select User screen
+  - The layout remains responsive, touch-friendly, and usable on tablet and kiosk-sized displays
+  - Existing form logic, validation, and conditional field behavior remain unchanged
+  - The full flow context remains preserved throughout the form, including `new/renewal`, selected member, and membership type
+- **Definition of Done:**
+  - Implementation is completed for the horizontal stepper and card-based single-step form presentation
+  - Relevant UI tests and validation coverage are updated for the refreshed layout without changing existing form behavior expectations
+  - Visual and interaction behaviour are verified across supported responsive and touch-friendly screen sizes
+- **Dependencies:** PBI-014, PBI-015, PBI-016, PBI-017, PBI-021, PBI-022
+- **Systems Affected:** frontend
+- **Risk Level:** Medium
+- **Estimated Effort:** M
