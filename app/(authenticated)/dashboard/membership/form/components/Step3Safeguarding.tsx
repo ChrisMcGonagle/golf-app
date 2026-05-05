@@ -51,106 +51,113 @@ export default function Step3Safeguarding({
   };
 
   const inputClasses =
-    'w-full rounded-lg border border-[#eeeeee] px-3 py-2 text-sm placeholder-[#969696] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500';
+    'w-full border-0 border-b-2 border-[#eeeeee] bg-transparent px-0 py-2 text-xs text-[#6f6f6f] placeholder:text-xs placeholder:text-[#969696] focus:border-blue-500 focus:outline-none';
   const textareaClasses = `${inputClasses} resize-none`;
-  const labelClasses = 'block text-sm font-medium text-[#2b2b2b] mb-2';
+  const fieldRowClasses = 'grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-3';
+  const textareaRowClasses = 'grid grid-cols-[7rem_minmax(0,1fr)] items-start gap-3';
+  const labelClasses = 'text-xs font-bold leading-4 text-[#2b2b2b]';
+  const getFieldClasses = (error?: string, baseClasses = inputClasses) =>
+    `${baseClasses} ${error ? 'border-red-500 focus:border-red-500' : ''}`;
 
   return (
     <div className="space-y-6">
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <div>
+        <div className={fieldRowClasses}>
           <label htmlFor="emergencyContactName" className={labelClasses}>
-            Emergency Contact Name *
+            Emergency Contact Name <span className="text-[#ef4444]">*</span>
           </label>
-          <input
-            id="emergencyContactName"
-            type="text"
-            value={step3.emergencyContactName}
-            onChange={(e) => handleChange('emergencyContactName', e.target.value)}
-            className={inputClasses}
-            placeholder="John Smith"
-          />
-          {errors.emergencyContactName && (
-            <p className="mt-1 text-sm text-red-600">{errors.emergencyContactName}</p>
-          )}
+          <div className="min-w-0">
+            <input
+              id="emergencyContactName"
+              type="text"
+              value={step3.emergencyContactName}
+              onChange={(e) => handleChange('emergencyContactName', e.target.value)}
+              className={getFieldClasses(errors.emergencyContactName)}
+              placeholder="John Smith"
+            />
+          </div>
         </div>
 
-        <div>
+        <div className={fieldRowClasses}>
           <label htmlFor="emergencyContactRelationship" className={labelClasses}>
-            Relationship *
+            Relationship <span className="text-[#ef4444]">*</span>
           </label>
-          <input
-            id="emergencyContactRelationship"
-            type="text"
-            value={step3.emergencyContactRelationship}
-            onChange={(e) => handleChange('emergencyContactRelationship', e.target.value)}
-            className={inputClasses}
-            placeholder="Spouse, Parent, Sibling, etc."
-          />
-          {errors.emergencyContactRelationship && (
-            <p className="mt-1 text-sm text-red-600">{errors.emergencyContactRelationship}</p>
-          )}
+          <div className="min-w-0">
+            <input
+              id="emergencyContactRelationship"
+              type="text"
+              value={step3.emergencyContactRelationship}
+              onChange={(e) => handleChange('emergencyContactRelationship', e.target.value)}
+              className={getFieldClasses(errors.emergencyContactRelationship)}
+              placeholder="Spouse, Parent, Sibling, etc."
+            />
+          </div>
         </div>
       </div>
 
-      <div>
+      <div className={fieldRowClasses}>
         <label htmlFor="emergencyPhone" className={labelClasses}>
-          Emergency Phone *
+          Emergency Phone <span className="text-[#ef4444]">*</span>
         </label>
-        <input
-          id="emergencyPhone"
-          type="tel"
-          value={step3.emergencyPhone}
-          onChange={(e) => handleChange('emergencyPhone', e.target.value)}
-          className={inputClasses}
-          placeholder="+353 1 234 5678"
-        />
-        {errors.emergencyPhone && (
-          <p className="mt-1 text-sm text-red-600">{errors.emergencyPhone}</p>
-        )}
+        <div className="min-w-0">
+          <input
+            id="emergencyPhone"
+            type="tel"
+            value={step3.emergencyPhone}
+            onChange={(e) => handleChange('emergencyPhone', e.target.value)}
+            className={getFieldClasses(errors.emergencyPhone)}
+            placeholder="+353 1 234 5678"
+          />
+        </div>
       </div>
 
-      <div>
+      <div className={textareaRowClasses}>
         <label htmlFor="allergies" className={labelClasses}>
           Allergies
         </label>
-        <textarea
-          id="allergies"
-          value={step3.allergies}
-          onChange={(e) => handleChange('allergies', e.target.value)}
-          className={textareaClasses}
-          rows={4}
-          placeholder="Please list any allergies we should be aware of"
-        />
+        <div className="min-w-0">
+          <textarea
+            id="allergies"
+            value={step3.allergies}
+            onChange={(e) => handleChange('allergies', e.target.value)}
+            className={textareaClasses}
+            rows={4}
+            placeholder="Please list any allergies we should be aware of"
+          />
+        </div>
       </div>
 
-      <div>
+      <div className={textareaRowClasses}>
         <label htmlFor="medications" className={labelClasses}>
           Medications
         </label>
-        <textarea
-          id="medications"
-          value={step3.medications}
-          onChange={(e) => handleChange('medications', e.target.value)}
-          className={textareaClasses}
-          rows={4}
-          placeholder="Please list any medications you are currently taking"
-        />
+        <div className="min-w-0">
+          <textarea
+            id="medications"
+            value={step3.medications}
+            onChange={(e) => handleChange('medications', e.target.value)}
+            className={textareaClasses}
+            rows={4}
+            placeholder="Please list any medications you are currently taking"
+          />
+        </div>
       </div>
 
-      <div>
+      <div className={textareaRowClasses}>
         <label htmlFor="additionalAssistance" className={labelClasses}>
           Additional Assistance
         </label>
-        <textarea
-          id="additionalAssistance"
-          value={step3.additionalAssistance}
-          onChange={(e) => handleChange('additionalAssistance', e.target.value)}
-          className={textareaClasses}
-          rows={4}
-          placeholder="Please describe any additional assistance or accommodations you may need"
-        />
+        <div className="min-w-0">
+          <textarea
+            id="additionalAssistance"
+            value={step3.additionalAssistance}
+            onChange={(e) => handleChange('additionalAssistance', e.target.value)}
+            className={textareaClasses}
+            rows={4}
+            placeholder="Please describe any additional assistance or accommodations you may need"
+          />
+        </div>
       </div>
     </div>
   );

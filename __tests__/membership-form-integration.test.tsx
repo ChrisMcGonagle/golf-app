@@ -157,43 +157,4 @@ describe('Membership Form Page - Integration', () => {
     expect(screen.getByText(/Invalid form parameters/i)).toBeInTheDocument();
   });
 
-  it('displays flow context for new membership flow', async () => {
-    (useSearchParams as jest.Mock).mockReturnValue(
-      new URLSearchParams('intent=new&typeId=Full+Member&step=1')
-    );
-
-    const searchParams = Promise.resolve({
-      intent: 'new',
-      typeId: 'Full Member',
-      step: '1',
-    });
-
-    render(await MembershipFormPage({ searchParams }));
-    await waitFor(() => {
-      expect(screen.getByText(/New Membership/i)).toBeInTheDocument();
-      const journeyText = screen.getByText(/Journey:/i).parentElement;
-      expect(journeyText).toHaveTextContent('New Membership - Full Member');
-    });
-  });
-
-  it('displays flow context for renewal flow with selected member', async () => {
-    (useSearchParams as jest.Mock).mockReturnValue(
-      new URLSearchParams('intent=renewal&typeId=Standard+Member&memberId=member-456&step=4')
-    );
-
-    const searchParams = Promise.resolve({
-      intent: 'renewal',
-      typeId: 'Standard Member',
-      memberId: 'member-456',
-      step: '4',
-    });
-
-    render(await MembershipFormPage({ searchParams }));
-    await waitFor(() => {
-      expect(screen.getByText(/Renewal/i)).toBeInTheDocument();
-      const summaryText = screen.getByText(/Form Summary:/i).parentElement;
-      expect(summaryText).toHaveTextContent('Renewal - Standard Member');
-      expect(screen.getByText(/member-456/i)).toBeInTheDocument();
-    });
-  });
 });

@@ -31,15 +31,10 @@ const getLineColor = (stepNumber: number, currentStep: number): string => {
 export default function StepIndicator({ currentStep }: StepIndicatorProps) {
   return (
     <div className="mb-6">
-      {/* Row 1: Labels aligned above circles using grid */}
-      <div className="mb-3 grid grid-cols-[auto_1fr_auto_1fr_auto_1fr_auto] gap-0 mx-auto max-w-[35rem]">
+      <div className="mb-3 flex items-end mx-auto max-w-[35rem]">
         {STEPS.flatMap((step, index) => {
           const items: JSX.Element[] = [
-            // Label container
-            <div 
-              key={`label-${step.number}`} 
-              className={`col-span-1 flex justify-center ${step.number === 1 || step.number === 4 ? 'w-6' : ''}`}
-            >
+            <div key={`label-${step.number}`} className="flex w-6 justify-center">
               <p
                 className={`text-center text-xs font-bold uppercase transition-colors ${
                   step.number <= currentStep ? 'text-[#2b2b2b]' : 'text-[#969696]'
@@ -50,10 +45,9 @@ export default function StepIndicator({ currentStep }: StepIndicatorProps) {
             </div>,
           ];
 
-          // Empty div for line column (only if not the last label)
           if (index < STEPS.length - 1) {
             items.push(
-              <div key={`label-space-${step.number}`} />,
+              <div key={`label-space-${step.number}`} className="flex-1" />,
             );
           }
 
@@ -61,11 +55,9 @@ export default function StepIndicator({ currentStep }: StepIndicatorProps) {
         })}
       </div>
 
-      {/* Row 2: Alternating circles and lines */}
       <div className="flex items-center mx-auto max-w-[35rem]">
         {STEPS.flatMap((step, index) => {
           const items: JSX.Element[] = [
-            // Circle
             <div
               key={`circle-${step.number}`}
               className={`h-6 w-6 rounded-full transition-colors flex-shrink-0 flex-grow-0 ${getCircleColor(
@@ -75,7 +67,6 @@ export default function StepIndicator({ currentStep }: StepIndicatorProps) {
             />,
           ];
 
-          // Line after circle (only if not the last circle)
           if (index < STEPS.length - 1) {
             items.push(
               <div

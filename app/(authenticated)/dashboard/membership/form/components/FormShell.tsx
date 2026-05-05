@@ -82,16 +82,16 @@ export default function FormShell({
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f6f5]">
-      <div className="mx-auto max-w-3xl pt-6 pb-0">
+    <div className="flex min-h-screen flex-col bg-[#f5f6f5]">
+      <div className="mx-[5rem] pt-6 pb-0 2xl:mx-[20rem]">
         <h1 className="mb-5 text-xl font-semibold tracking-[0.04em] text-[#2b2b2b]">
           {membershipTitle}
         </h1>
         <StepIndicator currentStep={currentStep} />
       </div>
 
-      <div className="w-full bg-white">
-        <div className="mx-auto max-w-3xl pt-4 pb-0">
+      <div className="w-full flex-1 bg-white">
+        <div className="mx-[5rem] pt-4 pb-0 2xl:mx-[20rem]">
           <div className="mb-4 flex items-center">
             <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#2b2b2b]">
               {STEP_TITLES[currentStep - 1]}

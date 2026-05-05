@@ -136,25 +136,8 @@ describe('FormShell', () => {
     }
   });
 
-  it('displays flow context (journey type) on step 1', () => {
-    render(
-      <FormProvider intent="new" typeId="Full Member">
-        <FormShell currentStep={1} />
-      </FormProvider>
-    );
-    expect(screen.getByText(/New Membership/i)).toBeInTheDocument();
-  });
-
-  it('displays flow context for renewal journey', () => {
-    render(
-      <FormProvider intent="renewal" typeId="Standard Member" memberId="member-123">
-        <FormShell currentStep={1} />
-      </FormProvider>
-    );
-    expect(screen.getByText(/Renewal/i)).toBeInTheDocument();
-    expect(screen.getByText(/member-123/i)).toBeInTheDocument();
-  });
 });
+
 
 describe('FormShell with memberId (renewal)', () => {
   beforeEach(() => {

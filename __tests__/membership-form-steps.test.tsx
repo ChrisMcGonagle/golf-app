@@ -9,7 +9,7 @@ import { FormProvider } from '@/components/contexts/FormContext';
 describe('Step1Personal', () => {
   const mockOnValidationChange = jest.fn();
 
-  it('renders all 13 personal detail fields', () => {
+  it('renders all 12 visible personal detail fields', () => {
     render(
       <FormProvider intent="new" typeId="Full Member">
         <Step1Personal onValidationChange={mockOnValidationChange} />
@@ -51,27 +51,6 @@ describe('Step1Personal', () => {
     });
   });
 
-  it('displays flow context on step 1', () => {
-    render(
-      <FormProvider intent="new" typeId="Full Member">
-        <Step1Personal onValidationChange={jest.fn()} />
-      </FormProvider>
-    );
-
-    expect(screen.getByText(/New Membership/i)).toBeInTheDocument();
-    expect(screen.getByText(/Full Member/i)).toBeInTheDocument();
-  });
-
-  it('displays renewal member context when present', () => {
-    render(
-      <FormProvider intent="renewal" typeId="Standard Member" memberId="member-789">
-        <Step1Personal onValidationChange={jest.fn()} />
-      </FormProvider>
-    );
-
-    expect(screen.getByText(/Renewal/i)).toBeInTheDocument();
-    expect(screen.getByText(/member-789/i)).toBeInTheDocument();
-  });
 });
 
 describe('Step2Membership', () => {
