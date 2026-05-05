@@ -13,17 +13,23 @@ const STEPS = [
 
 const getCircleColor = (stepNumber: number, currentStep: number): string => {
   if (stepNumber < currentStep) {
-    return 'bg-[#2b2b2b]';
+    return 'bg-[#22c55e]';
   }
   if (stepNumber === currentStep) {
-    return 'bg-[#2b2b2b]';
+    return 'border-[0.3rem] border-[#fbbf24] bg-transparent';
   }
   return 'bg-[#e0e0e0]';
 };
 
 const getLineColor = (stepNumber: number, currentStep: number): string => {
-  if (stepNumber < currentStep) {
-    return 'bg-[#2b2b2b]';
+  if (stepNumber === currentStep - 1) {
+    return 'bg-gradient-to-r from-[#22c55e] to-[#fbbf24]';
+  }
+  if (stepNumber < currentStep - 1) {
+    return 'bg-[#22c55e]';
+  }
+  if (stepNumber === currentStep) {
+    return 'bg-gradient-to-r from-[#fbbf24] to-[#e0e0e0]';
   }
   return 'bg-[#e0e0e0]';
 };
@@ -37,7 +43,7 @@ export default function StepIndicator({ currentStep }: StepIndicatorProps) {
             <div key={`label-${step.number}`} className="flex w-6 justify-center">
               <p
                 className={`text-center text-xs font-bold uppercase transition-colors ${
-                  step.number <= currentStep ? 'text-[#2b2b2b]' : 'text-[#969696]'
+                  step.number === currentStep ? 'text-[#fbbf24]' : step.number < currentStep ? 'text-[#22c55e]' : 'text-[#969696]'
                 }`}
               >
                 {step.label}

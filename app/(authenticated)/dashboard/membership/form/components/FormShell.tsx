@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useFormContext } from '@/components/contexts/FormContext';
@@ -44,14 +45,6 @@ export default function FormShell({
     }
   };
 
-  const handleBack = () => {
-    if (currentStep > 1) {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.set('step', String(currentStep - 1));
-      router.push(`?${newParams.toString()}`);
-    }
-  };
-
   const renderStep = () => {
     switch (currentStep) {
       case 1:
@@ -74,7 +67,9 @@ export default function FormShell({
         );
       case 4:
         return (
-          <Step4Placeholder />
+          <Step4Placeholder
+            onValidationChange={setIsValid}
+          />
         );
       default:
         return null;
@@ -105,14 +100,14 @@ export default function FormShell({
 
           <div className="border-x border-b border-[#eeeeee] bg-[#f5f6f5] px-8 py-4">
             <div className="flex justify-between gap-4">
-              <button
-                onClick={handleBack}
-                disabled={currentStep === 1}
-                className="rounded-lg border border-[#eeeeee] bg-white px-6 py-2 font-medium text-[#2b2b2b] hover:bg-[#f5f5f5] disabled:cursor-not-allowed disabled:opacity-50"
+              <Link
+                href="/dashboard/membership-registration"
+                aria-label="Back to membership registration"
+                className="inline-flex items-center gap-2 text-sm font-medium text-[#969696] transition-colors hover:text-[#2b2b2b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2b2b2b] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f5f6f5]"
               >
-                Back
-              </button>
-
+                <span aria-hidden="true">&larr;</span>
+                <span>Back</span>
+              </Link>
               {currentStep < 4 ? (
                 <button
                   onClick={handleNext}
@@ -123,8 +118,8 @@ export default function FormShell({
                 </button>
               ) : (
                 <button
-                  disabled
-                  className="rounded-lg cursor-not-allowed bg-[#969696] px-6 py-2 font-medium text-white"
+                  disabled={!isValid}
+                  className="rounded-lg bg-[#2b2b2b] px-6 py-2 font-medium text-white hover:bg-[#1a1a1a] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Complete (Coming Soon)
                 </button>
