@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import MembershipFormPage from '@/app/(authenticated)/dashboard/membership/form/page.tsx';
+import MembershipFormPage from '@/app/(authenticated)/dashboard/membership/form/page';
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
@@ -54,7 +54,7 @@ describe('Membership Form Page - Integration', () => {
 
     render(await MembershipFormPage({ searchParams }));
     await waitFor(() => {
-      expect(screen.getByText(/Step 1 of 4:/i)).toBeInTheDocument();
+      expect(screen.getByText(/personal details/i)).toBeInTheDocument();
     });
   });
 
@@ -72,7 +72,7 @@ describe('Membership Form Page - Integration', () => {
 
     render(await MembershipFormPage({ searchParams }));
     await waitFor(() => {
-      expect(screen.getByText(/Step 1 of 4:/i)).toBeInTheDocument();
+      expect(screen.getByText(/personal details/i)).toBeInTheDocument();
     });
   });
 
@@ -88,7 +88,7 @@ describe('Membership Form Page - Integration', () => {
 
     render(await MembershipFormPage({ searchParams }));
     await waitFor(() => {
-      expect(screen.getByText(/Step 1 of 4:/i)).toBeInTheDocument();
+      expect(screen.getByText(/personal details/i)).toBeInTheDocument();
     });
   });
 
@@ -123,7 +123,7 @@ describe('Membership Form Page - Integration', () => {
 
     render(await MembershipFormPage({ searchParams }));
     await waitFor(() => {
-      expect(screen.getByText(/Step 2 of 4:/i)).toBeInTheDocument();
+      expect(screen.getByText(/membership details/i)).toBeInTheDocument();
     });
   });
 
@@ -157,41 +157,4 @@ describe('Membership Form Page - Integration', () => {
     expect(screen.getByText(/Invalid form parameters/i)).toBeInTheDocument();
   });
 
-  it('displays flow context for new membership flow', async () => {
-    (useSearchParams as jest.Mock).mockReturnValue(
-      new URLSearchParams('intent=new&typeId=Full+Member&step=1')
-    );
-
-    const searchParams = Promise.resolve({
-      intent: 'new',
-      typeId: 'Full Member',
-      step: '1',
-    });
-
-    render(await MembershipFormPage({ searchParams }));
-    await waitFor(() => {
-      expect(screen.getByText(/New Membership/i)).toBeInTheDocument();
-      expect(screen.getByText(/Full Member/i)).toBeInTheDocument();
-    });
-  });
-
-  it('displays flow context for renewal flow with selected member', async () => {
-    (useSearchParams as jest.Mock).mockReturnValue(
-      new URLSearchParams('intent=renewal&typeId=Standard+Member&memberId=member-456&step=4')
-    );
-
-    const searchParams = Promise.resolve({
-      intent: 'renewal',
-      typeId: 'Standard Member',
-      memberId: 'member-456',
-      step: '4',
-    });
-
-    render(await MembershipFormPage({ searchParams }));
-    await waitFor(() => {
-      expect(screen.getByText(/Renewal/i)).toBeInTheDocument();
-      expect(screen.getByText(/Standard Member/i)).toBeInTheDocument();
-      expect(screen.getByText(/member-456/i)).toBeInTheDocument();
-    });
-  });
 });

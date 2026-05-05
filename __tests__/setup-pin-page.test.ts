@@ -54,7 +54,7 @@ import SetupPinPage from '@/app/setup-pin/page';
 type MockedFn<T extends (...args: unknown[]) => unknown> = jest.MockedFunction<T>;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _mockRedirect = redirect as MockedFn<typeof redirect>;
+const _mockRedirect = redirect as unknown as jest.MockedFunction<typeof redirect>;
 const mockGetIronSession = getIronSession as jest.MockedFunction<typeof getIronSession>;
 const mockBcryptHash = bcryptjs.hash as jest.MockedFunction<typeof bcryptjs.hash>;
 const mockCreateServiceRoleClient = createServiceRoleClient as jest.MockedFunction<
@@ -155,7 +155,7 @@ describe('/setup-pin page guards', () => {
   it('redirects to /select-user when no userId is provided', async () => {
     const supabaseMock = makeSupabaseMock(null);
     mockCreateServiceRoleClient.mockReturnValue(
-      supabaseMock as ReturnType<typeof createServiceRoleClient>
+      supabaseMock as unknown as ReturnType<typeof createServiceRoleClient>
     );
 
     let redirectUrl = '';
@@ -177,7 +177,7 @@ describe('/setup-pin page guards', () => {
 
     const supabaseMock = makeSupabaseMock(profileWithPin);
     mockCreateServiceRoleClient.mockReturnValue(
-      supabaseMock as ReturnType<typeof createServiceRoleClient>
+      supabaseMock as unknown as ReturnType<typeof createServiceRoleClient>
     );
 
     let redirectUrl = '';
@@ -199,7 +199,7 @@ describe('/setup-pin page guards', () => {
 
     const supabaseMock = makeSupabaseMock(profile);
     mockCreateServiceRoleClient.mockReturnValue(
-      supabaseMock as ReturnType<typeof createServiceRoleClient>
+      supabaseMock as unknown as ReturnType<typeof createServiceRoleClient>
     );
 
     const pageElement = await SetupPinPage({
@@ -220,7 +220,7 @@ describe('/setup-pin page guards', () => {
 
     const supabaseMock = makeSupabaseMock(profile);
     mockCreateServiceRoleClient.mockReturnValue(
-      supabaseMock as ReturnType<typeof createServiceRoleClient>
+      supabaseMock as unknown as ReturnType<typeof createServiceRoleClient>
     );
 
     const pageElement = await SetupPinPage({
@@ -243,11 +243,11 @@ describe('verifyIdentity server action', () => {
     const profile = { id: 'user-10', display_name: 'Dave', role: 'staff', pin_hash: null };
     const supabaseMock = makeSupabaseMock(profile);
     mockCreateServiceRoleClient.mockReturnValue(
-      supabaseMock as ReturnType<typeof createServiceRoleClient>
+      supabaseMock as unknown as ReturnType<typeof createServiceRoleClient>
     );
 
     const authMock = makeAuthClientMock(null, true);
-    mockCreateClient.mockReturnValue(authMock as ReturnType<typeof createClient>);
+    mockCreateClient.mockReturnValue(authMock as unknown as ReturnType<typeof createClient>);
 
     const fd = buildVerifyFormData('user-10', 'dave@example.com', 'wrongpass');
 
@@ -265,12 +265,12 @@ describe('verifyIdentity server action', () => {
     const profile = { id: 'user-10', display_name: 'Dave', role: 'staff', pin_hash: null };
     const supabaseMock = makeSupabaseMock(profile);
     mockCreateServiceRoleClient.mockReturnValue(
-      supabaseMock as ReturnType<typeof createServiceRoleClient>
+      supabaseMock as unknown as ReturnType<typeof createServiceRoleClient>
     );
 
     // Auth returns a different user ID
     const authMock = makeAuthClientMock('different-user-id', false);
-    mockCreateClient.mockReturnValue(authMock as ReturnType<typeof createClient>);
+    mockCreateClient.mockReturnValue(authMock as unknown as ReturnType<typeof createClient>);
 
     const fd = buildVerifyFormData('user-10', 'other@example.com', 'password123');
 
@@ -288,12 +288,12 @@ describe('verifyIdentity server action', () => {
     const profile = { id: 'user-10', display_name: 'Dave', role: 'staff', pin_hash: null };
     const supabaseMock = makeSupabaseMock(profile);
     mockCreateServiceRoleClient.mockReturnValue(
-      supabaseMock as ReturnType<typeof createServiceRoleClient>
+      supabaseMock as unknown as ReturnType<typeof createServiceRoleClient>
     );
 
     // Auth returns matching user ID
     const authMock = makeAuthClientMock('user-10', false);
-    mockCreateClient.mockReturnValue(authMock as ReturnType<typeof createClient>);
+    mockCreateClient.mockReturnValue(authMock as unknown as ReturnType<typeof createClient>);
 
     const fd = buildVerifyFormData('user-10', 'dave@example.com', 'correctpassword');
 
@@ -317,7 +317,7 @@ describe('savePin server action', () => {
     const profile = { id: 'user-20', display_name: 'Eve', role: 'staff', pin_hash: null };
     const supabaseMock = makeSupabaseMock(profile);
     mockCreateServiceRoleClient.mockReturnValue(
-      supabaseMock as ReturnType<typeof createServiceRoleClient>
+      supabaseMock as unknown as ReturnType<typeof createServiceRoleClient>
     );
 
     const fd = buildSavePinFormData(
@@ -340,7 +340,7 @@ describe('savePin server action', () => {
     const profile = { id: 'user-20', display_name: 'Eve', role: 'staff', pin_hash: null };
     const supabaseMock = makeSupabaseMock(profile);
     mockCreateServiceRoleClient.mockReturnValue(
-      supabaseMock as ReturnType<typeof createServiceRoleClient>
+      supabaseMock as unknown as ReturnType<typeof createServiceRoleClient>
     );
 
     // non-numeric digit
@@ -364,7 +364,7 @@ describe('savePin server action', () => {
     const profile = { id: 'user-20', display_name: 'Eve', role: 'staff', pin_hash: null };
     const supabaseMock = makeSupabaseMock(profile);
     mockCreateServiceRoleClient.mockReturnValue(
-      supabaseMock as ReturnType<typeof createServiceRoleClient>
+      supabaseMock as unknown as ReturnType<typeof createServiceRoleClient>
     );
 
     mockBcryptHash.mockResolvedValue('$2b$10$hashedpin' as never);
@@ -404,7 +404,7 @@ describe('savePin server action', () => {
     const profile = { id: 'user-21', display_name: 'Frank', role: 'staff', pin_hash: null };
     const supabaseMock = makeSupabaseMock(profile);
     mockCreateServiceRoleClient.mockReturnValue(
-      supabaseMock as ReturnType<typeof createServiceRoleClient>
+      supabaseMock as unknown as ReturnType<typeof createServiceRoleClient>
     );
 
     // Mismatched PINs to trigger a redirect with error

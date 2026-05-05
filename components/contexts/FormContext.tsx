@@ -19,22 +19,31 @@ export interface Step1Data {
 }
 
 export interface Step2Data {
+  isCurrentMember: string;
   isCruitHome: string;
   homeClub: string;
+  homeClubCountry: string;
   hadOtherClub: string;
   previousClubs: string;
   ghinNumber: string;
   hasHandicap: string;
   handicapIndex: string;
+  noHandicapSyncWanted: string;
 }
 
 export interface Step3Data {
   emergencyContactName: string;
   emergencyContactRelationship: string;
   emergencyPhone: string;
+  medicalConditions: string;
   allergies: string;
   medications: string;
   additionalAssistance: string;
+}
+
+export interface Step4Data {
+  acceptedTerms: string;
+  acceptedGdpr: string;
 }
 
 export interface FlowContext {
@@ -48,9 +57,11 @@ export interface FormContextType {
   step1: Step1Data;
   step2: Step2Data;
   step3: Step3Data;
+  step4: Step4Data;
   setStep1: (data: Partial<Step1Data>) => void;
   setStep2: (data: Partial<Step2Data>) => void;
   setStep3: (data: Partial<Step3Data>) => void;
+  setStep4: (data: Partial<Step4Data>) => void;
   // Flow context
   flow: FlowContext;
 }
@@ -74,22 +85,31 @@ const initialStep1: Step1Data = {
 };
 
 const initialStep2: Step2Data = {
+  isCurrentMember: '',
   isCruitHome: '',
   homeClub: '',
+  homeClubCountry: '',
   hadOtherClub: '',
   previousClubs: '',
   ghinNumber: '',
   hasHandicap: '',
   handicapIndex: '',
+  noHandicapSyncWanted: '',
 };
 
 const initialStep3: Step3Data = {
   emergencyContactName: '',
   emergencyContactRelationship: '',
   emergencyPhone: '',
+  medicalConditions: '',
   allergies: '',
   medications: '',
   additionalAssistance: '',
+};
+
+const initialStep4: Step4Data = {
+  acceptedTerms: '',
+  acceptedGdpr: '',
 };
 
 interface FormProviderProps {
@@ -108,6 +128,7 @@ export function FormProvider({
   const [step1, setStep1State] = useState<Step1Data>(initialStep1);
   const [step2, setStep2State] = useState<Step2Data>(initialStep2);
   const [step3, setStep3State] = useState<Step3Data>(initialStep3);
+  const [step4, setStep4State] = useState<Step4Data>(initialStep4);
 
   const setStep1 = (data: Partial<Step1Data>) => {
     setStep1State((prev) => ({ ...prev, ...data }));
@@ -121,6 +142,10 @@ export function FormProvider({
     setStep3State((prev) => ({ ...prev, ...data }));
   };
 
+  const setStep4 = (data: Partial<Step4Data>) => {
+    setStep4State((prev) => ({ ...prev, ...data }));
+  };
+
   const flow: FlowContext = {
     intent,
     typeId,
@@ -131,9 +156,11 @@ export function FormProvider({
     step1,
     step2,
     step3,
+    step4,
     setStep1,
     setStep2,
     setStep3,
+    setStep4,
     flow,
   };
 

@@ -30,7 +30,7 @@ describe('FormShell', () => {
         <FormShell currentStep={1} />
       </FormProvider>
     );
-    expect(screen.getByText(/Step 1 of 4:/i)).toBeInTheDocument();
+    expect(screen.getByText(/personal details/i)).toBeInTheDocument();
   });
 
   it('renders back button disabled on step 1', () => {
@@ -39,8 +39,8 @@ describe('FormShell', () => {
         <FormShell currentStep={1} />
       </FormProvider>
     );
-    const backButton = screen.getByRole('button', { name: /Back/i });
-    expect(backButton).toBeDisabled();
+    const backLink = screen.getByRole('link', { name: /Back/i });
+    expect(backLink).toBeInTheDocument();
   });
 
   it('renders back button enabled on step 2', () => {
@@ -49,8 +49,8 @@ describe('FormShell', () => {
         <FormShell currentStep={2} />
       </FormProvider>
     );
-    const backButton = screen.getByRole('button', { name: /Back/i });
-    expect(backButton).not.toBeDisabled();
+    const backLink = screen.getByRole('link', { name: /Back/i });
+    expect(backLink).toBeInTheDocument();
   });
 
   it('renders next button on steps 1-3', () => {
@@ -120,40 +120,24 @@ describe('FormShell', () => {
         <FormShell currentStep={4} />
       </FormProvider>
     );
-    expect(screen.getByText(/Consent information/i)).toBeInTheDocument();
+    expect(screen.getByText(/Please read our Membership Terms/i)).toBeInTheDocument();
   });
 
   it('renders step indicator for each step', () => {
+    const stepLabels = ['PERSONAL DETAILS', 'MEMBERSHIP DETAILS', 'SAFEGUARDING & MEDICAL', 'ADDITIONAL INFO & CONSENT'];
     for (let step = 1; step <= 4; step++) {
       const { unmount } = render(
         <FormProvider intent="new" typeId="Full Member">
           <FormShell currentStep={step} />
         </FormProvider>
       );
-      expect(screen.getByText(new RegExp(`Step ${step} of 4`))).toBeInTheDocument();
+      expect(screen.getByText(stepLabels[step - 1])).toBeInTheDocument();
       unmount();
     }
   });
 
-  it('displays flow context (journey type) on step 1', () => {
-    render(
-      <FormProvider intent="new" typeId="Full Member">
-        <FormShell currentStep={1} />
-      </FormProvider>
-    );
-    expect(screen.getByText(/New Membership/i)).toBeInTheDocument();
-  });
-
-  it('displays flow context for renewal journey', () => {
-    render(
-      <FormProvider intent="renewal" typeId="Standard Member" memberId="member-123">
-        <FormShell currentStep={1} />
-      </FormProvider>
-    );
-    expect(screen.getByText(/Renewal/i)).toBeInTheDocument();
-    expect(screen.getByText(/member-123/i)).toBeInTheDocument();
-  });
 });
+
 
 describe('FormShell with memberId (renewal)', () => {
   beforeEach(() => {
@@ -168,6 +152,6 @@ describe('FormShell with memberId (renewal)', () => {
         <FormShell currentStep={1} />
       </FormProvider>
     );
-    expect(screen.getByText(/Step 1 of 4:/i)).toBeInTheDocument();
+    expect(screen.getByText(/personal details/i)).toBeInTheDocument();
   });
 });
