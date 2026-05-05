@@ -48,13 +48,13 @@ export default function Step2Membership({
   const isGhinDisabled = !step2.homeClub.trim() || step2.hadOtherClub === 'No';
 
   const inputClasses =
-    'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed';
+    'w-full rounded-lg border border-[#eeeeee] px-3 py-2 text-sm placeholder-[#969696] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-[#f5f5f5] disabled:text-[#969696] disabled:cursor-not-allowed';
   const selectClasses = inputClasses;
-  const labelClasses = 'block text-sm font-medium text-gray-700 mb-1';
+  const labelClasses = 'block text-sm font-medium text-[#2b2b2b] mb-2';
 
   return (
     <div className="space-y-6">
-      <h3 className="text-xl font-semibold text-gray-900">Membership Details</h3>
+      <h3 className="text-xl font-semibold text-[#2b2b2b]">Membership Details</h3>
 
       <div>
         <label htmlFor="isCruitHome" className={labelClasses}>

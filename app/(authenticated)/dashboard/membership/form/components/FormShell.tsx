@@ -66,10 +66,11 @@ export default function FormShell({
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
-      <StepIndicator currentStep={currentStep} />
+    <div className="min-h-screen bg-[#f5f6f5]">
+      <div className="mx-auto max-w-3xl px-4 py-10">
+        <StepIndicator currentStep={currentStep} />
 
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
+      <div className="rounded-2xl border border-[#eeeeee] bg-white p-8 shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
         {renderStep()}
       </div>
 
@@ -77,7 +78,7 @@ export default function FormShell({
         <button
           onClick={handleBack}
           disabled={currentStep === 1}
-          className="rounded-lg border border-gray-300 bg-white px-6 py-2 font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg border border-[#eeeeee] bg-white px-6 py-2 font-medium text-[#2b2b2b] hover:bg-[#f5f5f5] disabled:cursor-not-allowed disabled:opacity-50"
         >
           Back
         </button>
@@ -86,18 +87,19 @@ export default function FormShell({
           <button
             onClick={handleNext}
             disabled={!isValid}
-            className="rounded-lg bg-blue-600 px-6 py-2 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-[#2b2b2b] px-6 py-2 font-medium text-white hover:bg-[#1a1a1a] disabled:cursor-not-allowed disabled:opacity-50"
           >
             Next
           </button>
         ) : (
           <button
             disabled
-            className="rounded-lg bg-gray-400 px-6 py-2 font-medium text-white cursor-not-allowed"
+            className="rounded-lg bg-[#969696] px-6 py-2 font-medium text-white cursor-not-allowed"
           >
             Complete (Coming Soon)
           </button>
         )}
+      </div>
       </div>
     </div>
   );

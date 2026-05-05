@@ -61,13 +61,13 @@ export default function Step1Personal({
   };
 
   const inputClasses =
-    'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500';
+    'w-full rounded-lg border border-[#eeeeee] px-3 py-2 text-sm placeholder-[#969696] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500';
   const selectClasses = inputClasses;
-  const labelClasses = 'block text-sm font-medium text-gray-700 mb-1';
+  const labelClasses = 'block text-sm font-medium text-[#2b2b2b] mb-2';
 
   return (
     <div className="space-y-6">
-      <h3 className="text-xl font-semibold text-gray-900">Personal Details</h3>
+      <h3 className="text-xl font-semibold text-[#2b2b2b]">Personal Details</h3>
 
       {/* Display flow context to verify it's available */}
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">

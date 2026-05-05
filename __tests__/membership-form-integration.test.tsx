@@ -54,7 +54,7 @@ describe('Membership Form Page - Integration', () => {
 
     render(await MembershipFormPage({ searchParams }));
     await waitFor(() => {
-      expect(screen.getByText(/Step 1 of 4:/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 3, name: /Personal Details/i })).toBeInTheDocument();
     });
   });
 
@@ -72,7 +72,7 @@ describe('Membership Form Page - Integration', () => {
 
     render(await MembershipFormPage({ searchParams }));
     await waitFor(() => {
-      expect(screen.getByText(/Step 1 of 4:/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 3, name: /Personal Details/i })).toBeInTheDocument();
     });
   });
 
@@ -88,7 +88,7 @@ describe('Membership Form Page - Integration', () => {
 
     render(await MembershipFormPage({ searchParams }));
     await waitFor(() => {
-      expect(screen.getByText(/Step 1 of 4:/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 3, name: /Personal Details/i })).toBeInTheDocument();
     });
   });
 
@@ -123,7 +123,7 @@ describe('Membership Form Page - Integration', () => {
 
     render(await MembershipFormPage({ searchParams }));
     await waitFor(() => {
-      expect(screen.getByText(/Step 2 of 4:/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 3, name: /Membership Details/i })).toBeInTheDocument();
     });
   });
 
