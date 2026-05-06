@@ -38,8 +38,8 @@ function buildMemberTypeUrl(
   const params = new URLSearchParams({
     intent,
     action,
-    memberId: member.MEMBER_NUMBER.toString(),
-    memberType: member.MEMBERSHIP_TYPE ?? '',
+    memberId: member.member_number,
+    memberType: member.membership_type ?? '',
   });
 
   return `/dashboard/membership/type?${params.toString()}`;
@@ -141,7 +141,7 @@ export default function MemberSearchAutocomplete({
             {!isLoading && results.length > 0 && (
               <ul className="max-h-80 overflow-y-auto py-2">
                 {results.map((member) => (
-                  <li key={member.MEMBER_NUMBER}>
+                  <li key={member.member_number}>
                     <Link
                       href={buildMemberTypeUrl(member, intent, action)}
                       className="block px-4 py-3 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
@@ -149,12 +149,12 @@ export default function MemberSearchAutocomplete({
                       <div className="flex items-center justify-between gap-4">
                         <div>
                           <p className="font-semibold text-gray-900">
-                            {member.FIRST_NAME} {member.LAST_NAME}
+                            {member.first_name} {member.last_name}
                           </p>
-                          <p className="text-sm text-gray-500">Member No: {member.MEMBER_NUMBER}</p>
+                          <p className="text-sm text-gray-500">Member No: {member.member_number}</p>
                         </div>
                         <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
-                          {member.MEMBERSHIP_TYPE}
+                          {member.membership_type}
                         </span>
                       </div>
                     </Link>

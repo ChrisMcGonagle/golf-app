@@ -1,8 +1,8 @@
 export type MembershipIntent = 'new' | 'renewal';
 export type MembershipAction = 'form' | 'email';
 export type MemberFlowSearchResult = {
-  MEMBER_NUMBER: number;
-  FIRST_NAME: string;
-  LAST_NAME: string;
-  MEMBERSHIP_TYPE: string | null;
+  member_number: string;
+  first_name: string;
+  last_name: string;
+  membership_type: string | null;
 };

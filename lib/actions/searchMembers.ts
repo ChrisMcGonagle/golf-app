@@ -10,12 +10,12 @@ export async function searchMembers(query: string): Promise<MemberFlowSearchResu
 
   try {
     const supabase = createServiceRoleClient();
-    const nameFilter = `"FIRST_NAME".ilike.%${q}%,"LAST_NAME".ilike.%${q}%`;
-    const filter = /^\d+$/.test(q) ? `${nameFilter},"MEMBER_NUMBER".eq.${parseInt(q, 10)}` : nameFilter;
+    const nameFilter = `first_name.ilike.%${q}%,last_name.ilike.%${q}%`;
+    const filter = /^\d+$/.test(q) ? `${nameFilter},member_number.eq.${q}` : nameFilter;
 
     const { data, error } = await supabase
       .from('members')
-      .select('"MEMBER_NUMBER", "FIRST_NAME", "LAST_NAME", "MEMBERSHIP_TYPE"')
+      .select('member_number, first_name, last_name, membership_type')
       .or(filter)
       .limit(20);
 

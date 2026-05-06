@@ -18,9 +18,9 @@ jest.mock('@/components/MemberSearchAutocomplete', () => ({
     intent: string;
     action: string;
     initialQuery: string;
-    initialMembers: Array<{ MEMBER_NUMBER: number }>;
+    initialMembers: Array<{ member_number: string }>;
   }) => {
-    const R = require('react');
+    const R = jest.requireActual<typeof import('react')>('react');
     return R.createElement(
       'div',
       { 'data-testid': 'member-search-autocomplete' },
@@ -32,7 +32,6 @@ jest.mock('@/components/MemberSearchAutocomplete', () => ({
   },
 }));
 
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { getActiveUserSession } from '@/lib/auth/activeUserSession';
 import { searchMembers } from '@/lib/actions/searchMembers';
@@ -103,7 +102,7 @@ describe('MemberSearchPage (/dashboard/membership/member-search)', () => {
   });
 
   it('passes initial member results to the live search component', async () => {
-    mockSearchMembers.mockResolvedValue([{ MEMBER_NUMBER: 1001, FIRST_NAME: "Jane", LAST_NAME: "Smith", MEMBERSHIP_TYPE: "Full Member" }]);
+    mockSearchMembers.mockResolvedValue([{ member_number: '1001', first_name: "Jane", last_name: "Smith", membership_type: "Full Member" }]);
     render(await MemberSearchPage({ searchParams: Promise.resolve({ intent: 'renewal', action: 'form', query: 'Jane' }) }));
     expect(screen.getByTestId('member-search-count').textContent).toBe('1');
   });
