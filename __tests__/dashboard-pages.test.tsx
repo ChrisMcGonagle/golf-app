@@ -4,12 +4,19 @@
  * Covers: rendering of dashboard main page, submissions page, and members page.
  */
 
+jest.mock('@/lib/supabase/server', () => ({
+  createServiceRoleClient: jest.fn(),
+}));
+
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { within } from '@testing-library/dom';
 import DashboardPage from '@/app/(authenticated)/dashboard/(with-sidebar)/page';
 import SubmissionsPage from '@/app/(authenticated)/dashboard/(with-sidebar)/submissions/page';
 import MembersPage from '@/app/(authenticated)/dashboard/(with-sidebar)/members/page';
+import { createServiceRoleClient } from '@/lib/supabase/server';
+
+const mockCreateServiceRoleClient = createServiceRoleClient as jest.MockedFunction<typeof createServiceRoleClient>;
 
 describe('DashboardPage', () => {
   describe('rendering', () => {
@@ -54,13 +61,13 @@ describe('DashboardPage', () => {
     });
 
     it('should display placeholder count of 0 for submissions', () => {
-      const { container } = render(<DashboardPage />);
+      render(<DashboardPage />);
       const stats = screen.getAllByText('0');
       expect(stats.length).toBeGreaterThan(0);
     });
 
     it('should display placeholder count of 0 for members', () => {
-      const { container } = render(<DashboardPage />);
+      render(<DashboardPage />);
       const stats = screen.getAllByText('0');
       expect(stats.length).toBeGreaterThan(0);
     });
@@ -140,19 +147,68 @@ describe('SubmissionsPage', () => {
 });
 
 describe('MembersPage', () => {
+  const mockMembersData = [
+    {
+      member_number: 'M-1024',
+      first_name: 'Aoife',
+      last_name: 'Brennan',
+      membership_type: 'Full Member',
+      status: 'active',
+      email: 'aoife.brennan@example.com',
+      mobile_phone: '(086) 123-4567',
+      home_club: null,
+      secondary_club: 'Portmarnock, Royal Dublin',
+      missingRequiredInfo: true,
+    },
+    {
+      member_number: 'M-1048',
+      first_name: 'Conor',
+      last_name: 'Walsh',
+      membership_type: 'Country Member',
+      status: 'inactive',
+      email: 'conor.walsh@example.com',
+      mobile_phone: '(087) 234-5678',
+      home_club: null,
+      secondary_club: 'Greystones',
+      missingRequiredInfo: false,
+    },
+    {
+      member_number: 'M-1081',
+      first_name: 'Niamh',
+      last_name: "O'Sullivan",
+      membership_type: 'Juvenile',
+      status: 'active',
+      email: 'niamh.osullivan@example.com',
+      mobile_phone: '(085) 345-6789',
+      home_club: null,
+      secondary_club: 'Elm Park, Woodenbridge',
+      missingRequiredInfo: true,
+    },
+  ];
+
+  beforeEach(() => {
+    const mockOrder = jest.fn().mockResolvedValue({ data: mockMembersData, error: null });
+    const mockSelect = jest.fn().mockReturnValue({ order: mockOrder });
+    mockCreateServiceRoleClient.mockReturnValue({ from: jest.fn().mockReturnValue({ select: mockSelect }) } as never);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('rendering', () => {
-    it('should render a heading with "Members" title', () => {
-      render(<MembersPage />);
+    it('should render a heading with "Members" title', async () => {
+      render(await MembersPage());
       expect(screen.getByRole('heading', { level: 1, name: /members/i })).toBeInTheDocument();
     });
 
-    it('should render the member count in the header', () => {
-      render(<MembersPage />);
+    it('should render the member count in the header', async () => {
+      render(await MembersPage());
       expect(screen.getByText('3')).toBeInTheDocument();
     });
 
-    it('should render the search and filter toolbar without the old supporting copy', () => {
-      render(<MembersPage />);
+    it('should render the search and filter toolbar without the old supporting copy', async () => {
+      render(await MembersPage());
 
       expect(screen.getByRole('searchbox', { name: /search members/i })).toBeInTheDocument();
       expect(screen.getByRole('combobox', { name: /filter by membership type/i })).toBeInTheDocument();
@@ -160,8 +216,8 @@ describe('MembersPage', () => {
       expect(screen.queryByText(/sample member records for dashboard preview/i)).not.toBeInTheDocument();
     });
 
-    it('should render a members table with the updated member details columns in order', () => {
-      render(<MembersPage />);
+    it('should render a members table with the updated member details columns in order', async () => {
+      render(await MembersPage());
       const table = screen.getByRole('table', { name: /members table/i });
       const headers = within(table).getAllByRole('columnheader');
       const rows = within(table).getAllByRole('row');
@@ -183,17 +239,17 @@ describe('MembersPage', () => {
       expect(screen.queryByRole('columnheader', { name: /handicap index/i })).not.toBeInTheDocument();
       expect(firstRowCells[0]).toHaveTextContent('M-1024');
       expect(firstRowCells[2]).toHaveTextContent('Full');
-      expect(firstRowCells[3]).toHaveTextContent('Active');
-      expect(firstRowCells[4]).toHaveTextContent('12 Jan 2027');
+      expect(firstRowCells[3]).toHaveTextContent('active');
+      expect(firstRowCells[4]).toHaveTextContent('—');
       expect(firstRowCells[5]).toHaveTextContent('aoife.brennan@example.com');
       expect(firstRowCells[6]).toHaveTextContent('(086) 123-4567');
-      expect(firstRowCells[7]).toHaveTextContent('Yes');
+      expect(firstRowCells[7]).toHaveTextContent('—');
       expect(firstRowCells[8]).toHaveTextContent('Portmarnock, Royal Dublin');
       expect(screen.queryByRole('columnheader', { name: /applications/i })).not.toBeInTheDocument();
     });
 
-    it('should render row actions including info, emergency info, disable for active members, and enable for resigned members', () => {
-      render(<MembersPage />);
+    it('should render row actions including info, emergency info, disable for active members, and enable for inactive members', async () => {
+      render(await MembersPage());
 
       const table = screen.getByRole('table', { name: /members table/i });
       const rows = within(table).getAllByRole('row');
@@ -238,8 +294,8 @@ describe('MembersPage', () => {
     });
 
     describe('status dialog', () => {
-      it('should open a disable modal with the correct member name and membership number', () => {
-        render(<MembersPage />);
+      it('should open a disable modal with the correct member name and membership number', async () => {
+        render(await MembersPage());
 
         fireEvent.click(screen.getByRole('button', { name: /disable aoife brennan/i }));
 
@@ -254,8 +310,8 @@ describe('MembersPage', () => {
         expect(within(dialog).getByRole('button', { name: /confirm disable/i })).toBeInTheDocument();
       });
 
-      it('should open an enable modal with the correct member name and membership number', () => {
-        render(<MembersPage />);
+      it('should open an enable modal with the correct member name and membership number', async () => {
+        render(await MembersPage());
 
         fireEvent.click(screen.getByRole('button', { name: /enable conor walsh/i }));
 
@@ -269,8 +325,8 @@ describe('MembersPage', () => {
         expect(within(dialog).getByRole('button', { name: /confirm enable/i })).toBeInTheDocument();
       });
 
-      it('should close the status modal when cancel is clicked', () => {
-        render(<MembersPage />);
+      it('should close the status modal when cancel is clicked', async () => {
+        render(await MembersPage());
 
         fireEvent.click(screen.getByRole('button', { name: /disable aoife brennan/i }));
         fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
@@ -280,8 +336,8 @@ describe('MembersPage', () => {
     });
 
     describe('emergency dialog', () => {
-      it('should open an emergency modal with safeguarding details for the chosen member', () => {
-        render(<MembersPage />);
+      it('should open an emergency modal for the chosen member', async () => {
+        render(await MembersPage());
 
         fireEvent.click(screen.getByRole('button', { name: /show emergency info for aoife brennan/i }));
 
@@ -289,14 +345,11 @@ describe('MembersPage', () => {
 
         expect(dialog).toBeInTheDocument();
         expect(within(dialog).getAllByText(/aoife brennan/i)).toHaveLength(2);
-        expect(within(dialog).getByText(/siobhan brennan/i)).toBeInTheDocument();
-        expect(within(dialog).getByText((_, element) => element?.textContent === 'Relationship: Sister')).toBeInTheDocument();
-        expect(within(dialog).getByText((_, element) => element?.textContent === 'Emergency phone: (087) 555-1204')).toBeInTheDocument();
-        expect(within(dialog).getByText(/exercise-induced asthma/i)).toBeInTheDocument();
+        expect(within(dialog).getByText(/m-1024/i)).toBeInTheDocument();
       });
 
-      it('should close the emergency modal when close is clicked', () => {
-        render(<MembersPage />);
+      it('should close the emergency modal when close is clicked', async () => {
+        render(await MembersPage());
 
         fireEvent.click(screen.getByRole('button', { name: /show emergency info for conor walsh/i }));
         fireEvent.click(screen.getByRole('button', { name: /close/i }));
@@ -307,21 +360,21 @@ describe('MembersPage', () => {
   });
 
   describe('styling', () => {
-    it('should render heading with correct size and color', () => {
-      render(<MembersPage />);
+    it('should render heading with correct size and color', async () => {
+      render(await MembersPage());
       const heading = screen.getByRole('heading', { level: 1, name: /members/i });
       expect(heading).toHaveClass('text-3xl', 'font-bold', 'text-gray-900');
     });
 
-    it('should have horizontally scrollable table container styling', () => {
-      const { container } = render(<MembersPage />);
+    it('should have horizontally scrollable table container styling', async () => {
+      const { container } = render(await MembersPage());
       const tableContainer = container.querySelector('[class*="overflow-x-auto"]');
 
       expect(tableContainer).toHaveClass('overflow-x-auto', 'bg-white', 'ring-gray-200');
     });
 
-    it('should render rows with a hover state and subtle borders', () => {
-      const { container } = render(<MembersPage />);
+    it('should render rows with a hover state and subtle borders', async () => {
+      const { container } = render(await MembersPage());
       const body = container.querySelector('tbody');
       const firstRow = container.querySelector('tbody tr');
 
