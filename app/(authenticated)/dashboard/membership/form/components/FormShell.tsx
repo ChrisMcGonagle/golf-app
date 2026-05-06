@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useFormContext } from '@/components/contexts/FormContext';
+import { submitMembershipForm } from '../actions';
 import StepIndicator from './StepIndicator';
 import Step1Personal from './Step1Personal';
 import Step2Membership from './Step2Membership';
@@ -29,6 +30,9 @@ export default function FormShell({
   const { flow, step1, step2, step3, step4 } = useFormContext();
   const [isValid, setIsValid] = useState(false);
   const [completing, setCompleting] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const membershipType = flow.typeId
     .replace(/[-_]+/g, ' ')
@@ -46,8 +50,9 @@ export default function FormShell({
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (!isValid) return;
+    setSubmitError('');
     setCompleting(true);
     const payload = {
       flow,
@@ -57,8 +62,14 @@ export default function FormShell({
       safeguarding: step3,
       consent: step4,
     };
-    console.log('Membership form payload:', payload);
-    console.log('Membership form payload JSON:', JSON.stringify(payload, null, 2));
+    const result = await submitMembershipForm(payload);
+    if (result.success) {
+      setSubmitted(true);
+      console.log('Membership form submitted successfully');
+    } else {
+      setCompleting(false);
+      setSubmitError(result.error ?? 'Submission failed. Please try again.');
+    }
   };
 
   const renderStep = () => {
@@ -142,6 +153,9 @@ export default function FormShell({
                 </button>
               )}
             </div>
+            {submitError && (
+              <p className="mt-2 text-sm text-red-500">{submitError}</p>
+            )}
           </div>
         </div>
       </div>

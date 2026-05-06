@@ -4,6 +4,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import FormShell from '@/app/(authenticated)/dashboard/membership/form/components/FormShell';
 import { FormProvider } from '@/components/contexts/FormContext';
 
+const mockSubmitMembershipForm = jest.fn();
+
+jest.mock('@/app/(authenticated)/dashboard/membership/form/actions', () => ({
+  submitMembershipForm: (...args: unknown[]) => mockSubmitMembershipForm(...args),
+}));
+
 const mockOperator = {
   profileId: 'staff-123',
   displayName: 'Alex Operator',
@@ -93,6 +99,7 @@ describe('FormShell', () => {
     (useSearchParams as jest.Mock).mockReturnValue(mockSearchParams);
     consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
     dateSpy = jest.spyOn(Date.prototype, 'toISOString').mockReturnValue(mockFormSubmittedAt);
+    mockSubmitMembershipForm.mockResolvedValue({ success: true });
   });
 
   afterEach(() => {
@@ -197,8 +204,7 @@ describe('FormShell', () => {
     fireEvent.click(completeButton);
 
     await waitFor(() => {
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        'Membership form payload:',
+      expect(mockSubmitMembershipForm).toHaveBeenCalledWith(
         expect.objectContaining({
           flow: expect.objectContaining({
             operator: expect.objectContaining({
@@ -219,8 +225,7 @@ describe('FormShell', () => {
     });
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
-      'Membership form payload JSON:',
-      expect.stringContaining('"operator"')
+      'Membership form submitted successfully'
     );
   });
 
@@ -313,7 +318,7 @@ describe('FormShell with memberId (renewal)', () => {
 
   it('renders form with memberId for renewal flow', () => {
     render(
-      <FormProvider intent="renewal" typeId="Full Member" memberId="member-123">
+      <FormProvider intent="renewal" typeId="Full Member" memberId="member-123" formCreatedAt={mockFormCreatedAt}>
         <FormShell currentStep={1} />
       </FormProvider>
     );

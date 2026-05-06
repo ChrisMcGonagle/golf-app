@@ -61,12 +61,14 @@ jest.mock('react-signature-canvas', () => {
   });
 });
 
+const mockFormCreatedAt = '2026-05-05T10:00:00.000Z';
+
 describe('Step1Personal', () => {
   const mockOnValidationChange = jest.fn();
 
   it('renders all 12 visible personal detail fields', () => {
     render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step1Personal onValidationChange={mockOnValidationChange} />
       </FormProvider>
     );
@@ -81,7 +83,7 @@ describe('Step1Personal', () => {
 
   it('shows validation error for empty required fields', async () => {
     render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step1Personal onValidationChange={mockOnValidationChange} />
       </FormProvider>
     );
@@ -93,7 +95,7 @@ describe('Step1Personal', () => {
 
   it('validates email format', async () => {
     const { container } = render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step1Personal onValidationChange={jest.fn()} />
       </FormProvider>
     );
@@ -112,7 +114,7 @@ describe('Step1Personal', () => {
 describe('Step2Membership', () => {
   it('renders isCurrentMember as first required field', () => {
     const { container } = render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step2Membership onValidationChange={jest.fn()} />
       </FormProvider>
     );
@@ -125,7 +127,7 @@ describe('Step2Membership', () => {
   it('shows validation error for isCurrentMember when required', async () => {
     const onValidationChange = jest.fn();
     const { container } = render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step2Membership onValidationChange={onValidationChange} />
       </FormProvider>
     );
@@ -138,7 +140,7 @@ describe('Step2Membership', () => {
 
   it('disables ghinNumber when isCurrentMember is not Yes', () => {
     const { container } = render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step2Membership onValidationChange={jest.fn()} />
       </FormProvider>
     );
@@ -149,7 +151,7 @@ describe('Step2Membership', () => {
 
   it('enables ghinNumber when isCurrentMember is set to Yes', async () => {
     const { container } = render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step2Membership onValidationChange={jest.fn()} />
       </FormProvider>
     );
@@ -167,7 +169,7 @@ describe('Step2Membership', () => {
 describe('Step3Safeguarding', () => {
   it('renders all safeguarding fields', () => {
     render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step3Safeguarding onValidationChange={jest.fn()} />
       </FormProvider>
     );
@@ -180,7 +182,7 @@ describe('Step3Safeguarding', () => {
   it('validates required emergency contact fields', async () => {
     const onValidationChange = jest.fn();
     const { container } = render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step3Safeguarding onValidationChange={onValidationChange} />
       </FormProvider>
     );
@@ -194,7 +196,7 @@ describe('Step3Safeguarding', () => {
   it('validates phone format', async () => {
     const onValidationChange = jest.fn();
     const { container } = render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step3Safeguarding onValidationChange={onValidationChange} />
       </FormProvider>
     );
@@ -214,7 +216,7 @@ describe('Step4Placeholder', () => {
 
   it('renders intro text about membership terms', () => {
     render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step4Placeholder onValidationChange={mockOnValidationChange} />
       </FormProvider>
     );
@@ -225,7 +227,7 @@ describe('Step4Placeholder', () => {
   it('requires acceptedTerms checkbox', async () => {
     const onValidationChange = jest.fn();
     render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step4Placeholder onValidationChange={onValidationChange} />
       </FormProvider>
     );
@@ -237,7 +239,7 @@ describe('Step4Placeholder', () => {
 
   it('renders acceptedTerms checkbox with correct label', () => {
     render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step4Placeholder onValidationChange={jest.fn()} />
       </FormProvider>
     );
@@ -247,7 +249,7 @@ describe('Step4Placeholder', () => {
 
   it('renders acceptedGdpr checkbox with correct label', () => {
     render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step4Placeholder onValidationChange={jest.fn()} />
       </FormProvider>
     );
@@ -257,7 +259,7 @@ describe('Step4Placeholder', () => {
 
   it('renders signature label and clear button', () => {
     render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step4Placeholder onValidationChange={jest.fn()} />
       </FormProvider>
     );
@@ -269,7 +271,7 @@ describe('Step4Placeholder', () => {
   it('calls onValidationChange when acceptedTerms is checked', async () => {
     const onValidationChange = jest.fn();
     const { container } = render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step4Placeholder onValidationChange={onValidationChange} />
       </FormProvider>
     );
@@ -285,7 +287,7 @@ describe('Step4Placeholder', () => {
   it('is invalid without a signature even when both checkboxes are checked', async () => {
     const onValidationChange = jest.fn();
     const { container } = render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step4Placeholder onValidationChange={onValidationChange} />
       </FormProvider>
     );
@@ -303,7 +305,7 @@ describe('Step4Placeholder', () => {
   it('becomes valid when both checkboxes and a signature are present', async () => {
     const onValidationChange = jest.fn();
     const { container } = render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step4Placeholder onValidationChange={onValidationChange} />
       </FormProvider>
     );
@@ -320,7 +322,7 @@ describe('Step4Placeholder', () => {
   it('clear resets signature and returns the step to an invalid state', async () => {
     const onValidationChange = jest.fn();
     const { container } = render(
-      <FormProvider intent="new" typeId="Full Member">
+      <FormProvider intent="new" typeId="Full Member" formCreatedAt={mockFormCreatedAt}>
         <Step4Placeholder onValidationChange={onValidationChange} />
       </FormProvider>
     );
