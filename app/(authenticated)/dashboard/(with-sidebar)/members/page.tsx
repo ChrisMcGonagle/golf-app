@@ -68,8 +68,8 @@ const members = [
   },
 ];
 
-const membershipTypes = ['Type', ...new Set(members.map((member) => member.membershipType))];
-const statuses = ['Status', ...new Set(members.map((member) => member.status))];
+const membershipTypes = ['Type', ...Array.from(new Set(members.map((member) => member.membershipType)))];
+const statuses = ['Status', ...Array.from(new Set(members.map((member) => member.status)))];
 
 const actionButtonClassName =
   'inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-[#2b2b2b] transition hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200';
