@@ -1037,7 +1037,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-029: Save Membership Form Submission to Database
 
-- **Status:** READY
+- **Status:** IN_PROGRESS
 - **Goal:** When the membership form is completed, persist the full form payload to a new `membership_pending` database table with account provisioning states set to `pending`.
 - **Scope:**
   - Create a new Supabase table `membership_pending` with the following columns:
