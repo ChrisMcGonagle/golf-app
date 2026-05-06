@@ -105,3 +105,42 @@ create index if not exists members_name_lower_idx
     on public.members (lower(first_name), lower(last_name));
 
 -- membership_id (member_number) index already exists as members_member_number_idx
+
+-- ============================================================
+-- PBI-029: membership_pending table
+-- Stores pending membership application payloads submitted via
+-- the membership form. All access is restricted to the service
+-- role only — no anon or authenticated user access permitted.
+-- Third-party account provisioning status fields (golfireland,
+-- brs, clubv1) default to 'pending' and are updated by the
+-- server-side provisioning workflow.
+-- ============================================================
+
+create table if not exists public.membership_pending (
+  id                   uuid        primary key default gen_random_uuid(),
+  payload              jsonb       not null,
+  golfireland_account  text        not null default 'pending',
+  brs_account          text        not null default 'pending',
+  clubv1_account       text        not null default 'pending',
+  submitted_at         timestamptz not null default now(),
+  created_at           timestamptz not null default now()
+);
+
+alter table public.membership_pending enable row level security;
+
+-- Deny all access to public, anon, and authenticated roles.
+-- Only the service role (which bypasses RLS) may read or write this table.
+revoke all on table public.membership_pending from public;
+revoke all on table public.membership_pending from anon;
+revoke all on table public.membership_pending from authenticated;
+
+-- Explicit service-role full-access policy (belt-and-suspenders).
+-- The service role bypasses RLS by default, but this policy documents
+-- intent and guards against future RLS flag changes.
+drop policy if exists "service role full access" on public.membership_pending;
+create policy "service role full access"
+  on public.membership_pending
+  for all
+  to service_role
+  using (true)
+  with check (true);
