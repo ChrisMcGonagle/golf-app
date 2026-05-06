@@ -1082,6 +1082,11 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
     - Stepper animates all steps to green (completing state — already partially supported)
     - Form fields disappear, replaced by a full-screen loading/submitting indicator ("Submitting..." with a spinner or animation)
   - On successful database insert (PBI-029):
+    - Animated success flow on successful submission:
+      - Grey overlay/blind descends from top of the page, covering it completely (like a window blind closing)
+      - Once fully covering the page, the blind reverses and shrinks into a small circle (centered, or appropriate position)
+      - Inside the circle, a white checkmark/tick mark is drawn
+      - Circle remains visible for a moment, then transitions to the final success summary page showing the invoice-style summary, email confirmation message, and return button
     - Stepper is replaced by a "Membership Form Submitted Successfully" heading/confirmation
     - Loading screen is replaced by an invoice-style summary of the submitted membership, showing key fields from the form (name, membership type, email, etc.)
     - Below the summary: an info message — "You should receive an email at [email address entered] within the next 24 hours with your membership details, or if any further information is required."
@@ -1099,6 +1104,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
   - Successful submission shows an invoice-style summary of the submitted data
   - Success view includes an email confirmation message referencing the member's email address
   - Success view includes a return-to-registration button
+  - Animated blind descends from top, fully covers page, then shrinks into a centered circle with a checkmark
   - Failed submission returns to the form with all fields still populated and stepper restored
   - An error message is shown on failure
   - No form data is lost on error
