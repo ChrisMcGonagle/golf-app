@@ -1107,3 +1107,147 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 - **Systems Affected:** frontend
 - **Risk Level:** Low
 - **Estimated Effort:** M
+
+---
+
+## PBI-031: Members Page UI — Members Table
+
+- **Status:** READY
+- **Goal:** Update the members page UI to include a clean, modern members table, with `Applications` included as one of the table columns and rendered as subtle chips/tags.
+- **Scope:**
+  - Add a members table to `/dashboard/members`
+  - Include an `Applications` column in that table
+  - Render application values inside the `Applications` cell as small rounded chips/tags
+  - Support multiple application values per member within a single table cell
+  - Supported application values are exactly:
+    - `Golf Ireland`
+    - `BRS Booking`
+    - `ClubV1`
+  - Keep the rest of the table wording and implementation centered on a generic members table UI rather than an applications-only feature
+  - Chips use subtle background colours consistent with the existing app UI and design system
+  - Chips have even spacing within the cell so multiple values remain readable
+  - Table styling uses a clean, modern light surface with subtle row borders, clear header styling with slightly bolder text, and a visible row hover state
+  - Layout is responsive and remains horizontally scrollable on smaller screens while keeping content aligned for readability
+  - Keep the colour palette, spacing, typography, and overall styling consistent with the current UI refresh work
+  - Use mock or sample member/application data if needed for the UI implementation
+- **Out of Scope:** Any backend or database work, real data wiring, application-status business logic, filtering, sorting, pagination, or redesign of unrelated dashboard screens
+- **Acceptance Criteria:**
+  - The members page displays a members table UI
+  - One of the table columns is `Applications`
+  - Each member row can display multiple application values inside the `Applications` cell
+  - Application values render as small rounded chips/tags rather than plain text
+  - Only the supported values `Golf Ireland`, `BRS Booking`, and `ClubV1` are shown in the UI state for this PBI
+  - Chips use subtle background colours that fit the existing app colour palette and maintain even spacing within the table cell
+  - The table uses a clean, modern light design with subtle row borders, clear headers, and a row hover state
+  - The table remains readable on smaller screens and allows horizontal scrolling where needed
+  - The change is limited to the members page UI layer only and may use mock/sample data
+- **Dependencies:** PBI-005 (Admin dashboard layout — DONE), PBI-028 (Dashboard sidebar redesign — DONE)
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** S
+
+---
+
+## PBI-032: Members Page Table — Real Data Wiring
+
+- **Status:** READY
+- **Goal:** Wire the members table on the members page to real database-backed data, including the `Applications` column values, while preserving the visual design established in PBI-031.
+- **Scope:**
+  - Replace mock or sample members table data on the members page with real database-backed data
+  - Wire member rows and their `Applications` column values from real data
+  - Retrieve the supported application values for each member and render them in the existing `Applications` column chips
+  - Preserve the table layout, chip styling, spacing, hover state, and overall visual design introduced in PBI-031
+  - Add or update the required server-side data-fetching path needed to supply the members page with real member rows and application values
+  - Ensure the rendered application chip values align with the supported set:
+    - `Golf Ireland`
+    - `BRS Booking`
+    - `ClubV1`
+  - Keep the implementation focused on replacing mock/sample table data with real sourced data for the members table while preserving the table design from PBI-031
+- **Out of Scope:** Any redesign of the members table, any change to chip styling or layout from PBI-031, unrelated schema redesign, unrelated dashboard UI changes, or broader application-management workflows
+- **Acceptance Criteria:**
+  - The members page no longer relies on mock/sample data for the members table
+  - Member rows are populated from real database-backed data supplied to the members page
+  - The `Applications` column values are populated from real database-backed data
+  - Each member row renders the correct application values in the existing `Applications` column chip UI
+  - Rendered chip values align with the supported values `Golf Ireland`, `BRS Booking`, and `ClubV1`
+  - The members table design introduced in PBI-031 remains unchanged after real data wiring
+  - Required backend/server/data-fetching work is in place to supply the members page with real member rows and application values
+- **Dependencies:** PBI-031 (Members page table UI — READY), PBI-029 (Save membership form submission to database — DONE)
+- **Systems Affected:** frontend, backend
+- **Risk Level:** Medium
+- **Estimated Effort:** M
+
+---
+
+## PBI-033: Accounts Page UI — Accounts Table
+
+- **Status:** READY
+- **Goal:** Add a UI table to the accounts page with a clean, modern presentation that matches the current dashboard table refresh work.
+- **Scope:**
+  - Add an accounts table to the accounts page
+  - Table columns are exactly:
+    - `Name`
+    - `Email`
+    - `Status`
+    - `Role`
+    - `Permissions`
+    - `Edit`
+  - The `Edit` column displays a row-level edit icon or icon button on each row, with no additional text content in the table cells
+  - Use mock or sample account data if needed for the UI implementation
+  - Keep the implementation limited to the UI layer only with no backend or real data wiring
+  - Table styling should match the existing table PBIs and current UI refresh work:
+    - clean, modern table design
+    - light background
+    - subtle row borders
+    - slightly bolder header row
+    - row hover state
+    - consistent spacing and alignment
+    - responsive layout with horizontal scroll on smaller screens if needed
+    - consistent palette, spacing, and typography with the existing app UI
+    - minimal styling
+- **Out of Scope:** Any backend or database work, real data wiring, edit form behavior, save/update functionality, filtering, sorting, pagination, or redesign of unrelated dashboard screens
+- **Acceptance Criteria:**
+  - The accounts page displays an accounts table UI
+  - The table columns are exactly `Name`, `Email`, `Status`, `Role`, `Permissions`, and `Edit`
+  - Each table row shows a row-level edit icon or icon button under the `Edit` column with no additional text content in that cell
+  - The table uses a clean, modern light design with subtle row borders, slightly bolder headers, consistent spacing/alignment, and a visible row hover state
+  - The table remains readable on smaller screens and allows horizontal scrolling where needed
+  - The styling remains consistent with the current app palette, spacing, typography, and broader UI refresh work
+  - The change is limited to the accounts page UI layer only and may use mock/sample account data
+- **Dependencies:** PBI-005 (Admin dashboard layout — DONE), PBI-028 (Dashboard sidebar redesign — DONE)
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** S
+
+---
+
+## PBI-034: Accounts Page Table — Profiles Data Wiring And Permissions Schema
+
+- **Status:** READY
+- **Goal:** Follow up PBI-033 by wiring the accounts page table to real database-backed account data sourced primarily from the `profiles` table, and update the profiles schema so permissions are stored on each profile record.
+- **Scope:**
+  - Replace the mock/sample accounts page table data introduced in PBI-033 with real database-backed data
+  - Source account rows for the accounts page primarily from the `profiles` table
+  - Update the `profiles` table schema so permissions data is stored on each profile record
+  - Supply the accounts page with real values for the columns:
+    - `Name`
+    - `Email`
+    - `Status`
+    - `Role`
+    - `Permissions`
+  - Preserve the table UI, column layout, and row-level edit-icon column design introduced in PBI-033
+  - Add or update the required server-side data-fetching path needed to supply the accounts page with real account/profile rows
+  - Where `Email` is not stored directly on the profile record, implementation may use any required safe server-side lookup or join to supply email alongside profile-backed account rows while keeping `profiles` as the primary source for account records
+  - Keep the `Edit` column limited to UI presentation only for this PBI unless a minimal supporting change is required to preserve the existing table rendering
+- **Out of Scope:** Any redesign of the accounts table UI, any change to edit interactions or edit workflows, unrelated schema redesign, filtering, sorting, pagination, or unrelated dashboard changes
+- **Acceptance Criteria:**
+  - The accounts page no longer relies on mock/sample data for the accounts table
+  - Accounts rows are populated from real database-backed account/profile data
+  - The accounts page shows real values for `Name`, `Email`, `Status`, `Role`, and `Permissions`
+  - Permissions are stored on profile records in the database
+  - The table design and edit-icon presentation introduced in PBI-033 remain unchanged after data wiring
+- **Dependencies:** PBI-033 (Accounts Page UI — Accounts Table — READY), PBI-002 (Profiles table and role support — DONE)
+- **Systems Affected:** frontend, backend, supabase
+- **Risk Level:** Medium
+- **Estimated Effort:** M
+- **Note:** Supabase Specialist Required

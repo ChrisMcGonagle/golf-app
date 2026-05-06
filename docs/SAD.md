@@ -54,8 +54,8 @@ Browser
 - `@supabase/ssr` — cookie-based session management for App Router.
 - Server components fetch data directly from Supabase (no intermediate REST layer needed for reads).
 - `middleware.ts` intercepts every request to validate session and enforce role routing.
-- The admin dashboard shell exposes a side menu with `Submissions` and `Members`, while the admin dashboard home also exposes quick-access buttons for membership journeys.
-- The membership-registration page remains outside the admin dashboard shell so both staff and admin can use the same entry surface for membership flows.
+- The dashboard shell uses a left sidebar with top-level `Dashboard` and `Accounts` navigation plus a collapsible `Membership` section exposing `Pending` and `Member List`.
+- The membership-registration page remains outside the sidebar shell so staff and admin share the same entry surface for membership journeys.
 - Membership journeys are converging on a shared flow under protected dashboard routes: choose action, optionally search for an existing member for renewals, choose membership type, then continue into the final form or email path.
 - No client-side Supabase calls for sensitive operations.
 
@@ -80,6 +80,19 @@ Browser
 | created_at | timestamptz | Default now() |
 
 **Constraint:** `role` is enforced at the DB level via a CHECK constraint, not only at the app level.
+
+### `public.membership_pending`
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid | PK, default `gen_random_uuid()` |
+| payload | jsonb | Not null; stores the full membership form payload |
+| golfireland_account | text | Not null, default `'pending'` |
+| brs_account | text | Not null, default `'pending'` |
+| clubv1_account | text | Not null, default `'pending'` |
+| submitted_at | timestamptz | Not null, default `now()` |
+| created_at | timestamptz | Not null, default `now()` |
+
+**Access model:** RLS is enabled. All reads and writes are restricted to server-side service-role paths.
 
 ---
 
@@ -146,6 +159,10 @@ After PIN validation, the server creates a signed `activeUser` cookie using `ACT
   - `Membership Details`
   - `Safeguarding & Medical`
   - `Additional Info and Consent` (placeholder for now)
+- Form submission is handled by a server action.
+- On success, the full payload is inserted into `membership_pending` and the downstream provisioning status fields are initialised to `pending`.
+- The client form shell then advances through a success animation sequence and ends on a success summary view.
+- On failure, the user remains on the populated form and sees an inline submission error.
 
 ### Security Properties
 - No Supabase session cookie exists on the device at rest.
@@ -162,16 +179,11 @@ After PIN validation, the server creates a signed `activeUser` cookie using `ACT
 |---|---|---|
 | `/select-user` | ✅ (unauthenticated only) | ✅ (unauthenticated only) |
 | `/dashboard` | ❌ → redirect `/dashboard/membership-registration` | ✅ |
+| `/dashboard/accounts` | ❌ → redirect `/dashboard/membership-registration` | ✅ |
 | `/dashboard/submissions` | ❌ → redirect `/dashboard/membership-registration` | ✅ |
 | `/dashboard/members` | ❌ → redirect `/dashboard/membership-registration` | ✅ |
-| `/dashboard/member-submissions` | ❌ → redirect `/dashboard/membership-registration` | ✅ |
-| `/dashboard/member-lists` | ❌ → redirect `/dashboard/membership-registration` | ✅ |
 | `/dashboard/membership-registration` | ✅ | ✅ |
-| `/dashboard/new-member` | ✅ | ✅ |
-| `/dashboard/membership-renewal` | ✅ | ✅ |
-| `/dashboard/membership/choice` | ✅ | ✅ |
-| `/dashboard/membership/member-search` | ✅ | ✅ |
-| `/dashboard/membership/type` | ✅ | ✅ |
+| `/dashboard/membership-flow` | ✅ | ✅ |
 | `/dashboard/membership/form` | ✅ | ✅ |
 | `/dashboard/membership/email` | ✅ | ✅ |
 
@@ -187,17 +199,14 @@ After PIN validation, the server creates a signed `activeUser` cookie using `ACT
 | `/pin` | `PinEntryPage` | No | staff/admin |
 | `/setup-pin` | `SetupPinPage` | No | staff/admin |
 | `/dashboard` | `AdminDashboardHome` | Yes | admin |
+| `/dashboard/accounts` | `DashboardAccountsPage` | Yes | admin |
 | `/dashboard/submissions` | `AdminSubmissionsPage` | Yes | admin |
 | `/dashboard/members` | `AdminMembersPage` | Yes | admin |
-| `/dashboard/member-submissions` | `AdminMemberSubmissionsPage` | Yes | admin |
-| `/dashboard/member-lists` | `AdminMemberListsPage` | Yes | admin |
-| `/dashboard/membership-registration` | `StaffMembershipRegistrationPage` | Yes | staff/admin |
-| `/dashboard/new-member` | `NewMembershipEntryPage` | Yes | staff/admin |
-| `/dashboard/membership-renewal` | `MembershipRenewalEntryPage` | Yes | staff/admin |
-| `/dashboard/membership/choice` | `SharedMembershipChoicePage` | Yes | staff/admin |
-| `/dashboard/membership/member-search` | `RenewalMemberSearchPage` | Yes | staff/admin |
-| `/dashboard/membership/type` | `MembershipTypeSelectionPage` | Yes | staff/admin |
-| `/dashboard/membership/form` | `SharedMembershipFormPage` | Yes | staff/admin |
+| `/dashboard/membership-registration` | `MembershipRegistrationPage` | Yes | staff/admin |
+| `/dashboard/membership-flow` | `MembershipFlowPage` | Yes | staff/admin |
+| `/dashboard/membership/member-search` | `MembershipMemberSearchPage` | Yes | staff/admin |
+| `/dashboard/membership/type` | `MembershipTypePage` | Yes | staff/admin |
+| `/dashboard/membership/form` | `MembershipFormPage` | Yes | staff/admin |
 | `/dashboard/membership/email` | `MembershipEmailFlowPage` | Yes | staff/admin |
 
 ### Branding and Layout
@@ -206,8 +215,8 @@ The Baffy golf club branding (icon + text) appears consistently across the app:
 
 - **Select User page** (`/select-user`): Branding positioned fixed top-left, over the profile grid
 - **PIN Entry page** (`/pin`): Branding positioned fixed top-left, over the PIN form
-- **Dashboard header** (`/dashboard` and subpages): Branding displayed in a full-width header above the sidebar
-- **Membership flow screens** (form, stepper, type, registration): No branding or header displayed — user stays focused on the form
+- **Dashboard shell** (`/dashboard` and sidebar subpages): Branding is rendered inside the left sidebar rather than in a separate full-width header
+- **Membership flow screens** (registration, flow choice, type, form, email): The dashboard shell/header treatment is omitted so the flow stays visually focused
 
 The Baffy branding component is defined in `components/BaffyBrand.tsx` and imported where needed. It renders a golf club SVG icon (#2b2b2b) followed by "Baffy" text.
 
@@ -247,7 +256,7 @@ ACTIVE_USER_SECRET=              # Server-only — symmetric secret for signing/
 
 - **TypeScript strict mode** — `"strict": true` in `tsconfig.json`. No `any`.
 - **Named exports only** — no default exports except Next.js page/layout files where the framework requires it.
-- **Tailwind CSS** — all styling via Tailwind utility classes. No inline styles. No CSS modules unless unavoidable.
+- **Tailwind CSS** — prefer Tailwind utility classes for styling. Inline styles are allowed only where animation geometry or runtime-driven presentation requires them. No CSS modules unless unavoidable.
 - **Server-first** — prefer Server Components. Only use `"use client"` when interactivity requires it.
 - **No secrets on client** — `SUPABASE_SERVICE_ROLE_KEY` and any sensitive keys are server-only.
 - **File naming** — `kebab-case` for files and folders. Component names in `PascalCase`.
