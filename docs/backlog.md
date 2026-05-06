@@ -1110,37 +1110,30 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ---
 
-## PBI-031: Members Page UI — Members Table
+## PBI-031: Members Page UI — Members Management Screen
 
 - **Status:** DONE
-- **Goal:** Update the members page UI to include a clean, modern members table, with `Applications` included as one of the table columns and rendered as subtle chips/tags.
+- **Goal:** Ship the members management screen on `/dashboard/members` with the current table layout, toolbar controls, row actions, missing-info indicator, and modal interactions using page-level mock member data.
 - **Scope:**
-  - Add a members table to `/dashboard/members`
-  - Include an `Applications` column in that table
-  - Render application values inside the `Applications` cell as small rounded chips/tags
-  - Support multiple application values per member within a single table cell
-  - Supported application values are exactly:
-    - `Golf Ireland`
-    - `BRS Booking`
-    - `ClubV1`
-  - Keep the rest of the table wording and implementation centered on a generic members table UI rather than an applications-only feature
-  - Chips use subtle background colours consistent with the existing app UI and design system
-  - Chips have even spacing within the cell so multiple values remain readable
-  - Table styling uses a clean, modern light surface with subtle row borders, clear header styling with slightly bolder text, and a visible row hover state
-  - Layout is responsive and remains horizontally scrollable on smaller screens while keeping content aligned for readability
-  - Keep the colour palette, spacing, typography, and overall styling consistent with the current UI refresh work
-  - Use mock or sample member/application data if needed for the UI implementation
-- **Out of Scope:** Any backend or database work, real data wiring, application-status business logic, filtering, sorting, pagination, or redesign of unrelated dashboard screens
+  - Build the members management screen at `/dashboard/members`
+  - Include the current members table columns exactly as shipped: `Member ID`, `Member`, `Membership Type`, `Status`, `Renewal`, `Email`, `Phone Number`, `Home Club`, `Other Clubs`, and `Actions`
+  - Add the current toolbar above the table with a `Search members` input, a membership-type filter, and a status filter
+  - Include the current row actions: view details, emergency information (`SOS`), and status action (`Disable` for active members, `Enable` for resigned members)
+  - Display the missing-info indicator at the end of a row when member details are incomplete, including the current tooltip treatment
+  - Provide the current member-status confirmation modal for enable/disable actions
+  - Provide the emergency-info modal populated from safeguarding-shaped mock data, including emergency contact and related safeguarding details
+  - Keep the existing clean light-surface table styling, hover state, spacing, typography, and responsive horizontal scroll behaviour
+  - Use page-level mock/sample member data for this UI delivery
+- **Out of Scope:** Real database wiring, persistence for status changes, redesign of the current members layout or interactions, pagination, sorting, or unrelated dashboard changes
 - **Acceptance Criteria:**
-  - The members page displays a members table UI
-  - One of the table columns is `Applications`
-  - Each member row can display multiple application values inside the `Applications` cell
-  - Application values render as small rounded chips/tags rather than plain text
-  - Only the supported values `Golf Ireland`, `BRS Booking`, and `ClubV1` are shown in the UI state for this PBI
-  - Chips use subtle background colours that fit the existing app colour palette and maintain even spacing within the table cell
-  - The table uses a clean, modern light design with subtle row borders, clear headers, and a row hover state
-  - The table remains readable on smaller screens and allows horizontal scrolling where needed
-  - The change is limited to the members page UI layer only and may use mock/sample data
+  - The members page renders the shipped members management screen on `/dashboard/members`
+  - The table shows the current shipped columns: `Member ID`, `Member`, `Membership Type`, `Status`, `Renewal`, `Email`, `Phone Number`, `Home Club`, `Other Clubs`, and `Actions`
+  - The toolbar includes a search input plus membership-type and status filters
+  - Each row includes the current action set: view details, `SOS` emergency information, and the context-appropriate enable/disable status action
+  - Rows with incomplete details show the missing-info indicator with the current tooltip treatment
+  - Triggering an enable/disable action opens the current confirmation modal
+  - Triggering the `SOS` action opens the emergency-info modal populated with safeguarding-shaped mock data
+  - The screen remains a UI-only delivery backed by page-level mock data
 - **Dependencies:** PBI-005 (Admin dashboard layout — DONE), PBI-028 (Dashboard sidebar redesign — DONE)
 - **Systems Affected:** frontend
 - **Risk Level:** Low
@@ -1148,31 +1141,30 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ---
 
-## PBI-032: Members Page Table — Real Data Wiring
+## PBI-032: Members Page — Real Data Wiring
 
-- **Status:** READY
-- **Goal:** Wire the members table on the members page to real database-backed data, including the `Applications` column values, while preserving the visual design established in PBI-031.
+- **Status:** IN_PROGRESS
+- **Goal:** Replace the page-level mock data behind the shipped members management screen with real database-backed data while preserving the current table columns, toolbar, row actions, missing-info indicator, status confirmation modal, and emergency-info modal UX from PBI-031.
 - **Scope:**
-  - Replace mock or sample members table data on the members page with real database-backed data
-  - Wire member rows and their `Applications` column values from real data
-  - Retrieve the supported application values for each member and render them in the existing `Applications` column chips
-  - Preserve the table layout, chip styling, spacing, hover state, and overall visual design introduced in PBI-031
-  - Add or update the required server-side data-fetching path needed to supply the members page with real member rows and application values
-  - Ensure the rendered application chip values align with the supported set:
-    - `Golf Ireland`
-    - `BRS Booking`
-    - `ClubV1`
-  - Keep the implementation focused on replacing mock/sample table data with real sourced data for the members table while preserving the table design from PBI-031
-- **Out of Scope:** Any redesign of the members table, any change to chip styling or layout from PBI-031, unrelated schema redesign, unrelated dashboard UI changes, or broader application-management workflows
+  - Replace the page-level mock member data on `/dashboard/members` with real database-backed data
+  - Preserve the current shipped members table columns: `Member ID`, `Member`, `Membership Type`, `Status`, `Renewal`, `Email`, `Phone Number`, `Home Club`, `Other Clubs`, and `Actions`
+  - Preserve the current toolbar UX: `Search members`, membership-type filter, and status filter
+  - Preserve the current row actions and modal interactions: view details, `SOS` emergency information, and enable/disable status actions with the existing confirmation modal UX
+  - Populate the shipped table columns with real values sourced from the existing data model
+  - Populate the emergency-info modal with real mapped safeguarding/emergency data rather than mock values
+  - Derive the missing-info indicator from real completeness rules and real member data rather than a hard-coded mock flag
+  - Add or update only the required read-side data-fetching and mapping path needed to supply the members page with real data
+  - Keep the current layout, styling, and interactions unchanged
+  - Do not guess new write paths or redesign the schema as part of this PBI
+- **Out of Scope:** Any redesign of the members page, changes to the shipped interactions or layout, guessed write-path implementation, schema redesign, or broader member-management workflows beyond wiring the existing UI to real data
 - **Acceptance Criteria:**
-  - The members page no longer relies on mock/sample data for the members table
-  - Member rows are populated from real database-backed data supplied to the members page
-  - The `Applications` column values are populated from real database-backed data
-  - Each member row renders the correct application values in the existing `Applications` column chip UI
-  - Rendered chip values align with the supported values `Golf Ireland`, `BRS Booking`, and `ClubV1`
-  - The members table design introduced in PBI-031 remains unchanged after real data wiring
-  - Required backend/server/data-fetching work is in place to supply the members page with real member rows and application values
-- **Dependencies:** PBI-031 (Members page table UI — READY), PBI-029 (Save membership form submission to database — DONE)
+  - The members page no longer relies on page-level mock data for the shipped members management screen
+  - The current shipped table columns are populated with real database-backed values
+  - The current toolbar, row actions, missing-info indicator, status confirmation modal, and emergency-info modal UX remain unchanged
+  - The emergency-info modal displays real mapped safeguarding/emergency data
+  - The missing-info indicator is derived from real completeness rules and real member data
+  - Required read-side backend/server/data-fetching work is in place to supply the shipped members UI with real data without introducing schema redesign or guessed new write paths
+- **Dependencies:** PBI-031 (Members management screen UI — DONE), PBI-029 (Save membership form submission to database — DONE)
 - **Systems Affected:** frontend, backend
 - **Risk Level:** Medium
 - **Estimated Effort:** M
