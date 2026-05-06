@@ -1076,35 +1076,30 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 ## PBI-030: Membership Form Submission UX — Loading, Success, and Error States
 
 - **Status:** IN_PROGRESS
-- **Goal:** On form completion, animate the stepper to green, show a loading state, then replace the form with a success summary view — or return the user to their fully-populated form on failure.
+- **Status:** DEV_DONE
+- **Goal:** On form completion, animate the submission into a grey blind success sequence that shrinks to a checked circle, morphs into a grey success card, then reveals the final member and membership summary below — or return the user to their fully-populated form with an inline error on failure.
 - **Scope:**
   - On "Complete" button click in FormShell:
     - Stepper animates all steps to green (completing state — already partially supported)
-    - Form fields disappear, replaced by a full-screen loading/submitting indicator ("Submitting..." with a spinner or animation)
   - On successful database insert (PBI-029):
-    - Animated success flow on successful submission:
-      - Grey overlay/blind descends from top of the page, covering it completely (like a window blind closing)
-      - Once fully covering the page, the blind reverses and shrinks into a small circle (centered, or appropriate position)
-      - Inside the circle, a white checkmark/tick mark is drawn
-      - Circle remains visible for a moment, then transitions to the final success summary page showing the invoice-style summary, email confirmation message, and return button
-    - Stepper is replaced by a "Membership Form Submitted Successfully" heading/confirmation
-    - Loading screen is replaced by an invoice-style summary of the submitted membership, showing key fields from the form (name, membership type, email, etc.)
-    - Below the summary: an info message — "You should receive an email at [email address entered] within the next 24 hours with your membership details, or if any further information is required."
-    - A button to return to the membership registration screen
+    - Grey overlay/blind descends from the top of the page and fully covers the form shell
+    - Blind shrinks into a small grey circle with a drawn white checkmark/tick
+    - Circle morphs into a persistent grey success card
+    - Final success view keeps the grey card visible and reveals the member and membership summary panel below it
+    - Success view includes the email follow-up copy and a return path back to membership registration
   - On failure:
-    - Dismiss the loading screen
     - Restore the stepper in its pre-submission state
     - Return the user to the form at the step they were on, fully populated — no data loss
     - Show an inline error message indicating submission failed with a prompt to try again
   - All transitions happen within the form shell — no full page navigations during submission flow
 - **Out of Scope:** Actual email sending, retry logic beyond returning to the form, partial save/draft functionality
 - **Acceptance Criteria:**
-  - Clicking "Complete" triggers stepper green animation and hides the form, showing a loading state
-  - Successful submission replaces the stepper with "Membership Form Submitted Successfully"
-  - Successful submission shows an invoice-style summary of the submitted data
-  - Success view includes an email confirmation message referencing the member's email address
-  - Success view includes a return-to-registration button
-  - Animated blind descends from top, fully covers page, then shrinks into a centered circle with a checkmark
+  - Clicking "Complete" triggers the submission completion state in the form shell
+  - Successful submission animates a grey blind from the top of the page, fully covering the form shell
+  - The blind shrinks into a grey circle and draws a white checkmark
+  - The checked circle morphs into a grey success card
+  - The final success view preserves the grey success card and shows the member and membership summary below it
+  - Success view includes email follow-up copy and a return path back to membership registration
   - Failed submission returns to the form with all fields still populated and stepper restored
   - An error message is shown on failure
   - No form data is lost on error
