@@ -318,7 +318,7 @@ describe('FormShell with memberId (renewal)', () => {
 
   it('renders form with memberId for renewal flow', () => {
     render(
-      <FormProvider intent="renewal" typeId="Full Member" memberId="member-123">
+      <FormProvider intent="renewal" typeId="Full Member" memberId="member-123" formCreatedAt={mockFormCreatedAt}>
         <FormShell currentStep={1} />
       </FormProvider>
     );

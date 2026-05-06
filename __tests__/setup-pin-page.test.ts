@@ -42,7 +42,7 @@ jest.mock('@supabase/supabase-js', () => ({
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { redirect } from 'next/navigation';
-import { getIronSession } from 'iron-session';
+import { getIronSession, IronSession } from 'iron-session';
 import bcryptjs from 'bcryptjs';
 import { createClient } from '@supabase/supabase-js';
 import { createServiceRoleClient } from '@/lib/supabase/server';
@@ -370,7 +370,7 @@ describe('savePin server action', () => {
     mockBcryptHash.mockResolvedValue('$2b$10$hashedpin' as never);
 
     const mockSession = { activeUser: undefined as unknown, save: jest.fn().mockResolvedValue(undefined) };
-    mockGetIronSession.mockResolvedValue(mockSession as ReturnType<typeof getIronSession> extends Promise<infer T> ? T : never);
+    mockGetIronSession.mockResolvedValue(mockSession as unknown as IronSession<object>);
 
     const fd = buildSavePinFormData(
       'user-20',
