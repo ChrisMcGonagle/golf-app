@@ -29,7 +29,7 @@ describe('DashboardLayout', () => {
 
       const flexContainer = container.querySelector('div[class*="flex"]');
       expect(flexContainer).toBeInTheDocument();
-      expect(flexContainer).toHaveClass('flex', 'min-h-screen', 'bg-gray-50');
+      expect(flexContainer).toHaveClass('flex', 'h-screen', 'bg-gray-50');
     });
 
     it('should render DashboardSidebar component', () => {
@@ -41,7 +41,8 @@ describe('DashboardLayout', () => {
 
       const aside = container.querySelector('aside');
       expect(aside).toBeInTheDocument();
-      expect(aside).toHaveClass('bg-gray-900', 'text-white');
+      expect(aside?.className).toContain('bg-white');
+      expect(aside?.className).toContain('text-[#2b2b2b]');
     });
 
     it('should render main content area to the right of sidebar', () => {
@@ -111,7 +112,7 @@ describe('DashboardLayout', () => {
       );
 
       const flexContainer = container.firstChild;
-      expect(flexContainer).toHaveClass('min-h-screen');
+      expect(flexContainer).toHaveClass('h-screen');
     });
   });
 

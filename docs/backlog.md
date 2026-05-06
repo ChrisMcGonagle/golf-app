@@ -1000,7 +1000,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-028: Dashboard Sidebar Navigation Redesign
 
-- **Status:** READY
+- **Status:** DEV_DONE
 - **Goal:** Update the dashboard sidebar to a clean, modern vertical navigation design with Baffy branding at the top, and rename existing menu items.
 - **Scope:**
   - Rename "Submissions" menu item to "Pending"
