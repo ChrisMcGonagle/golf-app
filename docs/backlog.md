@@ -1144,26 +1144,30 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 ## PBI-032: Members Page — Real Data Wiring
 
 - **Status:** IN_PROGRESS
-- **Goal:** Replace the page-level mock data behind the shipped members management screen with real database-backed data while preserving the current table columns, toolbar, row actions, missing-info indicator, status confirmation modal, and emergency-info modal UX from PBI-031.
+- **Goal:** Replace the page-level mock data behind the shipped members management screen with real database-backed data, including the minimum schema/storage work required so the SOS emergency modal reads from durable member data instead of mock values, while preserving the current table columns, toolbar, row actions, missing-info indicator, status confirmation modal, and SOS emergency modal UX from PBI-031.
 - **Scope:**
   - Replace the page-level mock member data on `/dashboard/members` with real database-backed data
+  - Preserve the current shipped columns, toolbar, row actions, missing-info indicator, status confirmation modal, and SOS emergency modal UX
   - Preserve the current shipped members table columns: `Member ID`, `Member`, `Membership Type`, `Status`, `Renewal`, `Email`, `Phone Number`, `Home Club`, `Other Clubs`, and `Actions`
   - Preserve the current toolbar UX: `Search members`, membership-type filter, and status filter
   - Preserve the current row actions and modal interactions: view details, `SOS` emergency information, and enable/disable status actions with the existing confirmation modal UX
   - Populate the shipped table columns with real values sourced from the existing data model
-  - Populate the emergency-info modal with real mapped safeguarding/emergency data rather than mock values
+  - Add the minimum member-schema fields required to store the emergency/safeguarding data used by the SOS emergency modal
+  - Wire the members page so the SOS emergency modal reads emergency/safeguarding data from the durable members data model rather than mock values
   - Derive the missing-info indicator from real completeness rules and real member data rather than a hard-coded mock flag
   - Add or update only the required read-side data-fetching and mapping path needed to supply the members page with real data
+  - Limit this PBI to the minimum schema addition required to support the existing shipped UI
   - Keep the current layout, styling, and interactions unchanged
-  - Do not guess new write paths or redesign the schema as part of this PBI
-- **Out of Scope:** Any redesign of the members page, changes to the shipped interactions or layout, guessed write-path implementation, schema redesign, or broader member-management workflows beyond wiring the existing UI to real data
+  - Do not guess new write paths as part of this PBI
+- **Out of Scope:** Any redesign of the members page, changes to the shipped interactions or layout, broader schema redesign, unrelated schema changes, guessed new write-path implementation, or broader member-management workflows beyond wiring the existing UI to real data and adding the minimum SOS data fields it already depends on
 - **Acceptance Criteria:**
   - The members page no longer relies on page-level mock data for the shipped members management screen
   - The current shipped table columns are populated with real database-backed values
-  - The current toolbar, row actions, missing-info indicator, status confirmation modal, and emergency-info modal UX remain unchanged
-  - The emergency-info modal displays real mapped safeguarding/emergency data
+  - The SOS emergency modal displays real member-linked emergency/safeguarding data from the durable members data model
+  - The minimum required schema/storage fields for the SOS emergency data are in place
   - The missing-info indicator is derived from real completeness rules and real member data
-  - Required read-side backend/server/data-fetching work is in place to supply the shipped members UI with real data without introducing schema redesign or guessed new write paths
+  - The current shipped UX remains unchanged
+  - Required read-side backend/server/data-fetching work is in place to supply the shipped members UI with real data without introducing broader schema redesign, unrelated schema changes, or guessed new write paths
 - **Dependencies:** PBI-031 (Members management screen UI — DONE), PBI-029 (Save membership form submission to database — DONE)
 - **Systems Affected:** frontend, backend
 - **Risk Level:** Medium

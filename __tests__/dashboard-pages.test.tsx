@@ -9,7 +9,8 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { within } from '@testing-library/dom';
 import DashboardPage from '@/app/(authenticated)/dashboard/(with-sidebar)/page';
 import SubmissionsPage from '@/app/(authenticated)/dashboard/(with-sidebar)/submissions/page';
-import MembersPage from '@/app/(authenticated)/dashboard/(with-sidebar)/members/page';
+import { MembersTableClient } from '@/app/(authenticated)/dashboard/(with-sidebar)/members/MembersTableClient';
+import type { MemberForDisplay } from '@/lib/actions/getMembers';
 
 describe('DashboardPage', () => {
   describe('rendering', () => {
@@ -140,28 +141,122 @@ describe('SubmissionsPage', () => {
 });
 
 describe('MembersPage', () => {
+  // Mock test data matching the new MemberForDisplay structure
+  const mockMembers: MemberForDisplay[] = [
+    {
+      id: 'uuid-1',
+      memberId: 'M-1024',
+      name: 'Aoife Brennan',
+      email: 'aoife.brennan@example.com',
+      phoneNumber: '(086) 123-4567',
+      homeClub: true,
+      otherClubs: 'Portmarnock, Royal Dublin',
+      membershipType: 'Full Member',
+      status: 'Active',
+      renewalDate: '12 Jan 2027',
+      missingRequiredInfo: true,
+      safeguarding: {
+        emergencyContactName: 'Siobhan Brennan',
+        emergencyContactRelationship: 'Sister',
+        emergencyPhone: '(087) 555-1204',
+        medicalConditions: 'Exercise-induced asthma',
+        allergies: 'Penicillin',
+        medications: 'Ventolin inhaler',
+        additionalAssistance: 'Keep inhaler available during competitions.',
+      },
+    },
+    {
+      id: 'uuid-2',
+      memberId: 'M-1048',
+      name: 'Conor Walsh',
+      email: 'conor.walsh@example.com',
+      phoneNumber: '(087) 234-5678',
+      homeClub: false,
+      otherClubs: 'Greystones',
+      membershipType: 'Senior Member',
+      status: 'Resigned',
+      renewalDate: '28 Feb 2027',
+      missingRequiredInfo: false,
+      safeguarding: {
+        emergencyContactName: 'Fiona Walsh',
+        emergencyContactRelationship: 'Spouse',
+        emergencyPhone: '(086) 555-7782',
+        medicalConditions: 'Type 1 diabetes',
+        allergies: 'None reported',
+        medications: 'Insulin pen',
+        additionalAssistance: 'May need quick access to glucose tablets.',
+      },
+    },
+    {
+      id: 'uuid-3',
+      memberId: 'M-1081',
+      name: 'Niamh O\'Sullivan',
+      email: 'niamh.osullivan@example.com',
+      phoneNumber: '(085) 345-6789',
+      homeClub: true,
+      otherClubs: 'Elm Park, Woodenbridge',
+      membershipType: 'Juvenile',
+      status: 'Active',
+      renewalDate: '04 Mar 2027',
+      missingRequiredInfo: true,
+      safeguarding: {
+        emergencyContactName: 'Patrick O\'Sullivan',
+        emergencyContactRelationship: 'Father',
+        emergencyPhone: '(085) 555-9011',
+        medicalConditions: 'History of fainting in extreme heat',
+        allergies: 'Peanuts',
+        medications: 'None reported',
+        additionalAssistance: 'Needs shade, water, and supervision if unwell.',
+      },
+    },
+  ];
+
   describe('rendering', () => {
     it('should render a heading with "Members" title', () => {
-      render(<MembersPage />);
+      render(<MembersTableClient members={mockMembers} />);
       expect(screen.getByRole('heading', { level: 1, name: /members/i })).toBeInTheDocument();
     });
 
     it('should render the member count in the header', () => {
-      render(<MembersPage />);
-      expect(screen.getByText('3')).toBeInTheDocument();
+      render(<MembersTableClient members={mockMembers} />);
+
+      const membersHeader = screen.getByRole('heading', { level: 1, name: /members/i }).parentElement;
+
+      expect(membersHeader).not.toBeNull();
+      expect(within(membersHeader as HTMLElement).getByText('2')).toBeInTheDocument();
+
+      fireEvent.change(screen.getByRole('combobox', { name: /filter by status/i }), {
+        target: { value: 'All' },
+      });
+
+      expect(within(membersHeader as HTMLElement).getByText('3')).toBeInTheDocument();
+
+      fireEvent.change(screen.getByRole('combobox', { name: /filter by status/i }), {
+        target: { value: 'Resigned' },
+      });
+
+      expect(within(membersHeader as HTMLElement).getByText('1')).toBeInTheDocument();
     });
 
     it('should render the search and filter toolbar without the old supporting copy', () => {
-      render(<MembersPage />);
+      render(<MembersTableClient members={mockMembers} />);
+
+      const statusFilter = screen.getByRole('combobox', { name: /filter by status/i });
 
       expect(screen.getByRole('searchbox', { name: /search members/i })).toBeInTheDocument();
       expect(screen.getByRole('combobox', { name: /filter by membership type/i })).toBeInTheDocument();
-      expect(screen.getByRole('combobox', { name: /filter by status/i })).toBeInTheDocument();
+      expect(statusFilter).toBeInTheDocument();
+      expect(statusFilter).toHaveValue('Active');
+      expect(within(statusFilter).getAllByRole('option').map((option) => option.textContent)).toEqual([
+        'All',
+        'Active',
+        'Resigned',
+      ]);
       expect(screen.queryByText(/sample member records for dashboard preview/i)).not.toBeInTheDocument();
     });
 
     it('should render a members table with the updated member details columns in order', () => {
-      render(<MembersPage />);
+      render(<MembersTableClient members={mockMembers} />);
       const table = screen.getByRole('table', { name: /members table/i });
       const headers = within(table).getAllByRole('columnheader');
       const rows = within(table).getAllByRole('row');
@@ -176,24 +271,200 @@ describe('MembersPage', () => {
         'Email',
         'Phone Number',
         'Home Club',
-        'Other Clubs',
         'Actions',
       ]);
+      expect(screen.queryByRole('columnheader', { name: /other clubs/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /missing info/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /handicap index/i })).not.toBeInTheDocument();
       expect(firstRowCells[0]).toHaveTextContent('M-1024');
-      expect(firstRowCells[2]).toHaveTextContent('Full');
+      expect(firstRowCells[2]).toHaveTextContent('Full Member');
       expect(firstRowCells[3]).toHaveTextContent('Active');
       expect(firstRowCells[4]).toHaveTextContent('12 Jan 2027');
       expect(firstRowCells[5]).toHaveTextContent('aoife.brennan@example.com');
       expect(firstRowCells[6]).toHaveTextContent('(086) 123-4567');
       expect(firstRowCells[7]).toHaveTextContent('Yes');
-      expect(firstRowCells[8]).toHaveTextContent('Portmarnock, Royal Dublin');
       expect(screen.queryByRole('columnheader', { name: /applications/i })).not.toBeInTheDocument();
     });
 
+    it('should show only active members by default', () => {
+      render(<MembersTableClient members={mockMembers} />);
+
+      const table = screen.getByRole('table', { name: /members table/i });
+      const rows = within(table).getAllByRole('row');
+
+      expect(screen.getByText('Aoife Brennan')).toBeInTheDocument();
+      expect(screen.getByText("Niamh O'Sullivan")).toBeInTheDocument();
+      expect(screen.queryByText('Conor Walsh')).not.toBeInTheDocument();
+      expect(rows).toHaveLength(3);
+    });
+
+    it('should show all members when the status filter is switched to all', () => {
+      render(<MembersTableClient members={mockMembers} />);
+
+      fireEvent.change(screen.getByRole('combobox', { name: /filter by status/i }), {
+        target: { value: 'All' },
+      });
+
+      const table = screen.getByRole('table', { name: /members table/i });
+      const rows = within(table).getAllByRole('row');
+
+      expect(screen.getByText('Aoife Brennan')).toBeInTheDocument();
+      expect(screen.getByText('Conor Walsh')).toBeInTheDocument();
+      expect(screen.getByText("Niamh O'Sullivan")).toBeInTheDocument();
+      expect(rows).toHaveLength(4);
+    });
+
+    it('should show only resigned members when the status filter is switched to resigned', () => {
+      render(<MembersTableClient members={mockMembers} />);
+
+      fireEvent.change(screen.getByRole('combobox', { name: /filter by status/i }), {
+        target: { value: 'Resigned' },
+      });
+
+      const table = screen.getByRole('table', { name: /members table/i });
+      const rows = within(table).getAllByRole('row');
+
+      expect(screen.getByText('Conor Walsh')).toBeInTheDocument();
+      expect(screen.queryByText('Aoife Brennan')).not.toBeInTheDocument();
+      expect(screen.queryByText("Niamh O'Sullivan")).not.toBeInTheDocument();
+      expect(rows).toHaveLength(2);
+    });
+
+    it('should narrow rows when searching by first name', () => {
+      render(<MembersTableClient members={mockMembers} />);
+
+      fireEvent.change(screen.getByRole('searchbox', { name: /search members/i }), {
+        target: { value: 'aoife' },
+      });
+
+      const table = screen.getByRole('table', { name: /members table/i });
+      const rows = within(table).getAllByRole('row');
+
+      expect(screen.getByText('Aoife Brennan')).toBeInTheDocument();
+      expect(screen.queryByText("Niamh O'Sullivan")).not.toBeInTheDocument();
+      expect(screen.queryByText('Conor Walsh')).not.toBeInTheDocument();
+      expect(rows).toHaveLength(2);
+    });
+
+    it('should narrow rows when searching by last name', () => {
+      render(<MembersTableClient members={mockMembers} />);
+
+      fireEvent.change(screen.getByRole('searchbox', { name: /search members/i }), {
+        target: { value: 'sullivan' },
+      });
+
+      const table = screen.getByRole('table', { name: /members table/i });
+      const rows = within(table).getAllByRole('row');
+
+      expect(screen.getByText("Niamh O'Sullivan")).toBeInTheDocument();
+      expect(screen.queryByText('Aoife Brennan')).not.toBeInTheDocument();
+      expect(screen.queryByText('Conor Walsh')).not.toBeInTheDocument();
+      expect(rows).toHaveLength(2);
+    });
+
+    it('should narrow rows when searching by member ID substring', () => {
+      render(<MembersTableClient members={mockMembers} />);
+
+      fireEvent.change(screen.getByRole('combobox', { name: /filter by status/i }), {
+        target: { value: 'All' },
+      });
+
+      fireEvent.change(screen.getByRole('searchbox', { name: /search members/i }), {
+        target: { value: '048' },
+      });
+
+      const table = screen.getByRole('table', { name: /members table/i });
+      const rows = within(table).getAllByRole('row');
+
+      expect(screen.getByText('Conor Walsh')).toBeInTheDocument();
+      expect(screen.queryByText('Aoife Brennan')).not.toBeInTheDocument();
+      expect(screen.queryByText("Niamh O'Sullivan")).not.toBeInTheDocument();
+      expect(rows).toHaveLength(2);
+    });
+
+    it('should narrow rows when searching with spaced multi-word input', () => {
+      render(<MembersTableClient members={mockMembers} />);
+
+      fireEvent.change(screen.getByRole('searchbox', { name: /search members/i }), {
+        target: { value: 'niamh o' },
+      });
+
+      const table = screen.getByRole('table', { name: /members table/i });
+      const rows = within(table).getAllByRole('row');
+
+      expect(screen.getByText("Niamh O'Sullivan")).toBeInTheDocument();
+      expect(screen.queryByText('Aoife Brennan')).not.toBeInTheDocument();
+      expect(screen.queryByText('Conor Walsh')).not.toBeInTheDocument();
+      expect(rows).toHaveLength(2);
+    });
+
+    it('should show an empty state when no rows match the search', () => {
+      render(<MembersTableClient members={mockMembers} />);
+
+      fireEvent.change(screen.getByRole('searchbox', { name: /search members/i }), {
+        target: { value: 'zzzz' },
+      });
+
+      const table = screen.getByRole('table', { name: /members table/i });
+      const rows = within(table).getAllByRole('row');
+
+      expect(screen.getByText('No members match the current filters.')).toBeInTheDocument();
+      expect(screen.queryByText('Aoife Brennan')).not.toBeInTheDocument();
+      expect(screen.queryByText("Niamh O'Sullivan")).not.toBeInTheDocument();
+      expect(rows).toHaveLength(2);
+    });
+
+    it('should restore rows when the search is cleared', () => {
+      render(<MembersTableClient members={mockMembers} />);
+
+      const searchInput = screen.getByRole('searchbox', { name: /search members/i });
+
+      fireEvent.change(searchInput, {
+        target: { value: 'aoife' },
+      });
+
+      expect(screen.queryByText("Niamh O'Sullivan")).not.toBeInTheDocument();
+
+      fireEvent.change(searchInput, {
+        target: { value: '' },
+      });
+
+      const table = screen.getByRole('table', { name: /members table/i });
+      const rows = within(table).getAllByRole('row');
+
+      expect(screen.getByText('Aoife Brennan')).toBeInTheDocument();
+      expect(screen.getByText("Niamh O'Sullivan")).toBeInTheDocument();
+      expect(screen.queryByText('Conor Walsh')).not.toBeInTheDocument();
+      expect(rows).toHaveLength(3);
+    });
+
+    it('should combine the search query with the existing filters', () => {
+      render(<MembersTableClient members={mockMembers} />);
+
+      fireEvent.change(screen.getByRole('combobox', { name: /filter by membership type/i }), {
+        target: { value: 'Juvenile' },
+      });
+
+      fireEvent.change(screen.getByRole('searchbox', { name: /search members/i }), {
+        target: { value: 'niamh' },
+      });
+
+      expect(screen.getByText("Niamh O'Sullivan")).toBeInTheDocument();
+      expect(screen.queryByText('Aoife Brennan')).not.toBeInTheDocument();
+
+      fireEvent.change(screen.getByRole('searchbox', { name: /search members/i }), {
+        target: { value: 'aoife' },
+      });
+
+      expect(screen.getByText('No members match the current filters.')).toBeInTheDocument();
+    });
+
     it('should render row actions including info, emergency info, disable for active members, and enable for resigned members', () => {
-      render(<MembersPage />);
+      render(<MembersTableClient members={mockMembers} />);
+
+      fireEvent.change(screen.getByRole('combobox', { name: /filter by status/i }), {
+        target: { value: 'All' },
+      });
 
       const table = screen.getByRole('table', { name: /members table/i });
       const rows = within(table).getAllByRole('row');
@@ -211,25 +482,25 @@ describe('MembersPage', () => {
       expect(screen.getByRole('button', { name: /disable aoife brennan/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /disable niamh o'sullivan/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /enable conor walsh/i })).toBeInTheDocument();
-      expect(aoifeCells).toHaveLength(11);
-      expect(conorCells).toHaveLength(11);
-      expect(niamhCells).toHaveLength(11);
-      expect(within(aoifeCells[9]).getAllByRole('button')).toHaveLength(3);
-      expect(within(conorCells[9]).getAllByRole('button')).toHaveLength(3);
-      expect(within(niamhCells[9]).getAllByRole('button')).toHaveLength(3);
-      const aoifeMissingInfoIndicator = within(aoifeCells[10]).getByRole('button', {
+      expect(aoifeCells).toHaveLength(10);
+      expect(conorCells).toHaveLength(10);
+      expect(niamhCells).toHaveLength(10);
+      expect(within(aoifeCells[8]).getAllByRole('button')).toHaveLength(3);
+      expect(within(conorCells[8]).getAllByRole('button')).toHaveLength(3);
+      expect(within(niamhCells[8]).getAllByRole('button')).toHaveLength(3);
+      const aoifeMissingInfoIndicator = within(aoifeCells[9]).getByRole('button', {
         name: /missing required info for aoife brennan/i,
       });
-      const niamhMissingInfoIndicator = within(niamhCells[10]).getByRole('button', {
+      const niamhMissingInfoIndicator = within(niamhCells[9]).getByRole('button', {
         name: /missing required info for niamh o'sullivan/i,
       });
 
       expect(aoifeMissingInfoIndicator).toBeDisabled();
       expect(niamhMissingInfoIndicator).toBeDisabled();
-      expect(within(aoifeCells[10]).getByText('Missing Member Details')).toBeInTheDocument();
-      expect(within(niamhCells[10]).getByText('Missing Member Details')).toBeInTheDocument();
-      expect(within(conorCells[10]).queryByRole('button', { name: /missing required info/i })).not.toBeInTheDocument();
-      expect(within(conorCells[10]).queryByText('Missing Member Details')).not.toBeInTheDocument();
+      expect(within(aoifeCells[9]).getByText('Missing Member Details')).toBeInTheDocument();
+      expect(within(niamhCells[9]).getByText('Missing Member Details')).toBeInTheDocument();
+      expect(within(conorCells[9]).queryByRole('button', { name: /missing required info/i })).not.toBeInTheDocument();
+      expect(within(conorCells[9]).queryByText('Missing Member Details')).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: /missing required info for aoife brennan/i })).toBeDisabled();
       expect(screen.getByRole('button', { name: /missing required info for niamh o'sullivan/i })).toBeDisabled();
       expect(screen.queryByRole('button', { name: /missing required info for conor walsh/i })).not.toBeInTheDocument();
@@ -239,7 +510,7 @@ describe('MembersPage', () => {
 
     describe('status dialog', () => {
       it('should open a disable modal with the correct member name and membership number', () => {
-        render(<MembersPage />);
+        render(<MembersTableClient members={mockMembers} />);
 
         fireEvent.click(screen.getByRole('button', { name: /disable aoife brennan/i }));
 
@@ -255,7 +526,11 @@ describe('MembersPage', () => {
       });
 
       it('should open an enable modal with the correct member name and membership number', () => {
-        render(<MembersPage />);
+        render(<MembersTableClient members={mockMembers} />);
+
+        fireEvent.change(screen.getByRole('combobox', { name: /filter by status/i }), {
+          target: { value: 'All' },
+        });
 
         fireEvent.click(screen.getByRole('button', { name: /enable conor walsh/i }));
 
@@ -270,7 +545,7 @@ describe('MembersPage', () => {
       });
 
       it('should close the status modal when cancel is clicked', () => {
-        render(<MembersPage />);
+        render(<MembersTableClient members={mockMembers} />);
 
         fireEvent.click(screen.getByRole('button', { name: /disable aoife brennan/i }));
         fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
@@ -281,7 +556,7 @@ describe('MembersPage', () => {
 
     describe('emergency dialog', () => {
       it('should open an emergency modal with safeguarding details for the chosen member', () => {
-        render(<MembersPage />);
+        render(<MembersTableClient members={mockMembers} />);
 
         fireEvent.click(screen.getByRole('button', { name: /show emergency info for aoife brennan/i }));
 
@@ -296,7 +571,11 @@ describe('MembersPage', () => {
       });
 
       it('should close the emergency modal when close is clicked', () => {
-        render(<MembersPage />);
+        render(<MembersTableClient members={mockMembers} />);
+
+        fireEvent.change(screen.getByRole('combobox', { name: /filter by status/i }), {
+          target: { value: 'All' },
+        });
 
         fireEvent.click(screen.getByRole('button', { name: /show emergency info for conor walsh/i }));
         fireEvent.click(screen.getByRole('button', { name: /close/i }));
@@ -308,20 +587,29 @@ describe('MembersPage', () => {
 
   describe('styling', () => {
     it('should render heading with correct size and color', () => {
-      render(<MembersPage />);
+      render(<MembersTableClient members={mockMembers} />);
       const heading = screen.getByRole('heading', { level: 1, name: /members/i });
       expect(heading).toHaveClass('text-3xl', 'font-bold', 'text-gray-900');
     });
 
     it('should have horizontally scrollable table container styling', () => {
-      const { container } = render(<MembersPage />);
+      const { container } = render(<MembersTableClient members={mockMembers} />);
       const tableContainer = container.querySelector('[class*="overflow-x-auto"]');
 
       expect(tableContainer).toHaveClass('overflow-x-auto', 'bg-white', 'ring-gray-200');
     });
 
+    it('should use fixed table layout with explicit columns so widths stay stable when filters change', () => {
+      const { container } = render(<MembersTableClient members={mockMembers} />);
+      const table = screen.getByRole('table', { name: /members table/i });
+      const columns = container.querySelectorAll('colgroup col');
+
+      expect(table).toHaveClass('w-[912px]', 'min-w-[912px]', 'table-fixed');
+      expect(columns).toHaveLength(10);
+    });
+
     it('should render rows with a hover state and subtle borders', () => {
-      const { container } = render(<MembersPage />);
+      const { container } = render(<MembersTableClient members={mockMembers} />);
       const body = container.querySelector('tbody');
       const firstRow = container.querySelector('tbody tr');
 
