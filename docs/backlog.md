@@ -1000,7 +1000,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-028: Dashboard Sidebar Navigation Redesign
 
-- **Status:** DEV_DONE
+- **Status:** DONE
 - **Goal:** Update the dashboard sidebar to a clean, modern vertical navigation design with Baffy branding at the top, and rename existing menu items.
 - **Scope:**
   - Rename "Submissions" menu item to "Pending"
@@ -1037,7 +1037,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-029: Save Membership Form Submission to Database
 
-- **Status:** IN_PROGRESS
+- **Status:** DONE
 - **Goal:** When the membership form is completed, persist the full form payload to a new `membership_pending` database table with account provisioning states set to `pending`.
 - **Scope:**
   - Create a new Supabase table `membership_pending` with the following columns:
@@ -1075,7 +1075,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-030: Membership Form Submission UX — Loading, Success, and Error States
 
-- **Status:** READY
+- **Status:** IN_PROGRESS
 - **Goal:** On form completion, animate the stepper to green, show a loading state, then replace the form with a success summary view — or return the user to their fully-populated form on failure.
 - **Scope:**
   - On "Complete" button click in FormShell:
