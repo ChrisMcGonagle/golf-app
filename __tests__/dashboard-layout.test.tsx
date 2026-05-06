@@ -41,7 +41,7 @@ describe('DashboardLayout', () => {
 
       const aside = container.querySelector('aside');
       expect(aside).toBeInTheDocument();
-      expect(aside?.className).toContain('bg-[#f5f6f5]');
+      expect(aside?.className).toContain('bg-white');
       expect(aside?.className).toContain('text-[#2b2b2b]');
     });
 
