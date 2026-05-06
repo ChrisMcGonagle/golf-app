@@ -956,3 +956,154 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 - **Systems Affected:** frontend
 - **Risk Level:** Low
 - **Estimated Effort:** S
+---
+
+## PBI-027: Dashboard Sidebar Navigation Redesign
+
+- **Status:** READY
+- **Goal:** Update the left-hand dashboard sidebar to a clean, modern vertical navigation menu with collapsible submenu support, consistent branding, and clear active states.
+- **Scope:**
+  - Update `components/DashboardSidebar.tsx` (or equivalent sidebar component)
+  - Display "Baffy" as the app brand name at the top of the sidebar
+  - Menu items in order:
+    - Dashboard
+    - Accounts
+    - Membership (collapsible parent)
+      - Pending (submenu item, indented)
+      - Member List (submenu item, indented)
+  - Membership item is NOT a navigation link — clicking it only toggles expand/collapse of the submenu; it does not navigate to any route
+  - Only one section expanded at a time (if additional collapsible sections are added in future)
+  - Active/selected menu item is highlighted (light grey background, rounded corners)
+  - Hover states on all items (subtle background, rounded corners)
+  - Submenu items slightly smaller font size and visually indented to show hierarchy
+  - Optional icons to the left of each top-level menu item, consistent with existing design system
+  - Smooth expand/collapse animation on submenu
+  - Styling uses existing app colour palette: `#f5f6f5` background, `#2b2b2b` text, `#eeeeee` borders
+  - Works on desktop and tablet widths
+- **Out of Scope:** Mobile hamburger menu, adding new routes, changing existing page behaviour, auth or middleware changes
+- **Acceptance Criteria:**
+  - Sidebar shows "Baffy" branding at the top
+  - Menu items render in order: Dashboard, Accounts, Membership
+  - Clicking Membership only toggles the submenu (Pending, Member List) — it does not navigate to any route
+  - Active route is clearly highlighted with a light grey background and rounded corners
+  - All hover states are visible and consistent
+  - Submenu items are indented and slightly smaller than top-level items
+  - No regression in existing navigation routes or behaviour
+  - Styling matches existing app design system (colours, spacing, typography)
+  - All existing tests pass; at least one new test covers expand/collapse behaviour
+- **Dependencies:** PBI-026 (merged — Baffy branding established)
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** M
+
+---
+
+## PBI-028: Dashboard Sidebar Navigation Redesign
+
+- **Status:** READY
+- **Goal:** Update the dashboard sidebar to a clean, modern vertical navigation design with Baffy branding at the top, and rename existing menu items.
+- **Scope:**
+  - Rename "Submissions" menu item to "Pending"
+  - Rename "Members" menu item to "Member List"
+  - Add "Baffy" app name/brand at the top of the sidebar (above nav items)
+  - Remove the full-width header above the sidebar in the dashboard layout — Baffy branding lives only in the sidebar
+  - Add "Dashboard" and "Accounts" as menu items in the navigation
+  - Clean, modern vertical sidebar layout:
+    - Subtle background highlight for active/selected item
+    - Rounded corners on hover/active states
+    - Consistent spacing between items
+    - Optional icons to the left of menu items aligned with existing design
+    - Visually consistent with existing app colours and spacing (`#f5f6f5`, `#2b2b2b`, `#eeeeee`)
+  - Works well on desktop and tablet
+  - Smooth hover states, simple uncluttered layout
+- **Out of Scope:** Collapsible submenus, new routes or pages, any backend changes
+- **Acceptance Criteria:**
+  - "Submissions" is renamed to "Pending" in the sidebar
+  - "Members" is renamed to "Member List" in the sidebar
+  - "Baffy" brand name appears at the top of the sidebar
+  - No separate header bar above the sidebar — the sidebar and content area span the full height of the viewport
+  - "Dashboard" and "Accounts" menu items are present
+  - Active state is clearly visible on the selected item
+  - Hover states are clean and consistent
+  - Styling matches existing app design system
+  - No regression in current navigation behaviour
+  - All existing tests pass
+- **Dependencies:** PBI-026 (Baffy branding — DONE)
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** S
+
+---
+
+## PBI-029: Save Membership Form Submission to Database
+
+- **Status:** READY
+- **Goal:** When the membership form is completed, persist the full form payload to a new `membership_pending` database table with account provisioning states set to `pending`.
+- **Scope:**
+  - Create a new Supabase table `membership_pending` with the following columns:
+    - `id` (uuid, PK, default gen_random_uuid())
+    - `payload` (jsonb, not null) — the full membership form JSON payload
+    - `golfireland_account` (text, not null, default `'pending'`)
+    - `brs_account` (text, not null, default `'pending'`)
+    - `clubv1_account` (text, not null, default `'pending'`)
+    - `submitted_at` (timestamptz, not null, default now())
+    - `created_at` (timestamptz, not null, default now())
+  - RLS enabled; no client-side reads or writes — all via service role
+  - On form completion (when the "Complete" button is clicked in FormShell), send the payload to a new server action or API route that:
+    - Inserts a row into `membership_pending`
+    - Sets `golfireland_account`, `brs_account`, `clubv1_account` to `'pending'`
+    - Stores the full form JSON in `payload`
+  - On successful insert, show a confirmation state to the user (e.g. success screen or message)
+  - On failure, surface an error state without losing the form data
+- **Out of Scope:** Account provisioning logic, external API integrations, admin review UI, status transitions beyond `pending`
+- **Acceptance Criteria:**
+  - `membership_pending` table exists in Supabase with the defined schema
+  - Completing the membership form inserts a row into `membership_pending`
+  - `golfireland_account`, `brs_account`, `clubv1_account` are all set to `'pending'` on insert
+  - Full form JSON payload is stored in the `payload` column
+  - Successful submission shows a confirmation to the user
+  - Failed submission shows an error without losing data
+  - No client-side direct DB access — insert happens server-side via service role
+  - All existing tests continue to pass
+- **Dependencies:** PBI-023 (Membership Form — DONE), PBI-025 (Operator Attribution — DONE)
+- **Systems Affected:** frontend, supabase
+- **Risk Level:** Medium
+- **Estimated Effort:** M
+- **Note:** Supabase Specialist required for schema; Coder required for server action and form wiring
+
+---
+
+## PBI-030: Membership Form Submission UX — Loading, Success, and Error States
+
+- **Status:** READY
+- **Goal:** On form completion, animate the stepper to green, show a loading state, then replace the form with a success summary view — or return the user to their fully-populated form on failure.
+- **Scope:**
+  - On "Complete" button click in FormShell:
+    - Stepper animates all steps to green (completing state — already partially supported)
+    - Form fields disappear, replaced by a full-screen loading/submitting indicator ("Submitting..." with a spinner or animation)
+  - On successful database insert (PBI-029):
+    - Stepper is replaced by a "Membership Form Submitted Successfully" heading/confirmation
+    - Loading screen is replaced by an invoice-style summary of the submitted membership, showing key fields from the form (name, membership type, email, etc.)
+    - Below the summary: an info message — "You should receive an email at [email address entered] within the next 24 hours with your membership details, or if any further information is required."
+    - A button to return to the membership registration screen
+  - On failure:
+    - Dismiss the loading screen
+    - Restore the stepper in its pre-submission state
+    - Return the user to the form at the step they were on, fully populated — no data loss
+    - Show an inline error message indicating submission failed with a prompt to try again
+  - All transitions happen within the form shell — no full page navigations during submission flow
+- **Out of Scope:** Actual email sending, retry logic beyond returning to the form, partial save/draft functionality
+- **Acceptance Criteria:**
+  - Clicking "Complete" triggers stepper green animation and hides the form, showing a loading state
+  - Successful submission replaces the stepper with "Membership Form Submitted Successfully"
+  - Successful submission shows an invoice-style summary of the submitted data
+  - Success view includes an email confirmation message referencing the member's email address
+  - Success view includes a return-to-registration button
+  - Failed submission returns to the form with all fields still populated and stepper restored
+  - An error message is shown on failure
+  - No form data is lost on error
+  - Loading, success, and error states are visually consistent with the app design system
+- **Dependencies:** PBI-029 (Save to database — READY)
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** M
