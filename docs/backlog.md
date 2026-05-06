@@ -1075,8 +1075,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-030: Membership Form Submission UX — Loading, Success, and Error States
 
-- **Status:** IN_PROGRESS
-- **Status:** DEV_DONE
+- **Status:** TESTING
 - **Goal:** On form completion, animate the submission into a grey blind success sequence that shrinks to a checked circle, morphs into a grey success card, then reveals the final member and membership summary below — or return the user to their fully-populated form with an inline error on failure.
 - **Scope:**
   - On "Complete" button click in FormShell:
