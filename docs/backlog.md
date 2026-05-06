@@ -1075,7 +1075,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-030: Membership Form Submission UX — Loading, Success, and Error States
 
-- **Status:** TESTING
+- **Status:** DONE
 - **Goal:** On form completion, animate the submission into a grey blind success sequence that shrinks to a checked circle, morphs into a grey success card, then reveals the final member and membership summary below — or return the user to their fully-populated form with an inline error on failure.
 - **Scope:**
   - On "Complete" button click in FormShell:
@@ -1112,7 +1112,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-031: Members Page UI — Members Table
 
-- **Status:** READY
+- **Status:** DONE
 - **Goal:** Update the members page UI to include a clean, modern members table, with `Applications` included as one of the table columns and rendered as subtle chips/tags.
 - **Scope:**
   - Add a members table to `/dashboard/members`
