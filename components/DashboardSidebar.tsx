@@ -5,6 +5,54 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import BaffyBrand from "@/components/BaffyBrand";
 
+function DashboardIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="mr-3 h-5 w-5"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect x="3" y="3" width="7" height="7" stroke="#2b2b2b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="14" y="3" width="7" height="7" stroke="#2b2b2b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="3" y="14" width="7" height="7" stroke="#2b2b2b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="14" y="14" width="7" height="7" stroke="#2b2b2b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function AccountsIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="mr-3 h-5 w-5"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M19 21C19 17.6863 15.866 15 12 15C8.13401 15 5 17.6863 5 21" stroke="#2b2b2b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="8" r="4" stroke="#2b2b2b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function MembershipIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="mr-3 h-5 w-5"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M8 20V5" stroke="#2b2b2b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8 5H18L14 10L18 15H8" stroke="#2b2b2b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 20H11" stroke="#2b2b2b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const [membershipOpen, setMembershipOpen] = useState(false);
@@ -18,6 +66,10 @@ export default function DashboardSidebar() {
 
   const isNavActive = (href: string) => pathname === href;
   const isSubmenuActive = isNavActive("/dashboard/members") || isNavActive("/dashboard/submissions");
+  const isDashboardActive = isNavActive("/dashboard");
+  const isAccountsActive = isNavActive("/dashboard/accounts");
+  const isPendingActive = isNavActive("/dashboard/submissions");
+  const isMemberListActive = isNavActive("/dashboard/members");
 
   const handleMembershipClick = () => {
     // Only toggle if NOT on a submenu route
@@ -43,13 +95,14 @@ export default function DashboardSidebar() {
         <Link
           href="/dashboard"
           onClick={handleNavClick}
-          className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
-            isNavActive("/dashboard")
+          className={`relative flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
+            isDashboardActive
               ? "bg-gray-100 text-[#2b2b2b] font-semibold"
               : "text-[#2b2b2b] hover:bg-gray-50"
           }`}
         >
-          <span className="mr-3 text-lg">📊</span>
+          {isDashboardActive && <span aria-hidden="true" className="absolute left-0 top-1/2 h-[50%] w-[2px] -translate-y-1/2 rounded-full bg-[#000000]" />}
+          <DashboardIcon />
           Dashboard
         </Link>
 
@@ -57,13 +110,14 @@ export default function DashboardSidebar() {
         <Link
           href="/dashboard/accounts"
           onClick={handleNavClick}
-          className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
-            isNavActive("/dashboard/accounts")
+          className={`relative flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${
+            isAccountsActive
               ? "bg-gray-100 text-[#2b2b2b] font-semibold"
               : "text-[#2b2b2b] hover:bg-gray-50"
           }`}
         >
-          <span className="mr-3 text-lg">👤</span>
+          {isAccountsActive && <span aria-hidden="true" className="absolute left-0 top-1/2 h-[50%] w-[2px] -translate-y-1/2 rounded-full bg-[#000000]" />}
+          <AccountsIcon />
           Accounts
         </Link>
 
@@ -74,7 +128,7 @@ export default function DashboardSidebar() {
             className="flex items-center justify-between w-full px-4 py-3 rounded-lg text-[#2b2b2b] transition-colors duration-200 focus:outline-none"
           >
             <div className="flex items-center">
-              <span className="mr-3 text-lg">🏌️</span>
+              <MembershipIcon />
               Membership
             </div>
             <svg
@@ -103,12 +157,13 @@ export default function DashboardSidebar() {
                 <span className="absolute left-0 top-1/2 w-3 h-px -translate-y-1/2 bg-[#e5e7eb]"></span>
                 <Link
                   href="/dashboard/submissions"
-                  className={`flex items-center px-4 py-1.5 rounded text-sm transition-colors duration-200 ${
-                    isNavActive("/dashboard/submissions")
+                  className={`relative flex items-center px-4 py-1.5 rounded text-sm transition-colors duration-200 ${
+                    isPendingActive
                       ? "bg-gray-100 text-[#2b2b2b] font-semibold"
                       : "text-[#2b2b2b] hover:bg-gray-50"
                   }`}
                 >
+                  {isPendingActive && <span aria-hidden="true" className="absolute left-0 top-1/2 h-[50%] w-[2px] -translate-y-1/2 rounded-full bg-[#000000]" />}
                   Pending
                 </Link>
               </div>
@@ -118,12 +173,13 @@ export default function DashboardSidebar() {
                 <span className="absolute left-0 top-1/2 w-3 h-px -translate-y-1/2 bg-[#e5e7eb]"></span>
                 <Link
                   href="/dashboard/members"
-                  className={`flex items-center px-4 py-1.5 rounded text-sm transition-colors duration-200 ${
-                    isNavActive("/dashboard/members")
+                  className={`relative flex items-center px-4 py-1.5 rounded text-sm transition-colors duration-200 ${
+                    isMemberListActive
                       ? "bg-gray-100 text-[#2b2b2b] font-semibold"
                       : "text-[#2b2b2b] hover:bg-gray-50"
                   }`}
                 >
+                  {isMemberListActive && <span aria-hidden="true" className="absolute left-0 top-1/2 h-[50%] w-[2px] -translate-y-1/2 rounded-full bg-[#000000]" />}
                   Member List
                 </Link>
               </div>

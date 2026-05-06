@@ -197,18 +197,25 @@ describe('DashboardSidebar', () => {
 
     it('should have icons for Dashboard, Accounts, and Membership', () => {
       mockUsePathname.mockReturnValue('/dashboard');
-      const { container } = render(<DashboardSidebar />);
-      // Check for icon elements (emojis rendered as text)
-      expect(container.textContent).toContain('📊'); // Dashboard icon
-      expect(container.textContent).toContain('👤'); // Accounts icon
-      expect(container.textContent).toContain('🏌️'); // Membership icon
+      render(<DashboardSidebar />);
+
+      const dashboardLink = screen.getByRole('link', { name: /dashboard/i });
+      const accountsLink = screen.getByRole('link', { name: /accounts/i });
+      const membershipButton = screen.getByRole('button', { name: /membership/i });
+
+      [dashboardLink, accountsLink, membershipButton].forEach((element) => {
+        const icon = element.querySelector('svg.h-5.w-5');
+        expect(icon).toBeInTheDocument();
+        expect(icon).toHaveAttribute('aria-hidden', 'true');
+        expect(icon).toHaveAttribute('fill', 'none');
+      });
     });
 
     it('should have chevron in Membership button', () => {
       mockUsePathname.mockReturnValue('/dashboard');
-      const { container } = render(<DashboardSidebar />);
+      render(<DashboardSidebar />);
       const membershipButton = screen.getByRole('button', { name: /membership/i });
-      const svg = membershipButton.querySelector('svg'); // Check for SVG chevron
+      const svg = membershipButton.querySelector('svg:not(.h-5):not(.w-5)');
       expect(svg).toBeInTheDocument();
       expect(svg).toHaveAttribute('viewBox', '0 0 12 8');
     });
