@@ -107,6 +107,26 @@ create index if not exists members_name_lower_idx
 -- membership_id (member_number) index already exists as members_member_number_idx
 
 -- ============================================================
+-- PBI-032: Emergency contact and safeguarding fields
+-- Additive migration to support shipped Renewal and SOS UI.
+-- All columns are nullable for migration safety.
+-- renewal_date: member's membership renewal due date
+-- emergency_contact_*: contact person for emergencies
+-- medical_conditions, allergies, medications: health info for SOS
+-- additional_assistance: accessibility/support needs
+-- ============================================================
+
+alter table public.members
+    add column if not exists renewal_date                date,
+    add column if not exists emergency_contact_name      text,
+    add column if not exists emergency_contact_relationship text,
+    add column if not exists emergency_phone_number      text,
+    add column if not exists medical_conditions          text,
+    add column if not exists allergies                   text,
+    add column if not exists medications                 text,
+    add column if not exists additional_assistance       text;
+
+-- ============================================================
 -- PBI-029: membership_pending table
 -- Stores pending membership application payloads submitted via
 -- the membership form. All access is restricted to the service
