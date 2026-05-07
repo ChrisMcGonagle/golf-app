@@ -1310,7 +1310,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-037: Requests Management Page
 
-- **Status:** TESTING
+- **Status:** DONE
 - **Goal:** Replace the current `Pending` dashboard menu/page with a real `Requests` management screen that follows existing dashboard patterns and gives admins clear, searchable request status tracking.
 - **Scope:**
   - Rename the existing `Pending` dashboard menu item and page surface to `Requests`
@@ -1319,17 +1319,17 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
   - Follow existing dashboard layout and table patterns where practical
   - Add a top row with:
     - a left-aligned search input with placeholder `Search requests…`
-    - a right-aligned segmented 3-button filter: `Pending`, `In Progress`, `Completed`
-  - Keep exactly one filter active at a time, with the active button highlighted and inactive buttons muted/outlined
+    - a right-aligned status dropdown with `All`, `Pending`, `In Progress`, and `Completed`, with `Pending` selected by default
+    - a year filter dropdown
   - Add a table with columns exactly:
-    - `ID`
+    - selection checkbox
     - `Request`
-    - `Creation Date & Time`
-    - `Submitted Date & Time`
     - `Requester`
-    - `Membership Status`
-    - `Progress` (or blank header for the steps column)
+    - `Intent`
+    - `Submitted Date`
     - `Status`
+    - `STEP`
+    - action button
   - Add rounded status chips using:
     - `Pending` = yellow
     - `In Progress` = blue
@@ -1346,22 +1346,23 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
     - Step 2: 'BRS'
     - Step 3: 'ClubV1'
   - Use the same tooltip style as other dashboard pages
-  - Implement filtering by the active status button
+  - Implement client-side filtering by the selected status and year
   - Implement search across `Request`, `ID`, and `Requester`
+  - Include pagination controls and a bottom selection drawer when visible rows are selected
   - Keep the design clean and admin-focused with minimal borders, soft row separation, consistent spacing/alignment, prominent rounded chips, and responsive small-screen handling
-- **Out of Scope:** New request-submission flows, edits to the membership form itself, new provisioning business logic, bulk actions, sorting, pagination, export, or unrelated dashboard redesign
+- **Out of Scope:** New request-submission flows, edits to the membership form itself, new provisioning business logic, export, or unrelated dashboard redesign
 - **Acceptance Criteria:**
   - The dashboard no longer shows `Pending`; it shows `Requests`
   - The page title is `Requests`
   - The old placeholder page is replaced by a real admin-style requests table screen
-  - The top row renders a search input with placeholder `Search requests…` and a segmented filter with `Pending` active by default
-  - Only one filter can be active at a time
-  - Clicking `Pending`, `In Progress`, or `Completed` filters the visible rows accordingly
-  - The table columns are exactly `ID`, `Request`, `Creation Date & Time`, `Submitted Date & Time`, `Requester`, `Membership Status`, `Progress` (or blank), and `Status`
+  - The top row renders a search input with placeholder `Search requests…`, a status dropdown with `All`, `Pending`, `In Progress`, and `Completed`, and a year filter dropdown, with `Pending` active by default
+  - Changing the status dropdown filters the visible rows accordingly
+  - The table columns are exactly selection checkbox, `Request`, `Requester`, `Intent`, `Submitted Date`, `Status`, `STEP`, and an action button
   - Each row renders a rounded status chip using the specified colour mapping
   - Each row renders three horizontally grouped step chips labeled `1`, `2`, and `3`, with the specified visual states and optional failed-state warning/error icon support
   - Each step chip (1, 2, 3) displays a tooltip showing the corresponding integration name (Golf Ireland, BRS, ClubV1 respectively)
   - Search filters rows by matches in `Request`, `ID`, or `Requester`
+  - The page includes pagination controls, and selecting visible rows reveals a bottom selection drawer
   - The page remains usable on smaller screens via horizontal scrolling or an equivalent responsive treatment
   - The final UI is consistent with the current dashboard look and feels like a clean SaaS admin table page
 - **Dependencies:** PBI-028 (Dashboard sidebar redesign — DONE), PBI-029 (Save membership form submission to database — DONE), PBI-030 (Membership form submission UX states — DONE)
@@ -1373,26 +1374,27 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-038: Requests Workflow Backend — Data Model & Form Wiring
 
-- **Status:** IN_PROGRESS
+- **Status:** TESTING
 - **Goal:** Establish the backend data model and data wiring for the Requests management workflow, replacing "Pending" terminology with "Requests", connecting form submissions to a membership_requests table, and enabling the requests management page (PBI-037) to read live request and provisioning-step data.
 - **Scope:**
   - **Rename & Module Update:** Rename all backend terminology, variable names, function names, and internal references from `pending` or `submissions` to `requests`. Update any existing backend utilities, helpers, services, or constants that reference the old terminology.
   - **Form Submission Update:** Update the membership form completion flow (PBI-030) to write submissions to a `membership_requests` table (or equivalent live requests data source) instead of the existing `membership_pending` table or any placeholder. Ensure form submission payloads are persisted with a `request_id` or equivalent unique identifier. Capture and store the authenticated operator (staff/admin user) who submitted the form as part of the request record.
   - **Data Model / Backend Structure:** Create or update the `membership_requests` table with: `id` (uuid, PK, default gen_random_uuid()); `payload` (jsonb, not null) — full membership form JSON payload; `request_type` (text, not null) — e.g. `'new_member'` or `'renewal'`; `operator_id` (uuid, not null, FK → profiles.id) — authenticated operator who submitted; `requester_name` (text, not null) — derived from payload; `requester_email` (text, not null) — derived from payload; `status` (text, not null, default `'pending'`, CHECK IN ('pending', 'in_progress', 'completed')) — overall request status; `golfireland_account` (text, not null, default `'pending'`) — Golf Ireland step status; `brs_account` (text, not null, default `'pending'`) — BRS step status; `clubv1_account` (text, not null, default `'pending'`) — ClubV1 step status; `membership_status` (text, not null) — derived from payload; `submitted_at` (timestamptz, not null, default now()); `created_at` (timestamptz, not null, default now()); `updated_at` (timestamptz, not null, default now()). Enable RLS with service-role-only access. Add an `updated_at` trigger.
-  - **Table Data Wiring:** Create a server-side data-fetching function (Server Action or API route) that queries the `membership_requests` table using the service role, accepts optional `status` filter (Pending, In Progress, Completed), accepts optional `search` parameter to filter by `requester_name`, `id`, or `operator_id`, returns all required fields for the Requests page table, and orders results by `created_at DESC`. Limit to authenticated admin users only.
+  - **Table Data Wiring:** Create a server-side data-fetching function that queries the `membership_requests` table using the service role, returns the request data required by the Requests page, orders results by `submitted_at DESC`, and limits access to authenticated admin users only. Search and status/year filtering remain handled client-side in the Requests page UI.
   - **Status Logic Mapping:** Define a mapping from provisioning-step states (`pending`, `in_progress`, `completed`, `failed`) to visual states (yellow, blue, green, red respectively) and from the request overall `status` field to the Requests page status chip. Add a computed field or helper function that derives the request's overall status from its provisioning steps if needed.
-  - **UI Integration Requirements:** Ensure the data-fetching function returns fields in a format that PBI-037 (Requests page) can directly use. Support null/undefined handling. Provide timestamp formatting that the Requests page can display as "Creation Date & Time" and "Submitted Date & Time". Ensure the operator lookup is efficient and does not introduce N+1 queries.
+  - **UI Integration Requirements:** Ensure the data-fetching function returns fields in a format that PBI-037 (Requests page) can directly use. Support null/undefined handling. Provide timestamp formatting for the request row data, including submitted date display. Ensure the operator lookup is efficient and does not introduce N+1 queries.
 - **Out of Scope:** Any UI redesign or routing changes related to the Requests page (handled by PBI-037), account provisioning workflows or automation, new write paths for updating request statuses or provisioning states, bulk actions, exporting, or advanced admin workflows on requests, membership form redesign or new form fields
 - **Acceptance Criteria:**
   - The `membership_requests` table exists with the defined schema and constraints
   - Form submission (PBI-030) writes to the `membership_requests` table with all required fields populated
   - The operator (authenticated staff/admin user) is correctly captured and stored in `operator_id`
-  - A server-side data-fetching function exists that queries the `membership_requests` table with optional `status` and `search` filters, returns all fields required by the Requests page, filters by `status` correctly, filters by search query across `requester_name`, `id`, and operator info, orders results by creation date (most recent first), and enforces authentication/authorization for admin users only
+  - A server-side data-fetching function exists that queries the `membership_requests` table, returns all fields required by the Requests page, orders results by submitted date (most recent first), and enforces authentication/authorization for admin users only
+  - Search and status/year filtering for the Requests page are handled client-side in the Requests page UI
   - Status and step-state mappings are defined and implemented correctly
   - All rows retrieved from the membership_requests table can be displayed by the Requests page without additional data transformation
   - Existing form submission tests continue to pass with the new `membership_requests` table destination
   - No N+1 query problems when fetching requests with operator data
-- **Dependencies:** PBI-029 (Save membership form submission to database — DONE), PBI-030 (Membership form submission UX states — DONE), PBI-025 (Membership form operator attribution — DONE), PBI-037 (Requests Management Page UI — READY)
+- **Dependencies:** PBI-029 (Save membership form submission to database — DONE), PBI-030 (Membership form submission UX states — DONE), PBI-025 (Membership form operator attribution — DONE), PBI-037 (Requests Management Page UI — DONE)
 - **Systems Affected:** backend, supabase
 - **Risk Level:** Medium
 - **Estimated Effort:** M
@@ -1419,7 +1421,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
   - The badge count reflects the live number of pending requests from `membership_requests`
   - The badge styling is visually consistent with the existing dashboard sidebar
   - The badge remains legible for multi-digit counts
-- **Dependencies:** PBI-037 (Requests Management Page — READY), PBI-038 (Requests Workflow Backend — Data Model & Form Wiring — READY)
+- **Dependencies:** PBI-037 (Requests Management Page — DONE), PBI-038 (Requests Workflow Backend — Data Model & Form Wiring — TESTING)
 - **Systems Affected:** frontend, backend
 - **Risk Level:** Low
 - **Estimated Effort:** S
