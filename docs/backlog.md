@@ -1275,7 +1275,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-036: HICKORY Branding Overhaul And Repository Rename Sweep
 
-- **Status:** READY
+- **Status:** DEV_DONE
 - **Goal:** Replace the current Baffy/Baffie brand identity with HICKORY across the app and repository, delivering production-ready core brand assets and removing obsolete brand-specific files without breaking existing product behaviour.
 - **Scope:**
   - Rename tracked files whose filenames contain `baffy` or `baffie` to `hickory`
@@ -1300,6 +1300,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
   - Horizontal and vertical lockups exist with `12px` to `18px` spacing and are ready for app use
   - Existing app brand surfaces no longer show Baffy or Baffie and instead show HICKORY using the new approved assets
   - The delivered wordmark remains legible on both light and dark UI backgrounds
+  - A branded splash/intro page exists at the app root (`/`) that displays the HICKORY wordmark centred and large on load, animates it to the top-left corner, then redirects to `/select-user`
 - **Dependencies:** None
 - **Systems Affected:** frontend, backend, tests
 - **Risk Level:** Medium

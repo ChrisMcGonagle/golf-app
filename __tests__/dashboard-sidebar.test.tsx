@@ -1,7 +1,7 @@
 /**
  * Tests for DashboardSidebar component (PBI-005, PBI-028)
  *
- * Covers: rendering sidebar with navigation links, collapsible Membership submenu, active link styling based on pathname, BaffyBrand component.
+ * Covers: rendering sidebar with navigation links, collapsible Membership submenu, active link styling based on pathname, HickoryBrand component.
  */
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
@@ -10,9 +10,9 @@ jest.mock('next/navigation', () => ({
   usePathname: jest.fn(),
 }));
 
-jest.mock('@/components/BaffyBrand', () => {
-  return function DummyBaffyBrand() {
-    return <div data-testid="baffy-brand">BaffyBrand</div>;
+jest.mock('@/components/HickoryBrand', () => {
+  return function DummyHickoryBrand() {
+    return <div data-testid="hickory-brand">HICKORY</div>;
   };
 });
 
@@ -42,10 +42,10 @@ describe('DashboardSidebar', () => {
       expect(aside?.className).toContain('text-[#2b2b2b]');
     });
 
-    it('should render BaffyBrand component at the top', () => {
+    it('should render HickoryBrand component at the top', () => {
       mockUsePathname.mockReturnValue('/dashboard');
       render(<DashboardSidebar />);
-      expect(screen.getByTestId('baffy-brand')).toBeInTheDocument();
+      expect(screen.getByTestId('hickory-brand')).toBeInTheDocument();
     });
 
     it('should NOT render "Admin" heading', () => {

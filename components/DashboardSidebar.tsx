@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import BaffyBrand from "@/components/BaffyBrand";
+import HickoryBrand from "@/components/HickoryBrand";
 
 function DashboardIcon() {
   return (
@@ -85,9 +85,9 @@ export default function DashboardSidebar() {
 
   return (
     <aside className="w-64 bg-white text-[#2b2b2b] min-h-screen border-r border-[#e5e7eb]">
-      {/* Baffy branding — no border below */}
+      {/* HICKORY wordmark */}
       <div className="p-4">
-        <BaffyBrand />
+        <HickoryBrand />
       </div>
 
       {/* Navigation */}
