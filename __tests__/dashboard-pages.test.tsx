@@ -9,6 +9,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { within } from '@testing-library/dom';
 import DashboardPage from '@/app/(authenticated)/dashboard/(with-sidebar)/page';
 import SubmissionsPage from '@/app/(authenticated)/dashboard/(with-sidebar)/submissions/page';
+import AccountsPage from '@/app/(authenticated)/dashboard/(with-sidebar)/accounts/page';
 import { MembersTableClient } from '@/app/(authenticated)/dashboard/(with-sidebar)/members/MembersTableClient';
 import type { MemberForDisplay } from '@/lib/actions/getMembers';
 
@@ -615,6 +616,280 @@ describe('MembersPage', () => {
 
       expect(body).toHaveClass('divide-y', 'divide-gray-100');
       expect(firstRow).toHaveClass('hover:bg-gray-50');
+    });
+  });
+});
+
+describe('AccountsPage', () => {
+  describe('rendering', () => {
+    it('should render the heading without the old count and dot block', () => {
+      const { container } = render(<AccountsPage />);
+      const heading = screen.getByRole('heading', { level: 1, name: /^accounts$/i });
+      const headerBlock = heading.parentElement;
+
+      expect(heading).toBeInTheDocument();
+      expect(headerBlock).not.toBeNull();
+      expect(within(headerBlock as HTMLElement).queryByText('4')).not.toBeInTheDocument();
+      expect(container.querySelector('.bg-gray-400')).toBeNull();
+    });
+
+    it('should render all six account filter tabs', () => {
+      render(<AccountsPage />);
+
+      ['All', 'Staff', 'Competitions', 'Handicapping', 'Course', 'Teams'].forEach((label) => {
+        expect(screen.getByRole('button', { name: label })).toBeInTheDocument();
+      });
+    });
+
+    it('should render the account filter tabs in an equal-width six-column grid', () => {
+      render(<AccountsPage />);
+
+      const allTab = screen.getByRole('button', { name: 'All' });
+      const teamsTab = screen.getByRole('button', { name: 'Teams' });
+      const tabRow = allTab.parentElement;
+
+      expect(tabRow).toHaveClass('grid', 'max-w-[780px]', 'grid-cols-6', 'gap-2');
+      expect(allTab).toHaveClass(
+        'flex',
+        'h-11',
+        'w-full',
+        'items-center',
+        'justify-center',
+        'px-2',
+        'text-center',
+        'leading-tight',
+        'whitespace-normal',
+      );
+      expect(teamsTab).toHaveClass('w-full', 'justify-center', 'text-center', 'whitespace-normal');
+    });
+
+    it('should select All by default', () => {
+      render(<AccountsPage />);
+
+      expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByRole('button', { name: 'Staff' })).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('should render the selected filter helper text for the default All tab', () => {
+      render(<AccountsPage />);
+
+      expect(screen.getByText('All accounts')).toHaveClass('text-md', 'font-semibold', 'text-gray-900');
+    });
+
+    it('should update the selected filter helper text when a different tab is clicked', () => {
+      render(<AccountsPage />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Staff' }));
+
+      expect(screen.getByText('Staff accounts')).toBeInTheDocument();
+      expect(screen.queryByText('All accounts')).not.toBeInTheDocument();
+    });
+
+    it('should render an invite button above the table', () => {
+      render(<AccountsPage />);
+
+      const inviteButton = screen.getByRole('button', { name: 'Invite' });
+
+      expect(inviteButton).toHaveClass(
+        'inline-flex',
+        'items-center',
+        'gap-2',
+        'rounded-lg',
+        'bg-gray-900',
+        'px-3',
+        'pt-[0.4rem]',
+        'pb-[0.4rem]',
+        'text-sm',
+        'font-medium',
+        'text-white',
+      );
+      expect(inviteButton).not.toHaveClass('border', 'border-gray-300', 'bg-white', 'text-gray-900');
+      expect(inviteButton.querySelector('svg')).not.toBeNull();
+    });
+
+    it('should render the correct column headers in order', () => {
+      render(<AccountsPage />);
+      const table = screen.getByRole('table', { name: /accounts table/i });
+      const headers = within(table).getAllByRole('columnheader');
+      // The Actions column th has role="presentation" and is intentionally excluded
+      // from the accessibility tree, so only 6 semantic headers are returned.
+      expect(headers.map((h) => h.textContent?.trim())).toEqual([
+        'Name',
+        'Email',
+        'Phone Number',
+        'Status',
+        'Role',
+        'Permissions',
+      ]);
+    });
+
+    it('should render the phone number value for each mock account', () => {
+      render(<AccountsPage />);
+
+      expect(screen.getByText('(087) 512-4431')).toBeInTheDocument();
+      expect(screen.getByText('(086) 274-1185')).toBeInTheDocument();
+      expect(screen.getByText('(085) 661-9024')).toBeInTheDocument();
+      expect(screen.getByText('(089) 340-7762')).toBeInTheDocument();
+    });
+
+    it('should render a row for each mock account', () => {
+      render(<AccountsPage />);
+      expect(screen.getByText('Siobhan Doherty')).toBeInTheDocument();
+      expect(screen.getByText('Padraig Sweeney')).toBeInTheDocument();
+      expect(screen.getByText('Ciara McLaughlin')).toBeInTheDocument();
+      expect(screen.getByText('Eoin Gallagher')).toBeInTheDocument();
+    });
+
+    it('should render initials fallback in the name column when an account has no avatar image', () => {
+      render(<AccountsPage />);
+
+      const table = screen.getByRole('table', { name: /accounts table/i });
+      const siobhanRow = within(table).getByText('Siobhan Doherty').closest('tr');
+
+      expect(siobhanRow).not.toBeNull();
+      expect(within(siobhanRow as HTMLElement).getByText('SD')).toBeInTheDocument();
+    });
+
+    it('should render an edit button for each row with the correct aria-label', () => {
+      render(<AccountsPage />);
+      expect(screen.getByRole('button', { name: /edit siobhan doherty/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /edit padraig sweeney/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /edit ciara mclaughlin/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /edit eoin gallagher/i })).toBeInTheDocument();
+    });
+
+    it('should render an activate/disable toggle button per row', () => {
+      render(<AccountsPage />);
+      // Active accounts get a Disable button
+      expect(screen.getByRole('button', { name: /disable siobhan doherty/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /disable padraig sweeney/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /disable ciara mclaughlin/i })).toBeInTheDocument();
+      // Disabled accounts get an Activate button
+      expect(screen.getByRole('button', { name: /activate eoin gallagher/i })).toBeInTheDocument();
+    });
+
+    it('should render compact status chips for active and disabled accounts', () => {
+      render(<AccountsPage />);
+      const activeChip = screen.getAllByText('Active')[0].parentElement;
+      const disabledChip = screen.getByText('Disabled').parentElement;
+
+      expect(activeChip).toHaveClass(
+        'inline-flex',
+        'items-center',
+        'gap-2',
+        'rounded-full',
+        'border',
+        'px-2.5',
+        'py-1',
+        'text-xs',
+        'font-medium',
+        'border-emerald-300',
+        'bg-emerald-100',
+        'text-emerald-800',
+      );
+      expect(activeChip?.querySelector('.bg-emerald-600')).not.toBeNull();
+
+      expect(disabledChip).toHaveClass(
+        'inline-flex',
+        'items-center',
+        'gap-2',
+        'rounded-full',
+        'border',
+        'px-2.5',
+        'py-1',
+        'text-xs',
+        'font-medium',
+        'border-red-200',
+        'bg-red-50',
+        'text-red-700',
+      );
+      expect(disabledChip?.querySelector('.bg-red-500')).not.toBeNull();
+    });
+
+    it('should toggle status when the activate/disable button is clicked', () => {
+      render(<AccountsPage />);
+      const disableBtn = screen.getByRole('button', { name: /disable siobhan doherty/i });
+      fireEvent.click(disableBtn);
+      const siobhanRow = screen.getByText('Siobhan Doherty').closest('tr');
+
+      expect(screen.getByRole('button', { name: /activate siobhan doherty/i })).toBeInTheDocument();
+      expect(within(siobhanRow as HTMLElement).getByText('Disabled')).toBeInTheDocument();
+    });
+
+    it('should not render any text content inside the edit cells', () => {
+      render(<AccountsPage />);
+      const editButton = screen.getByRole('button', { name: /edit siobhan doherty/i });
+      expect(editButton.textContent?.trim()).toBe('');
+    });
+
+    it('should render a clickable more button with the current aria-label and styling for Siobhan row', () => {
+      render(<AccountsPage />);
+
+      const table = screen.getByRole('table', { name: /accounts table/i });
+      const siobhanRow = within(table).getByText('Siobhan Doherty').closest('tr');
+
+      expect(siobhanRow).not.toBeNull();
+      const moreButton = within(siobhanRow as HTMLElement).getByRole('button', {
+        name: 'Show 3 more permissions for Siobhan Doherty',
+      });
+
+      expect(moreButton).toHaveClass(
+        'inline-flex',
+        'shrink-0',
+        'items-center',
+        'ml-2',
+        'text-xs',
+        'font-medium',
+        'text-blue-600',
+        'underline',
+        'underline-offset-2',
+        'hover:text-blue-700',
+      );
+      expect(moreButton).toHaveAttribute(
+        'aria-label',
+        'Show 3 more permissions for Siobhan Doherty',
+      );
+    });
+
+    it('should show all permissions without a more button when an account has three or fewer permissions', () => {
+      render(<AccountsPage />);
+
+      const table = screen.getByRole('table', { name: /accounts table/i });
+      const padraigRow = within(table).getByText('Padraig Sweeney').closest('tr');
+      const ciaraRow = within(table).getByText('Ciara McLaughlin').closest('tr');
+
+      expect(padraigRow).not.toBeNull();
+      expect(within(padraigRow as HTMLElement).getAllByText('members').length).toBeGreaterThan(0);
+      expect(within(padraigRow as HTMLElement).getAllByText('times').length).toBeGreaterThan(0);
+      expect(within(padraigRow as HTMLElement).queryByRole('button', { name: /more permissions/i })).not.toBeInTheDocument();
+
+      expect(ciaraRow).not.toBeNull();
+      expect(within(ciaraRow as HTMLElement).getAllByText('members').length).toBeGreaterThan(0);
+      expect(within(ciaraRow as HTMLElement).queryByRole('button', { name: /more permissions/i })).not.toBeInTheDocument();
+    });
+
+    it('should filter to staff rows only when Staff is selected', () => {
+      render(<AccountsPage />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Staff' }));
+
+      expect(screen.getByRole('button', { name: 'Staff' })).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.queryByText('Siobhan Doherty')).not.toBeInTheDocument();
+      expect(screen.getByText('Padraig Sweeney')).toBeInTheDocument();
+      expect(screen.getByText('Ciara McLaughlin')).toBeInTheDocument();
+      expect(screen.getByText('Eoin Gallagher')).toBeInTheDocument();
+    });
+
+    it('should show no rows when Course is selected and no accounts have the course permission', () => {
+      render(<AccountsPage />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Course' }));
+
+      expect(screen.getByRole('button', { name: 'Course' })).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.queryByText('Siobhan Doherty')).not.toBeInTheDocument();
+      expect(screen.queryByText('Padraig Sweeney')).not.toBeInTheDocument();
+      expect(screen.queryByText('Ciara McLaughlin')).not.toBeInTheDocument();
+      expect(screen.queryByText('Eoin Gallagher')).not.toBeInTheDocument();
     });
   });
 });

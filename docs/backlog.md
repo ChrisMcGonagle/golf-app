@@ -1143,7 +1143,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-032: Members Page — Real Data Wiring
 
-- **Status:** IN_PROGRESS
+- **Status:** DONE
 - **Goal:** Replace the page-level mock data behind the shipped members management screen with real database-backed data, including the minimum schema/storage work required so the SOS emergency modal reads from durable member data instead of mock values, while preserving the current table columns, toolbar, row actions, missing-info indicator, status confirmation modal, and SOS emergency modal UX from PBI-031.
 - **Scope:**
   - Replace the page-level mock member data on `/dashboard/members` with real database-backed data
@@ -1177,7 +1177,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-033: Accounts Page UI — Accounts Table
 
-- **Status:** READY
+- **Status:** TESTING
 - **Goal:** Add a UI table to the accounts page with a clean, modern presentation that matches the current dashboard table refresh work.
 - **Scope:**
   - Add an accounts table to the accounts page
