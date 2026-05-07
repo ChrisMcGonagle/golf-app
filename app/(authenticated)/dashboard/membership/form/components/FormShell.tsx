@@ -154,7 +154,7 @@ export default function FormShell({
         {showingSuccessAnimation ? (
           <div className="absolute inset-0 z-30">
             {/* Layer 1: Form content disabled during animation */}
-            <div className="pointer-events-none">
+            <div className="pointer-events-none flex min-h-screen flex-col">
               <div className="mx-[5rem] pt-6 pb-0 2xl:mx-[20rem]">
                 <h1 className="mb-5 text-xl font-semibold tracking-[0.04em] text-[#2b2b2b]">
                   {membershipTitle}
@@ -226,7 +226,7 @@ export default function FormShell({
 
   return (
     <div className="relative flex min-h-screen flex-col bg-[#f5f6f5]">
-      <div>
+      <div className="flex flex-1 flex-col">
         <div className="mx-[5rem] pt-6 pb-0 2xl:mx-[20rem]">
           <h1 className="mb-5 text-xl font-semibold tracking-[0.04em] text-[#2b2b2b]">
             {membershipTitle}
