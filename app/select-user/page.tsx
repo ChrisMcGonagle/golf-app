@@ -1,7 +1,7 @@
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import Image from 'next/image';
-import BaffyBrand from '@/components/BaffyBrand';
+import HickoryBrand from '@/components/HickoryBrand';
 
 // Mark as dynamic since it requires environment variables and real-time profile data
 export const dynamic = 'force-dynamic';
@@ -155,8 +155,8 @@ export default async function SelectUserPage({
   // STEP 9: Handle edge cases - no profiles
   if (profiles.length === 0 && !fetchError) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-8 py-16" style={{ backgroundColor: '#f5f6f5' }}>
-        <div className="w-full max-w-[1200px]">
+      <div className="flex min-h-screen flex-col items-center justify-center px-8 py-16" style={{ backgroundColor: '#f5f6f5' }}>
+        <div className="content-fade-in w-full max-w-[1200px]">
           <div className="w-full max-w-[800px] mb-16">
             <p aria-hidden="true" className="invisible text-6xl font-normal">Select</p>
             <h1 className="text-6xl font-normal mt-2" style={{ color: '#2b2b2b' }}>Select User</h1>
@@ -172,8 +172,8 @@ export default async function SelectUserPage({
   // STEP 9: Handle fetch error
   if (fetchError) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-8 py-16" style={{ backgroundColor: '#f5f6f5' }}>
-        <div className="w-full max-w-[1200px]">
+      <div className="flex min-h-screen flex-col items-center justify-center px-8 py-16" style={{ backgroundColor: '#f5f6f5' }}>
+        <div className="content-fade-in w-full max-w-[1200px]">
           <div className="w-full max-w-[800px] mb-16">
             <p aria-hidden="true" className="invisible text-6xl font-normal">Select</p>
             <h1 className="text-6xl font-normal mt-2" style={{ color: '#2b2b2b' }}>Select User</h1>
@@ -187,12 +187,12 @@ export default async function SelectUserPage({
   }
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen px-8 py-16" style={{ backgroundColor: '#f5f6f5' }}>
+    <div className="relative flex min-h-screen flex-col items-center justify-center px-8 py-16" style={{ backgroundColor: '#f5f6f5' }}>
       <div className="absolute top-0 left-0 px-8 py-8">
-        <BaffyBrand />
+        <HickoryBrand />
       </div>
       {/* Outer wrapper to contain and align heading with grid */}
-      <div className="w-full max-w-[800px]">
+      <div className="content-fade-in w-full max-w-[800px]">
         {/* Heading area - constrained to 800px to match other pages */}
         <div className="w-full max-w-[800px] mb-16">
           <p aria-hidden="true" className="invisible text-6xl font-normal">Select</p>
