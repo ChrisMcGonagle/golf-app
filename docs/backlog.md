@@ -1275,7 +1275,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-036: HICKORY Branding Overhaul And Repository Rename Sweep
 
-- **Status:** READY
+- **Status:** IN_PROGRESS
 - **Goal:** Replace the current Baffy/Baffie brand identity with HICKORY across the app and repository, delivering production-ready core brand assets and removing obsolete brand-specific files without breaking existing product behaviour.
 - **Scope:**
   - Rename tracked files whose filenames contain `baffy` or `baffie` to `hickory`
