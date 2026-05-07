@@ -45,6 +45,20 @@ type ProfileRecord = {
   display_name: string;
 };
 
+async function requireAdminSession() {
+  const activeUser = await getActiveUserSession();
+
+  if (!activeUser) {
+    redirect('/select-user');
+  }
+
+  if (activeUser.role !== 'admin') {
+    redirect('/dashboard');
+  }
+
+  return activeUser;
+}
+
 function getStringValue(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
@@ -189,15 +203,7 @@ function mapMembershipRequestToRow(
 }
 
 export async function getMembershipRequestsForAdmin(): Promise<RequestRow[]> {
-  const activeUser = await getActiveUserSession();
-
-  if (!activeUser) {
-    redirect('/select-user');
-  }
-
-  if (activeUser.role !== 'admin') {
-    redirect('/dashboard');
-  }
+  await requireAdminSession();
 
   const supabase = createServiceRoleClient();
   const { data, error } = await supabase
@@ -231,4 +237,20 @@ export async function getMembershipRequestsForAdmin(): Promise<RequestRow[]> {
   }
 
   return records.map((record) => mapMembershipRequestToRow(record, operatorNameById));
+}
+
+export async function getPendingMembershipRequestCountForAdmin(): Promise<number> {
+  await requireAdminSession();
+
+  const supabase = createServiceRoleClient();
+  const { count, error } = await supabase
+    .from('membership_requests')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'pending');
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return count ?? 0;
 }

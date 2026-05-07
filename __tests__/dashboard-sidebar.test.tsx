@@ -133,6 +133,7 @@ describe('DashboardSidebar', () => {
       // Membership should auto-expand if we're on a submenu route
       const requestsLink = screen.getByRole('link', { name: /requests/i });
       expect(requestsLink).toHaveClass('bg-gray-100', 'font-semibold');
+      expect(requestsLink).not.toHaveClass('border-amber-200', 'bg-amber-50/80', 'ring-1', 'ring-amber-100');
     });
 
     it('should apply active styling to Member List link when on /dashboard/members', () => {
@@ -231,6 +232,54 @@ describe('DashboardSidebar', () => {
       const { container } = render(<DashboardSidebar />);
       const aside = container.querySelector('aside');
       expect(aside).toHaveClass('bg-white');
+    });
+  });
+
+  describe('requests badge', () => {
+    it('should not render a badge when the pending request count is 0', () => {
+      mockUsePathname.mockReturnValue('/dashboard/requests');
+      render(<DashboardSidebar pendingRequestsCount={0} />);
+
+      expect(screen.queryByLabelText(/pending requests/i)).not.toBeInTheDocument();
+    });
+
+    it('should render a badge when the pending request count is greater than 0', () => {
+      mockUsePathname.mockReturnValue('/dashboard/requests');
+      render(<DashboardSidebar pendingRequestsCount={3} />);
+
+      const badge = screen.getByLabelText('3 pending requests');
+      expect(badge).toBeInTheDocument();
+      expect(badge).toHaveTextContent('3');
+      expect(badge).toHaveClass('border', 'border-amber-500', 'bg-amber-500', 'text-white', 'ring-1', 'ring-amber-200');
+    });
+
+    it('should keep the active requests row standard while the badge carries the warning emphasis', () => {
+      mockUsePathname.mockReturnValue('/dashboard/requests');
+      render(<DashboardSidebar pendingRequestsCount={5} />);
+
+      const requestsLink = screen.getByRole('link', { name: /requests/i });
+      const badge = screen.getByLabelText('5 pending requests');
+
+      expect(requestsLink).toHaveClass('bg-gray-100', 'font-semibold');
+      expect(requestsLink).not.toHaveClass('border-amber-200', 'bg-amber-50/80', 'ring-1', 'ring-amber-100');
+      expect(badge).toHaveClass('border-amber-500', 'bg-amber-500', 'text-white');
+    });
+
+    it('should keep multi-digit counts readable inside the requests item', () => {
+      mockUsePathname.mockReturnValue('/dashboard/requests');
+      render(<DashboardSidebar pendingRequestsCount={12} />);
+
+      const badge = screen.getByLabelText('12 pending requests');
+      expect(badge).toHaveTextContent('12');
+      expect(badge).toHaveClass('min-w-[1.25rem]', 'px-1.5', 'rounded-full');
+    });
+
+    it('should keep the same emphasized requests badge when the requests item is not selected', () => {
+      mockUsePathname.mockReturnValue('/dashboard/members');
+      render(<DashboardSidebar pendingRequestsCount={4} />);
+
+      const badge = screen.getByLabelText('4 pending requests');
+      expect(badge).toHaveClass('border', 'border-amber-500', 'bg-amber-500', 'text-white', 'ring-1', 'ring-amber-200');
     });
   });
 });

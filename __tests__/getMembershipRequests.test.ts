@@ -15,7 +15,10 @@ jest.mock('@/lib/supabase/server', () => ({
 import { redirect } from 'next/navigation';
 import { getActiveUserSession } from '@/lib/auth/activeUserSession';
 import { createServiceRoleClient } from '@/lib/supabase/server';
-import { getMembershipRequestsForAdmin } from '@/lib/actions/getMembershipRequests';
+import {
+  getMembershipRequestsForAdmin,
+  getPendingMembershipRequestCountForAdmin,
+} from '@/lib/actions/getMembershipRequests';
 
 const mockRedirect = jest.mocked(redirect);
 const mockGetActiveUserSession = jest.mocked(getActiveUserSession);
@@ -354,5 +357,95 @@ describe('getMembershipRequestsForAdmin', () => {
 
     await expect(getMembershipRequestsForAdmin()).rejects.toThrow('membership_requests unavailable');
     expect(from).toHaveBeenCalledWith('membership_requests');
+  });
+});
+
+describe('getPendingMembershipRequestCountForAdmin', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('redirects to /select-user when there is no active user session', async () => {
+    mockGetActiveUserSession.mockResolvedValueOnce(null);
+
+    await expect(getPendingMembershipRequestCountForAdmin()).rejects.toThrow('NEXT_REDIRECT:/select-user');
+
+    expect(mockRedirect).toHaveBeenCalledWith('/select-user');
+    expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
+  });
+
+  it('redirects to /dashboard when the active user is not an admin', async () => {
+    mockGetActiveUserSession.mockResolvedValueOnce({
+      profileId: 'staff-123',
+      displayName: 'Alex Operator',
+      role: 'staff',
+      expiresAt: Date.now() + 60_000,
+    });
+
+    await expect(getPendingMembershipRequestCountForAdmin()).rejects.toThrow('NEXT_REDIRECT:/dashboard');
+
+    expect(mockRedirect).toHaveBeenCalledWith('/dashboard');
+    expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
+  });
+
+  it('returns the exact pending request count using a head query', async () => {
+    mockGetActiveUserSession.mockResolvedValueOnce({
+      profileId: 'admin-123',
+      displayName: 'Pat Admin',
+      role: 'admin',
+      expiresAt: Date.now() + 60_000,
+    });
+
+    const membershipRequestsEq = jest.fn().mockResolvedValue({
+      count: 12,
+      error: null,
+    });
+    const membershipRequestsSelect = jest.fn().mockReturnValue({
+      eq: membershipRequestsEq,
+    });
+    const from = jest.fn((table: string) => {
+      if (table === 'membership_requests') {
+        return { select: membershipRequestsSelect };
+      }
+
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    mockCreateServiceRoleClient.mockReturnValue({ from } as never);
+
+    await expect(getPendingMembershipRequestCountForAdmin()).resolves.toBe(12);
+
+    expect(mockCreateServiceRoleClient).toHaveBeenCalledTimes(1);
+    expect(from).toHaveBeenCalledWith('membership_requests');
+    expect(membershipRequestsSelect).toHaveBeenCalledWith('*', { count: 'exact', head: true });
+    expect(membershipRequestsEq).toHaveBeenCalledWith('status', 'pending');
+  });
+
+  it('returns 0 when the count response is null', async () => {
+    mockGetActiveUserSession.mockResolvedValueOnce({
+      profileId: 'admin-123',
+      displayName: 'Pat Admin',
+      role: 'admin',
+      expiresAt: Date.now() + 60_000,
+    });
+
+    const membershipRequestsEq = jest.fn().mockResolvedValue({
+      count: null,
+      error: null,
+    });
+    const membershipRequestsSelect = jest.fn().mockReturnValue({
+      eq: membershipRequestsEq,
+    });
+    const from = jest.fn((table: string) => {
+      if (table === 'membership_requests') {
+        return { select: membershipRequestsSelect };
+      }
+
+      throw new Error(`Unexpected table: ${table}`);
+    });
+
+    mockCreateServiceRoleClient.mockReturnValue({ from } as never);
+
+    await expect(getPendingMembershipRequestCountForAdmin()).resolves.toBe(0);
   });
 });
