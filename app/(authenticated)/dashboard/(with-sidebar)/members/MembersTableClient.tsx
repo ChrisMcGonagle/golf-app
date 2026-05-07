@@ -151,7 +151,7 @@ export function MembersTableClient({ members }: { members: MemberForDisplay[] })
 
       <div className="min-h-0 flex-1 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-200">
         <div className="h-full overflow-y-auto">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto bg-white ring-gray-200">
             <table className="w-[912px] min-w-[912px] table-fixed divide-y divide-gray-200" aria-label="Members table">
           <colgroup>
             <col className="w-28" />
