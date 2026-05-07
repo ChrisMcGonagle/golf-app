@@ -1247,3 +1247,26 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 - **Risk Level:** Medium
 - **Estimated Effort:** M
 - **Note:** Supabase Specialist Required
+
+## PBI-035: Dashboard And Membership Flow Scroll Containment Fixes
+
+- **Status:** DEV_DONE
+- **Goal:** Tighten scroll containment across the dashboard members/accounts screens and the membership flow so page chrome stays fixed, only the intended content regions scroll, and the membership form/success surfaces render cleanly to the viewport bottom.
+- **Scope:**
+  - Contain dashboard shell/page scrolling correctly for the members and accounts screens
+  - On the members page, keep vertical scrolling limited to the table area only
+  - On the accounts page, keep the page chrome fixed, limit vertical scrolling to the table area, and remove horizontal table scrolling
+  - Ensure the white middle section of the membership form extends to the bottom of the viewport without the outer grey background showing below it
+  - Keep the top-left close (`X`) control visible on the membership success confirmation while the summary content scrolls
+- **Out of Scope:** Any new data wiring, table redesign, membership form business-logic changes, success-state copy changes, or unrelated dashboard layout changes
+- **Acceptance Criteria:**
+  - The members page does not scroll at the page level during normal table interaction; only the table region scrolls vertically
+  - The accounts page keeps its surrounding page chrome fixed while the table region scrolls vertically
+  - The accounts table does not introduce horizontal scrolling in the shipped dashboard layout
+  - The membership form white middle section visually reaches the bottom of the viewport without exposing outer grey below it
+  - The membership success confirmation keeps the top-left `X` button visible while the summary area scrolls
+  - Existing members, accounts, and membership-flow UI behaviour remains otherwise unchanged
+- **Dependencies:** PBI-030, PBI-032, PBI-033
+- **Systems Affected:** frontend
+- **Risk Level:** Low
+- **Estimated Effort:** S
