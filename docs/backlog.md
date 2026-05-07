@@ -1373,7 +1373,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-038: Requests Workflow Backend — Data Model & Form Wiring
 
-- **Status:** READY
+- **Status:** IN_PROGRESS
 - **Goal:** Establish the backend data model and data wiring for the Requests management workflow, replacing "Pending" terminology with "Requests", connecting form submissions to a membership_requests table, and enabling the requests management page (PBI-037) to read live request and provisioning-step data.
 - **Scope:**
   - **Rename & Module Update:** Rename all backend terminology, variable names, function names, and internal references from `pending` or `submissions` to `requests`. Update any existing backend utilities, helpers, services, or constants that reference the old terminology.
