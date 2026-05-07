@@ -31,6 +31,7 @@ export type RequestRow = {
   intent: RequestIntent;
   intentSource: RequestIntentSource;
   membershipStatus: string;
+  operatorName?: string;
   status: RequestStatus;
   steps: [RequestStep, RequestStep, RequestStep];
   payload: RequestPayload;
