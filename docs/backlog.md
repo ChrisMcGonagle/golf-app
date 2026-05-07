@@ -1404,7 +1404,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-039: Requests Sidebar Pending Count Badge
 
-- **Status:** IN_PROGRESS
+- **Status:** TESTING
 - **Goal:** Add a small pending-count badge to the Requests sidebar menu item so admins can immediately see when there are outstanding pending requests without opening the Requests page.
 - **Scope:**
   - Add a small circular number chip/badge to the `Requests` dashboard sidebar menu item
