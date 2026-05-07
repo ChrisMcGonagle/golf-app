@@ -164,3 +164,109 @@ create policy "service role full access"
   to service_role
   using (true)
   with check (true);
+
+-- ============================================================
+-- PBI-038: membership_requests table
+-- Stores live membership requests submitted via the membership
+-- form workflow. `operator_id` is the authenticated staff/admin
+-- profile that submitted the request. `requester_name` and
+-- `requester_email` are payload-derived display fields.
+-- ============================================================
+
+create table if not exists public.membership_requests (
+    id                   uuid        primary key default gen_random_uuid(),
+    payload              jsonb       not null,
+    request_type         text        not null,
+    operator_id          uuid        not null references public.profiles(id),
+    requester_name       text        not null,
+    requester_email      text        not null,
+    status               text        not null default 'pending',
+    golfireland_account  text        not null default 'pending',
+    brs_account          text        not null default 'pending',
+    clubv1_account       text        not null default 'pending',
+    membership_status    text        not null,
+    submitted_at         timestamptz not null default now(),
+    created_at           timestamptz not null default now(),
+    updated_at           timestamptz not null default now()
+);
+
+alter table public.membership_requests
+    add column if not exists payload              jsonb       not null,
+    add column if not exists request_type         text        not null,
+    add column if not exists operator_id          uuid,
+    add column if not exists requester_name       text,
+    add column if not exists requester_email      text,
+    add column if not exists status               text        not null default 'pending',
+    add column if not exists golfireland_account  text        not null default 'pending',
+    add column if not exists brs_account          text        not null default 'pending',
+    add column if not exists clubv1_account       text        not null default 'pending',
+    add column if not exists membership_status    text,
+    add column if not exists submitted_at         timestamptz not null default now(),
+    add column if not exists created_at           timestamptz not null default now(),
+    add column if not exists updated_at           timestamptz not null default now();
+
+alter table public.membership_requests drop constraint if exists membership_requests_operator_id_fkey;
+alter table public.membership_requests
+    add constraint membership_requests_operator_id_fkey
+    foreign key (operator_id) references public.profiles(id);
+
+alter table public.membership_requests drop constraint if exists membership_requests_status_check;
+alter table public.membership_requests
+    add constraint membership_requests_status_check
+    check (status in ('pending', 'in_progress', 'completed'));
+
+alter table public.membership_requests drop constraint if exists membership_requests_golfireland_account_check;
+alter table public.membership_requests
+    add constraint membership_requests_golfireland_account_check
+    check (golfireland_account in ('pending', 'in_progress', 'completed', 'failed'));
+
+alter table public.membership_requests drop constraint if exists membership_requests_brs_account_check;
+alter table public.membership_requests
+    add constraint membership_requests_brs_account_check
+    check (brs_account in ('pending', 'in_progress', 'completed', 'failed'));
+
+alter table public.membership_requests drop constraint if exists membership_requests_clubv1_account_check;
+alter table public.membership_requests
+    add constraint membership_requests_clubv1_account_check
+    check (clubv1_account in ('pending', 'in_progress', 'completed', 'failed'));
+
+alter table public.membership_requests drop constraint if exists membership_requests_membership_status_check;
+alter table public.membership_requests
+    add constraint membership_requests_membership_status_check
+    check (membership_status in ('pending', 'in_progress', 'completed', 'failed'));
+
+comment on column public.membership_requests.payload is 'Full membership form JSON payload.';
+comment on column public.membership_requests.operator_id is 'Authenticated staff/admin profile that submitted the request.';
+comment on column public.membership_requests.requester_name is 'Requester display name derived from the submitted payload.';
+comment on column public.membership_requests.requester_email is 'Requester email derived from the submitted payload.';
+comment on column public.membership_requests.membership_status is 'Membership workflow step status derived from the submitted payload/workflow state.';
+
+alter table public.membership_requests enable row level security;
+
+revoke all on table public.membership_requests from public;
+revoke all on table public.membership_requests from anon;
+revoke all on table public.membership_requests from authenticated;
+
+drop policy if exists "service role full access" on public.membership_requests;
+create policy "service role full access"
+    on public.membership_requests
+    for all
+    to service_role
+    using (true)
+    with check (true);
+
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+    new.updated_at = now();
+    return new;
+end;
+$$;
+
+drop trigger if exists set_membership_requests_updated_at on public.membership_requests;
+create trigger set_membership_requests_updated_at
+    before update on public.membership_requests
+    for each row
+    execute function public.set_updated_at();

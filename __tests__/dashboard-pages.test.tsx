@@ -9,12 +9,23 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { within } from '@testing-library/dom';
 import DashboardPage from '@/app/(authenticated)/dashboard/(with-sidebar)/page';
 import RequestsPage from '@/app/(authenticated)/dashboard/(with-sidebar)/requests/page';
+import { mockRequestRows } from '@/app/(authenticated)/dashboard/(with-sidebar)/requests/requestsViewModel';
 import AccountsPage from '@/app/(authenticated)/dashboard/(with-sidebar)/accounts/page';
 import { MembersTableClient } from '@/app/(authenticated)/dashboard/(with-sidebar)/members/MembersTableClient';
 import type { MemberForDisplay } from '@/lib/actions/getMembers';
+import { getMembershipRequestsForAdmin } from '@/lib/actions/getMembershipRequests';
+
+jest.mock('@/lib/actions/getMembershipRequests', () => ({
+  getMembershipRequestsForAdmin: jest.fn(),
+}));
 
 const currentYear = String(new Date().getFullYear());
 const previousYear = String(new Date().getFullYear() - 1);
+const mockGetMembershipRequestsForAdmin = jest.mocked(getMembershipRequestsForAdmin);
+
+async function renderRequestsPage() {
+  render(await RequestsPage());
+}
 
 describe('DashboardPage', () => {
   describe('rendering', () => {
@@ -59,13 +70,13 @@ describe('DashboardPage', () => {
     });
 
     it('should display placeholder count of 0 for submissions', () => {
-      const { container } = render(<DashboardPage />);
+      render(<DashboardPage />);
       const stats = screen.getAllByText('0');
       expect(stats.length).toBeGreaterThan(0);
     });
 
     it('should display placeholder count of 0 for members', () => {
-      const { container } = render(<DashboardPage />);
+      render(<DashboardPage />);
       const stats = screen.getAllByText('0');
       expect(stats.length).toBeGreaterThan(0);
     });
@@ -105,19 +116,23 @@ describe('DashboardPage', () => {
 });
 
 describe('RequestsPage', () => {
+  beforeEach(() => {
+    mockGetMembershipRequestsForAdmin.mockResolvedValue(mockRequestRows);
+  });
+
   describe('rendering', () => {
-    it('should render a heading with "Requests" title', () => {
-      render(<RequestsPage />);
+    it('should render a heading with "Requests" title', async () => {
+      await renderRequestsPage();
       expect(screen.getByRole('heading', { level: 1, name: /requests/i })).toBeInTheDocument();
     });
 
-    it('should render the search input with the expected placeholder and name', () => {
-      render(<RequestsPage />);
+    it('should render the search input with the expected placeholder and name', async () => {
+      await renderRequestsPage();
       expect(screen.getByRole('searchbox', { name: /search requests/i })).toHaveAttribute('placeholder', 'Search requests…');
     });
 
-    it('should default the Pending filter to active', () => {
-      render(<RequestsPage />);
+    it('should default the Pending filter to active', async () => {
+      await renderRequestsPage();
 
       const statusSelect = screen.getByRole('combobox', { name: /filter requests by status/i });
       const statusOptions = within(statusSelect).getAllByRole('option').map((option) => option.textContent);
@@ -126,14 +141,14 @@ describe('RequestsPage', () => {
       expect(statusSelect).toHaveValue('Pending');
     });
 
-    it('should render the year select with the current year selected by default', () => {
-      render(<RequestsPage />);
+    it('should render the year select with the current year selected by default', async () => {
+      await renderRequestsPage();
 
       expect(screen.getByRole('combobox', { name: /filter requests by year/i })).toHaveValue(currentYear);
     });
 
-    it('should include previous years as selectable options when present in the data', () => {
-      render(<RequestsPage />);
+    it('should include previous years as selectable options when present in the data', async () => {
+      await renderRequestsPage();
 
       const yearSelect = screen.getByRole('combobox', { name: /filter requests by year/i });
       const yearOptions = within(yearSelect).getAllByRole('option').map((option) => option.textContent);
@@ -143,50 +158,51 @@ describe('RequestsPage', () => {
   });
 
   describe('filters', () => {
-    it('should change the visible rows when a different status filter is selected', () => {
-      render(<RequestsPage />);
+    it('should change the visible rows when a different status filter is selected', async () => {
+      await renderRequestsPage();
 
       const statusSelect = screen.getByRole('combobox', { name: /filter requests by status/i });
 
-      expect(screen.getByText('REQ-1001')).toBeInTheDocument();
-      expect(screen.queryByText('REQ-1002')).not.toBeInTheDocument();
+      expect(screen.getByText('Full Member')).toBeInTheDocument();
+      expect(screen.queryByText('Senior Member')).not.toBeInTheDocument();
 
       fireEvent.change(statusSelect, { target: { value: 'All' } });
 
-      expect(screen.getByText('REQ-1001')).toBeInTheDocument();
-      expect(screen.getByText('REQ-1002')).toBeInTheDocument();
+      expect(screen.getByText('Full Member')).toBeInTheDocument();
+      expect(screen.getByText('Senior Member')).toBeInTheDocument();
 
       fireEvent.change(statusSelect, { target: { value: 'In Progress' } });
 
-      expect(screen.getByText('REQ-1002')).toBeInTheDocument();
-      expect(screen.queryByText('REQ-1001')).not.toBeInTheDocument();
+      expect(screen.getByText('Senior Member')).toBeInTheDocument();
+      expect(screen.queryByText('Full Member')).not.toBeInTheDocument();
 
       fireEvent.change(statusSelect, { target: { value: 'Completed' } });
 
-      expect(screen.getByText('REQ-1003')).toBeInTheDocument();
-      expect(screen.queryByText('REQ-1002')).not.toBeInTheDocument();
+      expect(screen.getByText('Junior')).toBeInTheDocument();
+      expect(screen.queryByText('Senior Member')).not.toBeInTheDocument();
     });
 
-    it('should filter rows by request, id, and requester search terms', () => {
-      render(<RequestsPage />);
+    it('should filter rows by request, id, and requester search terms', async () => {
+      await renderRequestsPage();
 
       const searchInput = screen.getByRole('searchbox', { name: /search requests/i });
 
       fireEvent.change(searchInput, { target: { value: 'overseas life' } });
-      expect(screen.getByText('REQ-1004')).toBeInTheDocument();
-      expect(screen.queryByText('REQ-1001')).not.toBeInTheDocument();
+      expect(screen.getByText('Overseas Life')).toBeInTheDocument();
+      expect(screen.queryByText('Full Member')).not.toBeInTheDocument();
 
       fireEvent.change(searchInput, { target: { value: 'REQ-1001' } });
-      expect(screen.getByText('REQ-1001')).toBeInTheDocument();
-      expect(screen.queryByText('REQ-1004')).not.toBeInTheDocument();
+      expect(screen.getByText('Aisling Murphy')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /view payload for req-1001/i })).toBeInTheDocument();
+      expect(screen.queryByText('Daniel Flynn')).not.toBeInTheDocument();
 
       fireEvent.change(searchInput, { target: { value: 'Aisling' } });
-      expect(screen.getByText('REQ-1001')).toBeInTheDocument();
-      expect(screen.queryByText('REQ-1004')).not.toBeInTheDocument();
+      expect(screen.getByText('Aisling Murphy')).toBeInTheDocument();
+      expect(screen.queryByText('Daniel Flynn')).not.toBeInTheDocument();
     });
 
-    it('should show the simplified empty state without a heading count badge when no rows match', () => {
-      render(<RequestsPage />);
+    it('should show the simplified empty state without a heading count badge when no rows match', async () => {
+      await renderRequestsPage();
 
       const searchInput = screen.getByRole('searchbox', { name: /search requests/i });
 
@@ -197,8 +213,8 @@ describe('RequestsPage', () => {
       expect(screen.queryByText(/^1$/)).not.toBeInTheDocument();
     });
 
-    it('should filter visible rows by the selected submitted year', () => {
-      render(<RequestsPage />);
+    it('should filter visible rows by the selected submitted year', async () => {
+      await renderRequestsPage();
 
       fireEvent.change(screen.getByRole('combobox', { name: /filter requests by status/i }), {
         target: { value: 'Completed' },
@@ -207,86 +223,86 @@ describe('RequestsPage', () => {
         target: { value: previousYear },
       });
 
-      expect(screen.getByText('REQ-1009')).toBeInTheDocument();
-      expect(screen.queryByText('REQ-1003')).not.toBeInTheDocument();
+      expect(screen.getByText('Student Member')).toBeInTheDocument();
+      expect(screen.queryByText('Junior')).not.toBeInTheDocument();
       expect(screen.queryByText('No requests found.')).not.toBeInTheDocument();
 
       fireEvent.change(screen.getByRole('combobox', { name: /filter requests by year/i }), {
         target: { value: currentYear },
       });
 
-      expect(screen.getByText('REQ-1003')).toBeInTheDocument();
-      expect(screen.queryByText('REQ-1009')).not.toBeInTheDocument();
+      expect(screen.getByText('Junior')).toBeInTheDocument();
+      expect(screen.queryByText('Student Member')).not.toBeInTheDocument();
     });
 
-    it('should render a footer count and pagination controls for the requests table', () => {
-      render(<RequestsPage />);
+    it('should render a footer count and pagination controls for the requests table', async () => {
+      await renderRequestsPage();
 
       expect(screen.getByText('5 of 6 requests')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Previous page' })).toBeDisabled();
       expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Next' })).toBeEnabled();
+      expect(screen.getByRole('button', { name: 'Next page' })).toBeEnabled();
     });
 
-    it('should change visible rows when moving between pagination pages and reset to page one on search', () => {
-      render(<RequestsPage />);
+    it('should change visible rows when moving between pagination pages and reset to page one on search', async () => {
+      await renderRequestsPage();
 
-      expect(screen.getByText('REQ-1006')).toBeInTheDocument();
-      expect(screen.queryByText('REQ-1008')).not.toBeInTheDocument();
+      expect(screen.getByText('Distance Member')).toBeInTheDocument();
+      expect(screen.queryByText('Pavilion Social')).not.toBeInTheDocument();
 
-      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Next page' }));
 
-      expect(screen.getByText('REQ-1008')).toBeInTheDocument();
-      expect(screen.queryByText('REQ-1006')).not.toBeInTheDocument();
+      expect(screen.getByText('Pavilion Social')).toBeInTheDocument();
+      expect(screen.queryByText('Distance Member')).not.toBeInTheDocument();
       expect(screen.getByText('1 of 6 requests')).toBeInTheDocument();
       expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Previous' })).toBeEnabled();
-      expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Previous page' })).toBeEnabled();
+      expect(screen.getByRole('button', { name: 'Next page' })).toBeDisabled();
 
       fireEvent.change(screen.getByRole('searchbox', { name: /search requests/i }), {
         target: { value: 'REQ-1008' },
       });
 
-      expect(screen.getByText('REQ-1008')).toBeInTheDocument();
+      expect(screen.getByText('Hugh Larkin')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /view payload for req-1008/i })).toBeInTheDocument();
       expect(screen.getByText('1 of 1 requests')).toBeInTheDocument();
       expect(screen.getByText('Page 1 of 1')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Previous page' })).toBeDisabled();
     });
 
-    it('should reset pagination back to page one when the year changes', () => {
-      render(<RequestsPage />);
+    it('should reset pagination back to page one when the year changes', async () => {
+      await renderRequestsPage();
 
-      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Next page' }));
 
       expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
-      expect(screen.getByText('REQ-1008')).toBeInTheDocument();
+      expect(screen.getByText('Pavilion Social')).toBeInTheDocument();
 
       fireEvent.change(screen.getByRole('combobox', { name: /filter requests by year/i }), {
         target: { value: previousYear },
       });
 
       expect(screen.getByText('Page 1 of 1')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
-      expect(screen.queryByText('REQ-1008')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Previous page' })).toBeDisabled();
+      expect(screen.queryByText('Pavilion Social')).not.toBeInTheDocument();
     });
   });
 
   describe('styling', () => {
-    it('should render heading with correct size and color', () => {
-      render(<RequestsPage />);
+    it('should render heading with correct size and color', async () => {
+      await renderRequestsPage();
       const heading = screen.getByRole('heading', { level: 1, name: /requests/i });
       expect(heading).toHaveClass('text-3xl', 'font-bold', 'text-gray-900');
     });
 
-    it('should render the requests table columns', () => {
-      render(<RequestsPage />);
+    it('should render the requests table columns', async () => {
+      await renderRequestsPage();
       const table = screen.getByRole('table', { name: 'Requests table' });
       const columnHeaders = within(table)
         .getAllByRole('columnheader')
         .map((header) => header.textContent?.trim());
 
       expect(columnHeaders).toEqual([
-        'ID',
         'Request',
         'Requester',
         'Intent',
@@ -296,10 +312,10 @@ describe('RequestsPage', () => {
       ]);
     });
 
-    it('should render the request intent with a source icon for a sample row', () => {
-      render(<RequestsPage />);
+    it('should render the request intent with a source icon for a sample row', async () => {
+      await renderRequestsPage();
 
-      const sampleRow = screen.getByText('REQ-1001').closest('tr');
+      const sampleRow = screen.getByText('Aisling Murphy').closest('tr');
 
       expect(sampleRow).not.toBeNull();
 
@@ -309,8 +325,8 @@ describe('RequestsPage', () => {
       expect(intentCell.querySelector('svg')).not.toBeNull();
     });
 
-    it('should allow the header checkbox to select all visible request rows', () => {
-      render(<RequestsPage />);
+    it('should allow the header checkbox to select all visible request rows', async () => {
+      await renderRequestsPage();
       const table = screen.getByRole('table', { name: 'Requests table' });
       const headerCheckbox = within(table).getByRole('checkbox', {
         name: /select all visible requests/i,
@@ -327,8 +343,8 @@ describe('RequestsPage', () => {
       });
     });
 
-    it('should only show the selection drawer after a request row is selected', () => {
-      render(<RequestsPage />);
+    it('should only show the selection drawer after a request row is selected', async () => {
+      await renderRequestsPage();
 
       expect(screen.queryByText('1 of 6 selected')).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Complete' })).not.toBeInTheDocument();
@@ -341,8 +357,8 @@ describe('RequestsPage', () => {
       expect(screen.getByRole('button', { name: 'More Actions' })).toBeInTheDocument();
     });
 
-    it('should open a payload dialog for a request row without leaving the table', () => {
-      render(<RequestsPage />);
+    it('should open a payload dialog for a request row without leaving the table', async () => {
+      await renderRequestsPage();
 
       fireEvent.click(screen.getByRole('button', { name: /view payload for req-1001/i }));
 

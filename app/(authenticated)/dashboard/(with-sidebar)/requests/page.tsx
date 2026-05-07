@@ -1,10 +1,12 @@
 import { RequestsTableClient } from './RequestsTableClient';
-import { mockRequestRows } from './requestsViewModel';
+import { getMembershipRequestsForAdmin } from '@/lib/actions/getMembershipRequests';
 
-export default function RequestsPage() {
+export default async function RequestsPage() {
+  const rows = await getMembershipRequestsForAdmin();
+
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
-      <RequestsTableClient rows={mockRequestRows} />
+      <RequestsTableClient rows={rows} />
     </div>
   );
 }

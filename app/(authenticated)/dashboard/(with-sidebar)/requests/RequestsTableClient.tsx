@@ -106,6 +106,99 @@ function IntentSourceIcon({ source }: { source: RequestIntentSource }) {
   );
 }
 
+function RequesterCell({ requester }: { requester: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const [hasOverflow, setHasOverflow] = useState(false);
+  const [overflowOffset, setOverflowOffset] = useState(0);
+  const [isActive, setIsActive] = useState(false);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const text = textRef.current;
+
+    if (!container || !text) {
+      return;
+    }
+
+    const measureOverflow = () => {
+      const nextHasOverflow = text.scrollWidth > container.clientWidth;
+
+      setHasOverflow(nextHasOverflow);
+      setOverflowOffset(nextHasOverflow ? text.scrollWidth - container.clientWidth : 0);
+
+      if (!nextHasOverflow) {
+        setIsActive(false);
+      }
+    };
+
+    measureOverflow();
+
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', measureOverflow);
+
+      return () => {
+        window.removeEventListener('resize', measureOverflow);
+      };
+    }
+
+    const resizeObserver = new ResizeObserver(() => {
+      measureOverflow();
+    });
+
+    resizeObserver.observe(container);
+    resizeObserver.observe(text);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [requester]);
+
+  const activate = () => {
+    if (hasOverflow) {
+      setIsActive(true);
+    }
+  };
+
+  const deactivate = () => {
+    setIsActive(false);
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className="overflow-hidden whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-200"
+      onMouseEnter={activate}
+      onMouseLeave={deactivate}
+      onFocus={activate}
+      onBlur={deactivate}
+      tabIndex={hasOverflow ? 0 : -1}
+    >
+      <span
+        ref={textRef}
+        className="inline-block min-w-full truncate align-top transition-transform duration-300 ease-out will-change-transform"
+        style={{ transform: isActive && hasOverflow ? `translateX(-${overflowOffset}px)` : 'translateX(0)' }}
+      >
+        {requester}
+      </span>
+    </div>
+  );
+}
+
+function PaginationChevronIcon({ direction }: { direction: 'left' | 'right' }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 12 8"
+      className={`h-2.5 w-3.5 ${direction === 'left' ? 'rotate-90' : '-rotate-90'}`}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M1 1.5L6 6.5L11 1.5" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function RequestsTableClient({ rows }: { rows: RequestRow[] }) {
   const pageSize = 5;
   const currentYear = String(new Date().getFullYear());
@@ -304,13 +397,12 @@ export function RequestsTableClient({ rows }: { rows: RequestRow[] }) {
         <table className="w-full table-fixed divide-y divide-gray-200" aria-label="Requests table">
           <colgroup>
             <col className="w-14" />
-            <col className="w-28" />
-            <col className="w-[15%]" />
             <col className="w-[18%]" />
+            <col className="w-[16%]" />
+            <col className="w-[16%]" />
+            <col className="w-[16%]" />
             <col className="w-[12%]" />
-            <col className="w-[20%]" />
-            <col className="w-[12%]" />
-            <col className="w-[14%]" />
+            <col className="w-[18%]" />
             <col className="w-12" />
           </colgroup>
           <thead className="bg-gray-50">
@@ -326,11 +418,10 @@ export function RequestsTableClient({ rows }: { rows: RequestRow[] }) {
                   />
                 </div>
               </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">ID</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">Request</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">Requester</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">Intent</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">Submitted Date</th>
+                <th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-700">Submitted Date</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-700">Status</th>
                 <th className="px-4 py-3 pr-1 text-center text-xs font-semibold uppercase tracking-wide text-gray-700">STEP</th>
                 <th aria-hidden="true" role="presentation" className="px-1 py-3" />
@@ -339,7 +430,7 @@ export function RequestsTableClient({ rows }: { rows: RequestRow[] }) {
           <tbody className="divide-y divide-gray-100 bg-white">
             {filteredRows.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-sm text-gray-600">
+                <td colSpan={8} className="px-4 py-8 text-center text-sm text-gray-600">
                   No requests found.
                 </td>
               </tr>
@@ -356,9 +447,10 @@ export function RequestsTableClient({ rows }: { rows: RequestRow[] }) {
                       />
                     </div>
                   </td>
-                  <td className="px-4 py-4 align-middle text-sm font-medium text-gray-900">{row.id}</td>
                   <td className="px-4 py-4 align-middle text-sm font-medium text-gray-700 break-words">{row.request}</td>
-                  <td className="px-4 py-4 align-middle text-sm text-gray-600 break-words">{row.requester}</td>
+                  <td className="px-4 py-4 align-middle text-sm text-gray-600">
+                    <RequesterCell requester={row.requester} />
+                  </td>
                   <td className="px-4 py-4 align-middle text-sm text-gray-600">
                     <span
                       className="inline-flex items-center gap-2 text-sm font-medium text-gray-700"
@@ -368,11 +460,13 @@ export function RequestsTableClient({ rows }: { rows: RequestRow[] }) {
                       <IntentSourceIcon source={row.intentSource} />
                     </span>
                   </td>
-                  <td className="px-4 py-4 align-middle text-sm text-gray-600 break-words">{row.submittedDateTime}</td>
+                  <td className="whitespace-nowrap px-4 py-4 align-middle text-sm text-gray-600">{row.submittedDateTime}</td>
                   <td className="px-4 py-4 align-middle text-sm text-gray-600">
-                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusChipClassNames[row.status]}`}>
-                      {row.status}
-                    </span>
+                    <div className="flex justify-center">
+                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusChipClassNames[row.status]}`}>
+                        {row.status}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-4 py-4 pr-1 align-middle text-sm text-gray-600">
                     <div className="flex items-center gap-2 xl:justify-end">
@@ -413,7 +507,7 @@ export function RequestsTableClient({ rows }: { rows: RequestRow[] }) {
         <div
           className={`absolute -bottom-8 -left-8 -right-8 z-20 transition-all duration-200 ease-out ${shouldShowSelectionDrawer ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}
         >
-          <div className="grid min-h-14 grid-cols-1 items-center gap-3 border-t border-gray-200 bg-white px-4 py-3 shadow-sm sm:grid-cols-3">
+          <div className="grid min-h-14 grid-cols-1 items-center gap-3 border-t border-gray-200 bg-white px-4 pb-3 shadow-sm sm:grid-cols-3">
             <p className="text-sm font-medium text-gray-700 sm:justify-self-start">
               {selectedVisibleRowCount} of {filteredRows.length} selected
             </p>
@@ -437,25 +531,27 @@ export function RequestsTableClient({ rows }: { rows: RequestRow[] }) {
         </div>
       ) : null}
 
-      <div className="mt-2 flex flex-col gap-3 px-4 py-3 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 px-4 py-3 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
         <p>{`${paginatedRows.length} of ${filteredRows.length} requests`}</p>
-        <div className="flex items-center gap-3 self-end sm:self-auto">
+        <div className="flex w-full items-center justify-end gap-3 sm:w-auto">
           <button
             type="button"
+            aria-label="Previous page"
             onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
             disabled={currentPage === 1}
-            className="inline-flex items-center justify-center rounded-lg border border-gray-200 px-3 py-2 font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-gray-200 disabled:hover:bg-white"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-gray-200 disabled:hover:bg-white"
           >
-            Previous
+            <PaginationChevronIcon direction="left" />
           </button>
           <p className="min-w-24 text-center text-sm text-gray-600">Page {currentPage} of {totalPages}</p>
           <button
             type="button"
+            aria-label="Next page"
             onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
             disabled={currentPage === totalPages}
-            className="inline-flex items-center justify-center rounded-lg border border-gray-200 px-3 py-2 font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-gray-200 disabled:hover:bg-white"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-gray-200 disabled:hover:bg-white"
           >
-            Next
+            <PaginationChevronIcon direction="right" />
           </button>
         </div>
       </div>
