@@ -1250,7 +1250,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-035: Dashboard And Membership Flow Scroll Containment Fixes
 
-- **Status:** TESTING
+- **Status:** DONE
 - **Goal:** Tighten scroll containment across the dashboard members/accounts screens and the membership flow so page chrome stays fixed, only the intended content regions scroll, and the membership form/success surfaces render cleanly to the viewport bottom.
 - **Scope:**
   - Contain dashboard shell/page scrolling correctly for the members and accounts screens
