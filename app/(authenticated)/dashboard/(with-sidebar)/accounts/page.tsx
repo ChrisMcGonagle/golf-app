@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useLayoutEffect, useRef, useState } from 'react';
 
 type AccountFilter = 'All' | 'Admin' | 'Staff' | 'Competitions' | 'Handicapping' | 'Course' | 'Teams';
@@ -448,9 +449,13 @@ export default function AccountsPage() {
                 <td className="px-4 py-4 text-sm text-gray-600">
                   <div className="flex min-w-0 items-center gap-3">
                     {account.avatarUrl ? (
-                      <img
+                      <Image
                         src={account.avatarUrl}
                         alt=""
+                        unoptimized
+                        width={32}
+                        height={32}
+                        sizes="32px"
                         className="h-8 w-8 rounded-full object-cover"
                       />
                     ) : (
