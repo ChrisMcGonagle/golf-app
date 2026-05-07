@@ -5,7 +5,7 @@ export default async function MembersPage() {
   const members = await getMembers();
 
   return (
-    <div>
+    <div className="flex min-h-0 flex-1 flex-col">
       <MembersTableClient members={members} />
     </div>
   );

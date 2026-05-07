@@ -79,8 +79,8 @@ export function MembersTableClient({ members }: { members: MemberForDisplay[] })
   });
 
   return (
-    <>
-      <div className="mb-6 space-y-4">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="mb-6 shrink-0 space-y-4">
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-bold text-gray-900">Members</h1>
           <span className="inline-flex items-center gap-3 text-sm font-medium text-gray-500">
@@ -90,7 +90,7 @@ export function MembersTableClient({ members }: { members: MemberForDisplay[] })
         </div>
       </div>
 
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+      <div className="mb-6 shrink-0 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <input
           type="search"
           aria-label="Search members"
@@ -149,8 +149,10 @@ export function MembersTableClient({ members }: { members: MemberForDisplay[] })
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-gray-200">
-        <table className="w-[912px] min-w-[912px] table-fixed divide-y divide-gray-200" aria-label="Members table">
+      <div className="min-h-0 flex-1 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-200">
+        <div className="h-full overflow-y-auto">
+          <div className="overflow-x-auto">
+            <table className="w-[912px] min-w-[912px] table-fixed divide-y divide-gray-200" aria-label="Members table">
           <colgroup>
             <col className="w-28" />
             <col className="w-48" />
@@ -316,9 +318,10 @@ export function MembersTableClient({ members }: { members: MemberForDisplay[] })
               ))
             )}
           </tbody>
-        </table>
+            </table>
+          </div>
+        </div>
       </div>
-
       {statusDialog ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/45 px-4">
           <div
@@ -444,6 +447,6 @@ export function MembersTableClient({ members }: { members: MemberForDisplay[] })
           </div>
         </div>
       ) : null}
-    </>
+    </div>
   );
 }
