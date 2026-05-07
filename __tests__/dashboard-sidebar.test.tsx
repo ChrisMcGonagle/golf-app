@@ -83,9 +83,9 @@ describe('DashboardSidebar', () => {
       const membershipButton = screen.getByRole('button', { name: /membership/i });
       fireEvent.click(membershipButton);
       
-      const pendingLink = screen.getByRole('link', { name: /pending/i });
+      const requestsLink = screen.getByRole('link', { name: /requests/i });
       const memberListLink = screen.getByRole('link', { name: /member list/i });
-      expect(pendingLink).toBeInTheDocument();
+      expect(requestsLink).toBeInTheDocument();
       expect(memberListLink).toBeInTheDocument();
     });
 
@@ -94,9 +94,9 @@ describe('DashboardSidebar', () => {
       render(<DashboardSidebar />);
       
       // Membership submenu should be collapsed by default
-      const pendingLink = screen.queryByRole('link', { name: /pending/i });
+      const requestsLink = screen.queryByRole('link', { name: /requests/i });
       const memberListLink = screen.queryByRole('link', { name: /member list/i });
-      expect(pendingLink).not.toBeInTheDocument();
+      expect(requestsLink).not.toBeInTheDocument();
       expect(memberListLink).not.toBeInTheDocument();
     });
   });
@@ -127,14 +127,12 @@ describe('DashboardSidebar', () => {
       expect(dashboardLink).not.toHaveClass('font-semibold');
     });
 
-    it('should apply active styling to Pending link when on /dashboard/submissions', () => {
-      mockUsePathname.mockReturnValue('/dashboard/submissions');
-      const { container } = render(<DashboardSidebar />);
+    it('should apply active styling to Requests link when on /dashboard/requests', () => {
+      mockUsePathname.mockReturnValue('/dashboard/requests');
+      render(<DashboardSidebar />);
       // Membership should auto-expand if we're on a submenu route
-      const membershipButton = screen.getByRole('button', { name: /membership/i });
-      // Since Pending is active, membership should be expanded
-      const pendingLink = screen.getByRole('link', { name: /pending/i });
-      expect(pendingLink).toHaveClass('bg-gray-100', 'font-semibold');
+      const requestsLink = screen.getByRole('link', { name: /requests/i });
+      expect(requestsLink).toHaveClass('bg-gray-100', 'font-semibold');
     });
 
     it('should apply active styling to Member List link when on /dashboard/members', () => {
@@ -153,26 +151,26 @@ describe('DashboardSidebar', () => {
       const membershipButton = screen.getByRole('button', { name: /membership/i });
 
       // Initially collapsed
-      expect(screen.queryByRole('link', { name: /pending/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /requests/i })).not.toBeInTheDocument();
 
       // Click to expand
       fireEvent.click(membershipButton);
-      expect(screen.getByRole('link', { name: /pending/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /requests/i })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: /member list/i })).toBeInTheDocument();
 
       // Click to collapse
       fireEvent.click(membershipButton);
-      expect(screen.queryByRole('link', { name: /pending/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /requests/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('link', { name: /member list/i })).not.toBeInTheDocument();
     });
 
-    it('should have correct href for Pending link', () => {
+    it('should have correct href for Requests link', () => {
       mockUsePathname.mockReturnValue('/dashboard');
       render(<DashboardSidebar />);
       const membershipButton = screen.getByRole('button', { name: /membership/i });
       fireEvent.click(membershipButton);
-      const pendingLink = screen.getByRole('link', { name: /pending/i });
-      expect(pendingLink.getAttribute('href')).toBe('/dashboard/submissions');
+      const requestsLink = screen.getByRole('link', { name: /requests/i });
+      expect(requestsLink.getAttribute('href')).toBe('/dashboard/requests');
     });
 
     it('should have correct href for Member List link', () => {

@@ -60,16 +60,16 @@ export default function DashboardSidebar() {
 
   // Auto-expand membership menu if on a submenu route
   useEffect(() => {
-    if (pathname === "/dashboard/members" || pathname === "/dashboard/submissions") {
+    if (pathname === "/dashboard/members" || pathname === "/dashboard/requests") {
       setMembershipOpen(true);
     }
   }, [pathname]);
 
   const isNavActive = (href: string) => pathname === href;
-  const isSubmenuActive = isNavActive("/dashboard/members") || isNavActive("/dashboard/submissions");
+  const isSubmenuActive = isNavActive("/dashboard/members") || isNavActive("/dashboard/requests");
   const isDashboardActive = isNavActive("/dashboard");
   const isAccountsActive = isNavActive("/dashboard/accounts");
-  const isPendingActive = isNavActive("/dashboard/submissions");
+  const isRequestsActive = isNavActive("/dashboard/requests");
   const isMemberListActive = isNavActive("/dashboard/members");
 
   const handleMembershipClick = () => {
@@ -153,19 +153,19 @@ export default function DashboardSidebar() {
               {/* Vertical line container */}
               <div className="absolute w-0 border-l-2 border-[#e5e7eb]" style={{ left: '-6px', top: '0', bottom: '0', height: 'calc(100% - 8px)' }}></div>
               
-              {/* Pending item with horizontal branch */}
+              {/* Requests item with horizontal branch */}
               <div className="relative pl-5">
                 <span className="absolute left-0 top-1/2 w-3 h-px -translate-y-1/2 bg-[#e5e7eb]"></span>
                 <Link
-                  href="/dashboard/submissions"
+                  href="/dashboard/requests"
                   className={`relative flex items-center px-4 py-1.5 rounded text-sm transition-colors duration-200 ${
-                    isPendingActive
+                    isRequestsActive
                       ? "bg-gray-100 text-[#2b2b2b] font-semibold"
                       : "text-[#2b2b2b] hover:bg-gray-50"
                   }`}
                 >
-                  {isPendingActive && <span aria-hidden="true" className="absolute left-0 top-1/2 h-[50%] w-[2px] -translate-y-1/2 rounded-full bg-[#000000]" />}
-                  Pending
+                  {isRequestsActive && <span aria-hidden="true" className="absolute left-0 top-1/2 h-[50%] w-[2px] -translate-y-1/2 rounded-full bg-[#000000]" />}
+                  Requests
                 </Link>
               </div>
 

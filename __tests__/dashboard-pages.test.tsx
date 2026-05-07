@@ -1,17 +1,20 @@
 /**
  * Tests for Dashboard Pages (PBI-005)
  *
- * Covers: rendering of dashboard main page, submissions page, and members page.
+ * Covers: rendering of dashboard main page, requests page, and members page.
  */
 
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { within } from '@testing-library/dom';
 import DashboardPage from '@/app/(authenticated)/dashboard/(with-sidebar)/page';
-import SubmissionsPage from '@/app/(authenticated)/dashboard/(with-sidebar)/submissions/page';
+import RequestsPage from '@/app/(authenticated)/dashboard/(with-sidebar)/requests/page';
 import AccountsPage from '@/app/(authenticated)/dashboard/(with-sidebar)/accounts/page';
 import { MembersTableClient } from '@/app/(authenticated)/dashboard/(with-sidebar)/members/MembersTableClient';
 import type { MemberForDisplay } from '@/lib/actions/getMembers';
+
+const currentYear = String(new Date().getFullYear());
+const previousYear = String(new Date().getFullYear() - 1);
 
 describe('DashboardPage', () => {
   describe('rendering', () => {
@@ -101,42 +104,251 @@ describe('DashboardPage', () => {
   });
 });
 
-describe('SubmissionsPage', () => {
+describe('RequestsPage', () => {
   describe('rendering', () => {
-    it('should render a heading with "Submissions" title', () => {
-      render(<SubmissionsPage />);
-      expect(screen.getByRole('heading', { level: 1, name: /submissions/i })).toBeInTheDocument();
+    it('should render a heading with "Requests" title', () => {
+      render(<RequestsPage />);
+      expect(screen.getByRole('heading', { level: 1, name: /requests/i })).toBeInTheDocument();
     });
 
-    it('should render placeholder text', () => {
-      render(<SubmissionsPage />);
-      expect(screen.getByText(/submissions content coming soon/i)).toBeInTheDocument();
+    it('should render the search input with the expected placeholder and name', () => {
+      render(<RequestsPage />);
+      expect(screen.getByRole('searchbox', { name: /search requests/i })).toHaveAttribute('placeholder', 'Search requests…');
     });
 
-    it('should have proper page structure', () => {
-      const { container } = render(<SubmissionsPage />);
-      const div = container.firstChild;
-      expect(div).toBeInTheDocument();
+    it('should default the Pending filter to active', () => {
+      render(<RequestsPage />);
+
+      const statusSelect = screen.getByRole('combobox', { name: /filter requests by status/i });
+      const statusOptions = within(statusSelect).getAllByRole('option').map((option) => option.textContent);
+
+      expect(statusOptions).toEqual(['All', 'Completed', 'In Progress', 'Pending']);
+      expect(statusSelect).toHaveValue('Pending');
+    });
+
+    it('should render the year select with the current year selected by default', () => {
+      render(<RequestsPage />);
+
+      expect(screen.getByRole('combobox', { name: /filter requests by year/i })).toHaveValue(currentYear);
+    });
+
+    it('should include previous years as selectable options when present in the data', () => {
+      render(<RequestsPage />);
+
+      const yearSelect = screen.getByRole('combobox', { name: /filter requests by year/i });
+      const yearOptions = within(yearSelect).getAllByRole('option').map((option) => option.textContent);
+
+      expect(yearOptions).toEqual([currentYear, previousYear]);
+    });
+  });
+
+  describe('filters', () => {
+    it('should change the visible rows when a different status filter is selected', () => {
+      render(<RequestsPage />);
+
+      const statusSelect = screen.getByRole('combobox', { name: /filter requests by status/i });
+
+      expect(screen.getByText('REQ-1001')).toBeInTheDocument();
+      expect(screen.queryByText('REQ-1002')).not.toBeInTheDocument();
+
+      fireEvent.change(statusSelect, { target: { value: 'All' } });
+
+      expect(screen.getByText('REQ-1001')).toBeInTheDocument();
+      expect(screen.getByText('REQ-1002')).toBeInTheDocument();
+
+      fireEvent.change(statusSelect, { target: { value: 'In Progress' } });
+
+      expect(screen.getByText('REQ-1002')).toBeInTheDocument();
+      expect(screen.queryByText('REQ-1001')).not.toBeInTheDocument();
+
+      fireEvent.change(statusSelect, { target: { value: 'Completed' } });
+
+      expect(screen.getByText('REQ-1003')).toBeInTheDocument();
+      expect(screen.queryByText('REQ-1002')).not.toBeInTheDocument();
+    });
+
+    it('should filter rows by request, id, and requester search terms', () => {
+      render(<RequestsPage />);
+
+      const searchInput = screen.getByRole('searchbox', { name: /search requests/i });
+
+      fireEvent.change(searchInput, { target: { value: 'overseas life' } });
+      expect(screen.getByText('REQ-1004')).toBeInTheDocument();
+      expect(screen.queryByText('REQ-1001')).not.toBeInTheDocument();
+
+      fireEvent.change(searchInput, { target: { value: 'REQ-1001' } });
+      expect(screen.getByText('REQ-1001')).toBeInTheDocument();
+      expect(screen.queryByText('REQ-1004')).not.toBeInTheDocument();
+
+      fireEvent.change(searchInput, { target: { value: 'Aisling' } });
+      expect(screen.getByText('REQ-1001')).toBeInTheDocument();
+      expect(screen.queryByText('REQ-1004')).not.toBeInTheDocument();
+    });
+
+    it('should show the simplified empty state without a heading count badge when no rows match', () => {
+      render(<RequestsPage />);
+
+      const searchInput = screen.getByRole('searchbox', { name: /search requests/i });
+
+      fireEvent.change(searchInput, { target: { value: 'not-a-request' } });
+
+      expect(screen.getByText('No requests found.')).toBeInTheDocument();
+      expect(screen.getByText('0 of 0 requests')).toBeInTheDocument();
+      expect(screen.queryByText(/^1$/)).not.toBeInTheDocument();
+    });
+
+    it('should filter visible rows by the selected submitted year', () => {
+      render(<RequestsPage />);
+
+      fireEvent.change(screen.getByRole('combobox', { name: /filter requests by status/i }), {
+        target: { value: 'Completed' },
+      });
+      fireEvent.change(screen.getByRole('combobox', { name: /filter requests by year/i }), {
+        target: { value: previousYear },
+      });
+
+      expect(screen.getByText('REQ-1009')).toBeInTheDocument();
+      expect(screen.queryByText('REQ-1003')).not.toBeInTheDocument();
+      expect(screen.queryByText('No requests found.')).not.toBeInTheDocument();
+
+      fireEvent.change(screen.getByRole('combobox', { name: /filter requests by year/i }), {
+        target: { value: currentYear },
+      });
+
+      expect(screen.getByText('REQ-1003')).toBeInTheDocument();
+      expect(screen.queryByText('REQ-1009')).not.toBeInTheDocument();
+    });
+
+    it('should render a footer count and pagination controls for the requests table', () => {
+      render(<RequestsPage />);
+
+      expect(screen.getByText('5 of 6 requests')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+      expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Next' })).toBeEnabled();
+    });
+
+    it('should change visible rows when moving between pagination pages and reset to page one on search', () => {
+      render(<RequestsPage />);
+
+      expect(screen.getByText('REQ-1006')).toBeInTheDocument();
+      expect(screen.queryByText('REQ-1008')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+
+      expect(screen.getByText('REQ-1008')).toBeInTheDocument();
+      expect(screen.queryByText('REQ-1006')).not.toBeInTheDocument();
+      expect(screen.getByText('1 of 6 requests')).toBeInTheDocument();
+      expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Previous' })).toBeEnabled();
+      expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+
+      fireEvent.change(screen.getByRole('searchbox', { name: /search requests/i }), {
+        target: { value: 'REQ-1008' },
+      });
+
+      expect(screen.getByText('REQ-1008')).toBeInTheDocument();
+      expect(screen.getByText('1 of 1 requests')).toBeInTheDocument();
+      expect(screen.getByText('Page 1 of 1')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+    });
+
+    it('should reset pagination back to page one when the year changes', () => {
+      render(<RequestsPage />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+
+      expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
+      expect(screen.getByText('REQ-1008')).toBeInTheDocument();
+
+      fireEvent.change(screen.getByRole('combobox', { name: /filter requests by year/i }), {
+        target: { value: previousYear },
+      });
+
+      expect(screen.getByText('Page 1 of 1')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+      expect(screen.queryByText('REQ-1008')).not.toBeInTheDocument();
     });
   });
 
   describe('styling', () => {
     it('should render heading with correct size and color', () => {
-      render(<SubmissionsPage />);
-      const heading = screen.getByRole('heading', { level: 1, name: /submissions/i });
+      render(<RequestsPage />);
+      const heading = screen.getByRole('heading', { level: 1, name: /requests/i });
       expect(heading).toHaveClass('text-3xl', 'font-bold', 'text-gray-900');
     });
 
-    it('should have placeholder text in gray color', () => {
-      render(<SubmissionsPage />);
-      const placeholder = screen.getByText(/submissions content coming soon/i);
-      expect(placeholder).toHaveClass('text-gray-600');
+    it('should render the requests table columns', () => {
+      render(<RequestsPage />);
+      const table = screen.getByRole('table', { name: 'Requests table' });
+      const columnHeaders = within(table)
+        .getAllByRole('columnheader')
+        .map((header) => header.textContent?.trim());
+
+      expect(columnHeaders).toEqual([
+        'ID',
+        'Request',
+        'Requester',
+        'Intent',
+        'Submitted Date',
+        'Status',
+        'STEP',
+      ]);
     });
 
-    it('should have spacing between heading and text', () => {
-      render(<SubmissionsPage />);
-      const heading = screen.getByRole('heading', { level: 1, name: /submissions/i });
-      expect(heading).toHaveClass('mb-4');
+    it('should render the request intent with a source icon for a sample row', () => {
+      render(<RequestsPage />);
+
+      const sampleRow = screen.getByText('REQ-1001').closest('tr');
+
+      expect(sampleRow).not.toBeNull();
+
+      const intentCell = within(sampleRow as HTMLTableRowElement).getByLabelText('New intent via form');
+
+      expect(intentCell).toHaveTextContent('New');
+      expect(intentCell.querySelector('svg')).not.toBeNull();
+    });
+
+    it('should allow the header checkbox to select all visible request rows', () => {
+      render(<RequestsPage />);
+      const table = screen.getByRole('table', { name: 'Requests table' });
+      const headerCheckbox = within(table).getByRole('checkbox', {
+        name: /select all visible requests/i,
+      });
+      const rowCheckboxes = within(table).getAllByRole('checkbox', {
+        name: /select request req-/i,
+      });
+
+      fireEvent.click(headerCheckbox);
+
+      expect(headerCheckbox).toBeChecked();
+      rowCheckboxes.forEach((checkbox) => {
+        expect(checkbox).toBeChecked();
+      });
+    });
+
+    it('should only show the selection drawer after a request row is selected', () => {
+      render(<RequestsPage />);
+
+      expect(screen.queryByText('1 of 6 selected')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Complete' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'More Actions' })).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('checkbox', { name: /select request req-1001/i }));
+
+      expect(screen.getByText('1 of 6 selected')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Complete' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'More Actions' })).toBeInTheDocument();
+    });
+
+    it('should open a payload dialog for a request row without leaving the table', () => {
+      render(<RequestsPage />);
+
+      fireEvent.click(screen.getByRole('button', { name: /view payload for req-1001/i }));
+
+      expect(screen.getByRole('dialog', { name: /payload for req-1001/i })).toBeInTheDocument();
+      expect(screen.getByText('aisling.murphy@example.com')).toBeInTheDocument();
+      expect(screen.getByText('Elm Park Golf Club')).toBeInTheDocument();
     });
   });
 });

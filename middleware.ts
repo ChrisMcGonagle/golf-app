@@ -56,8 +56,8 @@ export async function middleware(request: NextRequest) {
 
     const isAdminOnlyRoute =
       pathname === '/dashboard' ||
-      pathname === '/dashboard/submissions' ||
-      pathname.startsWith('/dashboard/submissions/') ||
+      pathname === '/dashboard/requests' ||
+      pathname.startsWith('/dashboard/requests/') ||
       pathname === '/dashboard/members' ||
       pathname.startsWith('/dashboard/members/')
 
