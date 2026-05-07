@@ -108,7 +108,7 @@ export default function MembershipSuccessSummary({
         <Link
           href="/dashboard/membership-registration"
           aria-label="Close success page"
-          className="absolute left-4 top-4 z-30 inline-flex h-8 w-8 items-center justify-center text-base font-medium leading-none text-[#5f6a60] transition-colors hover:text-[#2b2b2b] focus:outline-none focus:ring-2 focus:ring-[#5f6a60]/30 sm:left-6 sm:top-6"
+          className="fixed left-4 top-4 z-30 inline-flex h-8 w-8 items-center justify-center text-base font-medium leading-none text-[#5f6a60] transition-colors hover:text-[#2b2b2b] focus:outline-none focus:ring-2 focus:ring-[#5f6a60]/30 sm:left-6 sm:top-6"
         >
           X
         </Link>

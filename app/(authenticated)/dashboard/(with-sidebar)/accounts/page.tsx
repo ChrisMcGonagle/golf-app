@@ -181,10 +181,10 @@ function AccountPermissionsInline({ permissions, accountName }: AccountPermissio
   const hiddenCount = permissions.length - visibleCount;
 
   return (
-    <div className="relative">
-      <div ref={containerRef} className="flex items-center overflow-hidden whitespace-nowrap">
+    <div className="relative w-full min-w-0">
+      <div ref={containerRef} className="flex min-w-0 items-center overflow-hidden whitespace-nowrap">
         {visibleCount > 0 ? (
-          <div className="flex items-center gap-1 overflow-hidden">
+          <div className="flex min-w-0 items-center gap-1 overflow-hidden">
             {permissions.slice(0, visibleCount).map((permission) => (
               <span key={permission} className={permissionChipClassName}>
                 {permission}
@@ -346,8 +346,8 @@ export default function AccountsPage() {
   }
 
   return (
-    <div>
-      <div className="mb-3">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="mb-3 shrink-0">
         <h1 className="text-3xl font-bold text-gray-900">Accounts</h1>
 
         <div className="mt-4 border-b border-gray-200">
@@ -376,7 +376,7 @@ export default function AccountsPage() {
           </div>
         </div>
 
-        <div className="mt-2 flex items-center justify-between">
+        <div className="mt-2 flex items-center justify-between gap-4">
           <p className="text-md font-semibold text-gray-900">{selectedFilterHelperText}</p>
           <button
             type="button"
@@ -401,7 +401,7 @@ export default function AccountsPage() {
         </div>
       </div>
 
-      <div className="rounded-xl bg-white shadow-sm ring-1 ring-gray-200">
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-200">
         <table
           className="w-full table-fixed divide-y divide-gray-200"
           aria-label="Accounts table"
@@ -446,7 +446,7 @@ export default function AccountsPage() {
             {filteredAccounts.map((account) => (
               <tr key={account.id} className="transition hover:bg-gray-50">
                 <td className="px-4 py-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
                     {account.avatarUrl ? (
                       <img
                         src={account.avatarUrl}
@@ -454,14 +454,14 @@ export default function AccountsPage() {
                         className="h-8 w-8 rounded-full object-cover"
                       />
                     ) : (
-                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-700">
+                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-700">
                         {getAccountInitials(account.name)}
                       </span>
                     )}
-                    <span>{account.name}</span>
+                    <span className="truncate">{account.name}</span>
                   </div>
                 </td>
-                <td className="px-4 py-4 text-sm text-gray-600">{account.email}</td>
+                <td className="px-4 py-4 text-sm text-gray-600 [overflow-wrap:anywhere]">{account.email}</td>
                 <td className="px-4 py-4 text-sm text-gray-600">{account.phoneNumber}</td>
                 <td className="px-4 py-4 text-sm">
                   <span
@@ -483,14 +483,14 @@ export default function AccountsPage() {
                   </span>
                 </td>
                 <td className="px-4 py-4 text-sm text-gray-600">{account.role}</td>
-                <td className="px-4 py-4">
+                <td className="min-w-0 px-4 py-4">
                   <AccountPermissionsInline
                     permissions={account.permissions}
                     accountName={account.name}
                   />
                 </td>
-                <td className="px-4 py-4 text-sm text-gray-600 text-right">
-                  <div className="flex items-center justify-end gap-1">
+                <td className="px-4 py-4 text-right text-sm text-gray-600">
+                  <div className="flex items-center justify-end gap-1 whitespace-nowrap">
                     <button
                       type="button"
                       aria-label={`Edit ${account.name}`}
