@@ -1177,7 +1177,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-033: Accounts Page UI — Accounts Table
 
-- **Status:** TESTING
+- **Status:** DONE
 - **Goal:** Add a UI table to the accounts page with a clean, modern presentation that matches the current dashboard table refresh work.
 - **Scope:**
   - Add an accounts table to the accounts page
@@ -1275,7 +1275,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-036: HICKORY Branding Overhaul And Repository Rename Sweep
 
-- **Status:** DEV_DONE
+- **Status:** DONE
 - **Goal:** Replace the current Baffy/Baffie brand identity with HICKORY across the app and repository, delivering production-ready core brand assets and removing obsolete brand-specific files without breaking existing product behaviour.
 - **Scope:**
   - Rename tracked files whose filenames contain `baffy` or `baffie` to `hickory`
@@ -1310,7 +1310,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-037: Requests Management Page
 
-- **Status:** READY
+- **Status:** TESTING
 - **Goal:** Replace the current `Pending` dashboard menu/page with a real `Requests` management screen that follows existing dashboard patterns and gives admins clear, searchable request status tracking.
 - **Scope:**
   - Rename the existing `Pending` dashboard menu item and page surface to `Requests`

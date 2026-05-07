@@ -88,6 +88,37 @@ function formatMemberDisplayName(record: MemberRow): string {
   return lastName || firstName;
 }
 
+function buildMemberDisplayId(record: MemberRow): string {
+  const recordId = getMemberValue<string | number | null>(record, 'id');
+  const normalizedRecordId = recordId == null ? '' : String(recordId).trim();
+
+  if (normalizedRecordId) {
+    return normalizedRecordId;
+  }
+
+  const memberNumber = getMemberValue<string | number | null>(record, 'member_number');
+  const normalizedMemberNumber = memberNumber == null ? '' : String(memberNumber).trim();
+
+  if (normalizedMemberNumber) {
+    return `member-number:${normalizedMemberNumber}`;
+  }
+
+  const fallbackParts = [
+    getMemberValue<string | null>(record, 'first_name'),
+    getMemberValue<string | null>(record, 'last_name'),
+    getMemberValue<string | null>(record, 'email'),
+    getMemberValue<string | null>(record, 'mobile_phone'),
+  ]
+    .map((value) => value?.trim().toLowerCase() || '')
+    .filter(Boolean);
+
+  if (fallbackParts.length > 0) {
+    return `member:${fallbackParts.join('|')}`;
+  }
+
+  return 'member:unknown';
+}
+
 export async function getMembers(): Promise<MemberForDisplay[]> {
   try {
     const supabase = createServiceRoleClient();
@@ -131,7 +162,7 @@ export async function getMembers(): Promise<MemberForDisplay[]> {
         !emergencyPhone;
 
       return {
-        id: getMemberValue<string>(record, 'id') || '',
+        id: buildMemberDisplayId(record),
         memberId,
         name: formatMemberDisplayName(record),
         email: getMemberValue<string | null>(record, 'email') || null,

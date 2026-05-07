@@ -93,4 +93,49 @@ describe('getMembers', () => {
       }),
     ]);
   });
+
+  it('builds a deterministic non-empty fallback id when the source row id is missing', async () => {
+    const orderByFirstName = jest.fn().mockResolvedValue({
+      data: [
+        {
+          id: '',
+          member_number: '0042',
+          first_name: 'Ava',
+          last_name: 'Murphy',
+          email: 'ava@example.com',
+          mobile_phone: '555-0100',
+          membership_type: 'Adult',
+          status: 'active',
+          renewal_date: null,
+          home_club: 'Baffie',
+          secondary_club: null,
+          emergency_contact_name: 'Tom Murphy',
+          emergency_contact_relationship: 'Parent',
+          emergency_phone_number: '999',
+          medical_conditions: null,
+          allergies: null,
+          medications: null,
+          additional_assistance: null,
+        },
+      ],
+      error: null,
+    });
+    const orderByLastName = jest.fn().mockReturnValue({
+      order: orderByFirstName,
+    });
+    const select = jest.fn().mockReturnValue({
+      order: orderByLastName,
+    });
+
+    mockCreateServiceRoleClient.mockReturnValue({
+      from: jest.fn().mockReturnValue({
+        select,
+      }),
+    } as never);
+
+    const members = await getMembers();
+
+    expect(members).toHaveLength(1);
+    expect(members[0]?.id).toBe('member-number:0042');
+  });
 });
