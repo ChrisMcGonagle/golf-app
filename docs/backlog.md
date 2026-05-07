@@ -1270,3 +1270,373 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 - **Systems Affected:** frontend
 - **Risk Level:** Low
 - **Estimated Effort:** S
+
+---
+
+## PBI-036: HICKORY Branding Overhaul And Repository Rename Sweep
+
+- **Status:** READY
+- **Goal:** Replace the current Baffy/Baffie brand identity with HICKORY across the app and repository, delivering production-ready core brand assets and removing obsolete brand-specific files without breaking existing product behaviour.
+- **Scope:**
+  - Rename tracked files whose filenames contain `baffy` or `baffie` to `hickory`
+  - Update imports, references, asset paths, and tests required by those file renames
+  - Remove superseded brand-specific files once replacements exist and no active references remain
+  - Create a reusable HICKORY wordmark asset for the app name using Cormorant Garamond SemiBold, or Medium if that gives better balance
+  - Set the wordmark to all caps `HICKORY` with `0.18em` letter spacing
+  - Keep the wordmark minimal and timeless with no shadows, gradients, effects, or background
+  - Use wordmark colour `#1E2A26`
+  - Create a separate vintage hickory golf club head icon in a minimal engraved style
+  - Use warm metallic icon colour `#B08D57` or `#8C6A43`
+  - Deliver horizontal and vertical lockups with `12px` to `18px` spacing between icon and wordmark
+  - Replace existing in-app Baffy/Baffie brand surfaces with the approved HICKORY assets
+  - Ensure the new branding remains readable on both light and dark UI backgrounds
+- **Out of Scope:** Net-new product flows, unrelated layout redesign, non-brand copy rewrite beyond direct brand references, marketing-site work, or print collateral
+- **Acceptance Criteria:**
+  - No tracked runtime file names in the repo contain `baffy` or `baffie` after the rename sweep
+  - All imports and references affected by renamed files are updated and the touched app areas still run as expected
+  - Obsolete brand-specific files replaced by HICKORY assets are removed from active use and deleted when no longer needed
+  - A production-ready HICKORY wordmark asset exists and matches the required spec: all caps, Cormorant Garamond SemiBold or Medium, `0.18em` letter spacing, minimal/timeless styling, no shadows/gradients/effects/background, colour `#1E2A26`
+  - A separate vintage hickory golf club head icon asset exists in a minimal engraved style using either `#B08D57` or `#8C6A43`
+  - Horizontal and vertical lockups exist with `12px` to `18px` spacing and are ready for app use
+  - Existing app brand surfaces no longer show Baffy or Baffie and instead show HICKORY using the new approved assets
+  - The delivered wordmark remains legible on both light and dark UI backgrounds
+- **Dependencies:** None
+- **Systems Affected:** frontend, backend, tests
+- **Risk Level:** Medium
+- **Estimated Effort:** M
+
+---
+
+## PBI-037: Requests Management Page
+
+- **Status:** READY
+- **Goal:** Replace the current `Pending` dashboard menu/page with a real `Requests` management screen that follows existing dashboard patterns and gives admins clear, searchable request status tracking.
+- **Scope:**
+  - Rename the existing `Pending` dashboard menu item and page surface to `Requests`
+  - Update the route from `/dashboard/submissions` to `/dashboard/requests` and update all internal references
+  - Replace the current placeholder submissions/pending page with a real Requests management page
+  - Follow existing dashboard layout and table patterns where practical
+  - Add a top row with:
+    - a left-aligned search input with placeholder `Search requests…`
+    - a right-aligned segmented 3-button filter: `Pending`, `In Progress`, `Completed`
+  - Keep exactly one filter active at a time, with the active button highlighted and inactive buttons muted/outlined
+  - Add a table with columns exactly:
+    - `ID`
+    - `Request`
+    - `Creation Date & Time`
+    - `Submitted Date & Time`
+    - `Requester`
+    - `Membership Status`
+    - `Progress` (or blank header for the steps column)
+    - `Status`
+  - Add rounded status chips using:
+    - `Pending` = yellow
+    - `In Progress` = blue
+    - `Completed` = green
+  - Add horizontally grouped step chips labeled `1`, `2`, `3`, sized to allow an optional small icon
+  - Support step-chip states:
+    - completed/active = green
+    - in progress = blue
+    - pending = yellow
+    - failed = red
+  - Support an optional warning/error icon in the failed step state
+  - Add tooltips to each step chip (1, 2, 3) with integration names:
+    - Step 1: 'Golf Ireland'
+    - Step 2: 'BRS'
+    - Step 3: 'ClubV1'
+  - Use the same tooltip style as other dashboard pages
+  - Implement filtering by the active status button
+  - Implement search across `Request`, `ID`, and `Requester`
+  - Keep the design clean and admin-focused with minimal borders, soft row separation, consistent spacing/alignment, prominent rounded chips, and responsive small-screen handling
+- **Out of Scope:** New request-submission flows, edits to the membership form itself, new provisioning business logic, bulk actions, sorting, pagination, export, or unrelated dashboard redesign
+- **Acceptance Criteria:**
+  - The dashboard no longer shows `Pending`; it shows `Requests`
+  - The page title is `Requests`
+  - The old placeholder page is replaced by a real admin-style requests table screen
+  - The top row renders a search input with placeholder `Search requests…` and a segmented filter with `Pending` active by default
+  - Only one filter can be active at a time
+  - Clicking `Pending`, `In Progress`, or `Completed` filters the visible rows accordingly
+  - The table columns are exactly `ID`, `Request`, `Creation Date & Time`, `Submitted Date & Time`, `Requester`, `Membership Status`, `Progress` (or blank), and `Status`
+  - Each row renders a rounded status chip using the specified colour mapping
+  - Each row renders three horizontally grouped step chips labeled `1`, `2`, and `3`, with the specified visual states and optional failed-state warning/error icon support
+  - Each step chip (1, 2, 3) displays a tooltip showing the corresponding integration name (Golf Ireland, BRS, ClubV1 respectively)
+  - Search filters rows by matches in `Request`, `ID`, or `Requester`
+  - The page remains usable on smaller screens via horizontal scrolling or an equivalent responsive treatment
+  - The final UI is consistent with the current dashboard look and feels like a clean SaaS admin table page
+- **Dependencies:** PBI-028 (Dashboard sidebar redesign — DONE), PBI-029 (Save membership form submission to database — DONE), PBI-030 (Membership form submission UX states — DONE)
+- **Systems Affected:** frontend, backend
+- **Risk Level:** Medium
+- **Estimated Effort:** M
+
+---
+
+## PBI-038: Requests Workflow Backend — Data Model & Form Wiring
+
+- **Status:** READY
+- **Goal:** Establish the backend data model and data wiring for the Requests management workflow, replacing "Pending" terminology with "Requests", connecting form submissions to a membership_requests table, and enabling the requests management page (PBI-037) to read live request and provisioning-step data.
+- **Scope:**
+  - **Rename & Module Update:** Rename all backend terminology, variable names, function names, and internal references from `pending` or `submissions` to `requests`. Update any existing backend utilities, helpers, services, or constants that reference the old terminology.
+  - **Form Submission Update:** Update the membership form completion flow (PBI-030) to write submissions to a `membership_requests` table (or equivalent live requests data source) instead of the existing `membership_pending` table or any placeholder. Ensure form submission payloads are persisted with a `request_id` or equivalent unique identifier. Capture and store the authenticated operator (staff/admin user) who submitted the form as part of the request record.
+  - **Data Model / Backend Structure:** Create or update the `membership_requests` table with: `id` (uuid, PK, default gen_random_uuid()); `payload` (jsonb, not null) — full membership form JSON payload; `request_type` (text, not null) — e.g. `'new_member'` or `'renewal'`; `operator_id` (uuid, not null, FK → profiles.id) — authenticated operator who submitted; `requester_name` (text, not null) — derived from payload; `requester_email` (text, not null) — derived from payload; `status` (text, not null, default `'pending'`, CHECK IN ('pending', 'in_progress', 'completed')) — overall request status; `golfireland_account` (text, not null, default `'pending'`) — Golf Ireland step status; `brs_account` (text, not null, default `'pending'`) — BRS step status; `clubv1_account` (text, not null, default `'pending'`) — ClubV1 step status; `membership_status` (text, not null) — derived from payload; `submitted_at` (timestamptz, not null, default now()); `created_at` (timestamptz, not null, default now()); `updated_at` (timestamptz, not null, default now()). Enable RLS with service-role-only access. Add an `updated_at` trigger.
+  - **Table Data Wiring:** Create a server-side data-fetching function (Server Action or API route) that queries the `membership_requests` table using the service role, accepts optional `status` filter (Pending, In Progress, Completed), accepts optional `search` parameter to filter by `requester_name`, `id`, or `operator_id`, returns all required fields for the Requests page table, and orders results by `created_at DESC`. Limit to authenticated admin users only.
+  - **Status Logic Mapping:** Define a mapping from provisioning-step states (`pending`, `in_progress`, `completed`, `failed`) to visual states (yellow, blue, green, red respectively) and from the request overall `status` field to the Requests page status chip. Add a computed field or helper function that derives the request's overall status from its provisioning steps if needed.
+  - **UI Integration Requirements:** Ensure the data-fetching function returns fields in a format that PBI-037 (Requests page) can directly use. Support null/undefined handling. Provide timestamp formatting that the Requests page can display as "Creation Date & Time" and "Submitted Date & Time". Ensure the operator lookup is efficient and does not introduce N+1 queries.
+- **Out of Scope:** Any UI redesign or routing changes related to the Requests page (handled by PBI-037), account provisioning workflows or automation, new write paths for updating request statuses or provisioning states, bulk actions, exporting, or advanced admin workflows on requests, membership form redesign or new form fields
+- **Acceptance Criteria:**
+  - The `membership_requests` table exists with the defined schema and constraints
+  - Form submission (PBI-030) writes to the `membership_requests` table with all required fields populated
+  - The operator (authenticated staff/admin user) is correctly captured and stored in `operator_id`
+  - A server-side data-fetching function exists that queries the `membership_requests` table with optional `status` and `search` filters, returns all fields required by the Requests page, filters by `status` correctly, filters by search query across `requester_name`, `id`, and operator info, orders results by creation date (most recent first), and enforces authentication/authorization for admin users only
+  - Status and step-state mappings are defined and implemented correctly
+  - All rows retrieved from the membership_requests table can be displayed by the Requests page without additional data transformation
+  - Existing form submission tests continue to pass with the new `membership_requests` table destination
+  - No N+1 query problems when fetching requests with operator data
+- **Dependencies:** PBI-029 (Save membership form submission to database — DONE), PBI-030 (Membership form submission UX states — DONE), PBI-025 (Membership form operator attribution — DONE), PBI-037 (Requests Management Page UI — READY)
+- **Systems Affected:** backend, supabase
+- **Risk Level:** Medium
+- **Estimated Effort:** M
+- **Note:** Supabase Specialist Required for schema creation, RLS policies, and timestamp trigger. Coder required for form wiring, data-fetching function, and status mapping logic.
+
+---
+
+## PBI-039: Requests Sidebar Pending Count Badge
+
+- **Status:** READY
+- **Goal:** Add a small pending-count badge to the Requests sidebar menu item so admins can immediately see when there are outstanding pending requests without opening the Requests page.
+- **Scope:**
+  - Add a small circular number chip/badge to the `Requests` dashboard sidebar menu item
+  - Show no badge when the number of pending requests is `0`
+  - Show the badge only when the number of pending requests is greater than `0`
+  - Drive the badge from the live pending request count sourced from `membership_requests`
+  - Keep the badge styling consistent with the current dashboard/sidebar visual language
+  - Ensure the badge remains readable at small sizes and handles multi-digit counts gracefully
+  - Update the sidebar data wiring needed to fetch and render the pending request count efficiently
+- **Out of Scope:** Changes to Requests table behaviour, request processing logic, queue/worker logic, or broader sidebar redesign
+- **Acceptance Criteria:**
+  - The `Requests` sidebar item shows no badge when there are `0` pending requests
+  - The `Requests` sidebar item shows a small circular number badge when there is at least `1` pending request
+  - The badge count reflects the live number of pending requests from `membership_requests`
+  - The badge styling is visually consistent with the existing dashboard sidebar
+  - The badge remains legible for multi-digit counts
+- **Dependencies:** PBI-037 (Requests Management Page — READY), PBI-038 (Requests Workflow Backend — Data Model & Form Wiring — READY)
+- **Systems Affected:** frontend, backend
+- **Risk Level:** Low
+- **Estimated Effort:** S
+
+---
+
+## PBI-040: Queue Infrastructure & Request Auto-Enqueue
+
+- **Status:** READY
+- **Goal:** Establish a Supabase queue table with Row Level Security, an auto-trigger that enqueues membership requests when they are created, and a basic dequeue pattern for background workers.
+- **Scope:**
+  - Create a new Supabase table `integration_queue` with columns: `id` (uuid, PK, default gen_random_uuid()); `request_id` (uuid, not null, FK → membership_requests.id ON DELETE CASCADE); `status` (text, not null, CHECK IN ('pending', 'processing', 'completed', 'dead_letter'), default `'pending'`); `attempt_count` (int, not null, default 0); `max_attempts` (int, not null, default 5); `next_retry_at` (timestamptz, nullable); `last_error` (text, nullable); `last_error_at` (timestamptz, nullable); `locked_at` (timestamptz, nullable); `locked_by_worker` (text, nullable); `metadata` (jsonb, nullable); `created_at` (timestamptz, not null, default now()); `updated_at` (timestamptz, not null, default now()).
+  - Enable RLS on `integration_queue` with policies: service role can SELECT, INSERT, UPDATE, DELETE; anon key and client users cannot access.
+  - Create a Supabase trigger on `membership_requests` that automatically inserts a row into `integration_queue` when a new request is created with `status = 'pending'`, `attempt_count = 0`, `max_attempts = 5`.
+  - Add an `updated_at` trigger on `integration_queue` to update the timestamp on every write.
+  - Document the queue table schema and trigger in `/supabase/schema.sql`.
+  - Create a basic TypeScript helper function `lib/queue/dequeue.ts` that accepts `batch_size` parameter (default 10), queries pending queue entries with `status = 'pending'` and `(next_retry_at IS NULL OR next_retry_at <= now())`, locks each entry atomically, and returns locked entries with their associated request data.
+- **Out of Scope:** Worker service implementation, integration adapter logic, retry calculation or failure state transitions, audit logging, external queue services, worker authentication beyond service role
+- **Acceptance Criteria:**
+  - `integration_queue` table exists with all defined columns and constraints
+  - RLS is enabled and enforces service-role-only access
+  - Inserting a row into `membership_requests` automatically creates a corresponding row in `integration_queue`
+  - Auto-enqueued row has `status = 'pending'`, `attempt_count = 0`, `max_attempts = 5`
+  - `updated_at` trigger fires on insert and update
+  - Dequeue helper function exists at `lib/queue/dequeue.ts`
+  - `dequeue(batchSize)` returns pending queue entries with request data and sets `locked_at` and `locked_by_worker` atomically
+  - `dequeue()` respects `next_retry_at` — entries with future retry dates are not included
+  - Locked entries are not included in dequeue results until lock expires or is released
+  - Schema is fully documented in `/supabase/schema.sql`
+  - Tests verify trigger fires on membership_requests insert and dequeue returns locked entries
+- **Dependencies:** PBI-038 (membership_requests table exists)
+- **Systems Affected:** supabase, backend, tests
+- **Risk Level:** Medium
+- **Estimated Effort:** M
+- **Note:** Supabase Specialist Required for schema, triggers, and RLS. Coder required for dequeue helper and tests.
+
+---
+
+## PBI-041: Integration Adapter Framework
+
+- **Status:** READY
+- **Goal:** Define a pluggable adapter interface that all external integrations must implement, with contract for request input, success/failure output, and idempotency guarantees.
+- **Scope:**
+  - Create an abstract adapter interface in TypeScript (`lib/integrations/types.ts` or similar) that defines the contract all integrations must satisfy.
+  - Interface must include: `name` (string identifier, e.g. "golf_ireland"), `validate(request)` (validates input request payload), `execute(request, context)` (performs the integration action), `cleanup(context)` (optional teardown), and return type `{ success: boolean, externalId?: string, error?: string, metadata?: object }`.
+  - Define configuration pattern for storing adapter credentials, endpoints, and environment-specific settings securely.
+  - Document idempotency requirements: adapters must handle duplicate execution without creating duplicate external accounts.
+  - Create a factory function `createAdapterByName(name)` that instantiates the correct adapter based on configuration.
+  - Add TypeScript types for request context, logging, and error handling.
+- **Out of Scope:** Implementing specific adapters (e.g. Golf Ireland), worker service integration, credential management, external service APIs
+- **Acceptance Criteria:**
+  - Adapter interface exists with required methods and return types
+  - Interface documentation includes idempotency contract
+  - Factory function exists and returns correct adapter instance by name
+  - At least one example/mock adapter implementation exists for testing
+  - Types are exported and usable by all integration implementations
+  - Tests verify factory returns correct adapter and interface contract is enforced
+- **Dependencies:** PBI-040 (queue infrastructure)
+- **Systems Affected:** backend
+- **Risk Level:** Low
+- **Estimated Effort:** S
+
+---
+
+## PBI-042: Background Worker Service
+
+- **Status:** READY
+- **Goal:** Build a Node.js worker process that polls the queue, executes adapters for each request, and handles success and failure with single attempt per entry.
+- **Scope:**
+  - Create a worker service that runs continuously or as a scheduled job (e.g. every 5-10 seconds).
+  - Worker must poll `integration_queue` using the `dequeue()` helper from PBI-040.
+  - For each dequeued message: load the associated request payload from `membership_requests`, determine which adapter to use (based on request_type or configuration), instantiate the adapter from PBI-041, call `adapter.execute(request)`, and handle the response.
+  - On adapter success: write the returned `externalId` back to the `membership_requests` table, update the corresponding step status (e.g. `golfireland_account = 'completed'`), update queue entry to `status = 'completed'`, log success with externalId.
+  - On adapter failure: capture the error, take a screenshot if the adapter provides one, update queue entry with `last_error`, `last_error_at`, and `screenshot_path` (if applicable), mark queue entry as `status = 'failed'`. No retries — single attempt only.
+  - Add comprehensive structured logging for all steps: queue entry received, adapter started, adapter form fill, form submission, success/failure, screenshot capture (if applicable), worker completion. All logs must include event_type, adapter_name, external_id (if success), error_message, screenshot_path (if failure), and log_level.
+  - Implement graceful shutdown handling (finish in-flight requests, exit cleanly).
+  - Worker should run as a background service (PM2, systemd, or equivalent).
+- **Out of Scope:** Audit logging (PBI-045), specific adapter implementations (PBI-043+), credential management
+- **Acceptance Criteria:**
+  - Worker service exists and can be started via `npm run worker` or equivalent
+  - Worker polls `integration_queue` in a loop with configurable interval
+  - Worker successfully dequeues locked messages and processes them
+  - On success, `externalId` is written to `membership_requests`
+  - On success, queue entry is marked `completed`
+  - On failure, error is captured, queue entry is marked `failed`, and no retry is scheduled
+  - All processing steps logged with structured logging (adapter started, field fill, form submit, success/failure, screenshot path)
+  - Graceful shutdown is implemented
+  - Tests verify worker dequeues, executes adapters, and updates state correctly (with mock adapter)
+- **Dependencies:** PBI-040 (queue infrastructure), PBI-041 (adapter framework)
+- **Systems Affected:** backend, supabase
+- **Risk Level:** Medium
+- **Estimated Effort:** M
+
+---
+
+## PBI-043: Golf Ireland Integration Adapter
+
+- **Status:** READY
+- **Goal:** Implement a headless browser automation adapter that logs into Golf Ireland, creates a user account, captures the external user ID, and handles failures with screenshots.
+- **Scope:**
+  - Create an adapter implementation in `lib/integrations/golfireland.ts` that implements the interface from PBI-041.
+  - Use Puppeteer, Playwright, or equivalent headless browser automation library.
+  - Adapter must: launch a browser instance, navigate to Golf Ireland login page, enter credentials (from secure config), navigate to account creation form, populate form fields from the request payload (mapping required), submit the form, capture the resulting external user/member ID from the response page, and close the browser.
+  - Extract the external ID from the resulting page HTML or API response and return it in the adapter result.
+  - On form fill or submission failure: capture a screenshot using the browser automation library, save it to a file-based store or cloud storage (e.g. `/tmp/failures/<requestId>_<timestamp>.png`), return the screenshot path in the adapter failure response, and log the screenshot path in error messages.
+  - Store screenshot reference in the queue entry metadata or audit trail for admin review.
+  - Handle common failure modes: login failure, form validation error, network timeout, missing fields in payload.
+  - Add descriptive error messages and screenshot paths.
+  - Support both headless and non-headless modes (non-headless for development debugging).
+  - Test with a mocked Golf Ireland page or equivalent test environment.
+- **Out of Scope:** Golf Ireland API (if available) is preferred, but not required; manual clicking/form automation is acceptable. Worker integration is separate (PBI-042). Credential management is separate. Idempotency checks (single attempt, no duplication concern).
+- **Acceptance Criteria:**
+  - Golf Ireland adapter exists at `lib/integrations/golfireland.ts`
+  - Adapter implements the required interface from PBI-041
+  - Adapter successfully launches browser, navigates to Golf Ireland, and fills form fields from request payload
+  - Adapter captures external user ID from the resulting page
+  - Adapter returns success result with `externalId` populated
+  - On failure: adapter captures a screenshot, saves it to file or cloud storage, and returns the screenshot path in the failure response
+  - Screenshot path is logged in error messages and stored for admin review
+  - Adapter handles failure modes with descriptive error messages and screenshot references
+  - Tests verify adapter with mocked Golf Ireland page or test environment
+  - Headless and non-headless modes work correctly
+- **Dependencies:** PBI-041 (adapter interface), PBI-042 (worker service)
+- **Systems Affected:** backend
+- **Risk Level:** High (external site dependencies, UI automation fragility, credential handling)
+- **Estimated Effort:** M
+
+---
+
+## PBI-044: Failure Handling & Simplification
+
+- **Status:** READY
+- **Goal:** Simplify queue failure handling to mark entries as failed immediately with error and screenshot storage, allowing manual retry if needed.
+- **Scope:**
+  - When an adapter fails, immediately mark the queue entry as `status = 'failed'` (no retries).
+  - Store error details in queue entry `last_error` and `last_error_at` (timestamp).
+  - Add a new optional field `screenshot_path` to `integration_queue` to store the screenshot reference if one was captured during failure.
+  - Admin can view failed requests and their associated errors and screenshots from the Requests admin table.
+  - Optionally: add a simple manual retry button in the Requests admin UI (separate future PBI) that allows admins to reset a failed entry to `status = 'pending'` if they manually fix the underlying issue.
+  - No exponential backoff, no dead-letter queue, no retry scheduling logic.
+- **Out of Scope:** Worker process execution (PBI-042), audit logging (PBI-045), UI for failed request inspection (can be added in future), email alerts, automatic retries
+- **Acceptance Criteria:**
+  - On adapter failure, queue entry is immediately marked `failed` with no further retry scheduling
+  - `last_error` and `last_error_at` are captured on every failure
+  - `screenshot_path` field exists and is populated when a screenshot is captured during failure
+  - Admins can view failed entries and their errors/screenshots from the Requests table
+  - No exponential backoff calculation or dead-letter queue logic is implemented
+  - Tests verify queue entry transitions from processing to failed state with error and screenshot captured
+- **Dependencies:** PBI-042 (worker must persist error state)
+- **Systems Affected:** backend, supabase
+- **Risk Level:** Low
+- **Estimated Effort:** S
+
+---
+
+## PBI-045: Comprehensive Audit Trail & Structured Logging
+
+- **Status:** READY
+- **Goal:** Ensure comprehensive logging throughout the worker and adapter lifecycle, with structured audit events that include error details and screenshot references.
+- **Scope:**
+  - Add logging at every step in the worker and adapter execution:
+    - Queue entry created (enqueued event)
+    - Worker polling started
+    - Adapter instantiation started
+    - Adapter form fill started
+    - Form field population (debug-level)
+    - Form submission started
+    - Form submission completed (success or failure)
+    - Screenshot capture (if failure)
+    - Worker completion (success or failure)
+  - Audit trail captures structured events with:
+    - `event_type`: e.g. 'enqueued', 'processing_started', 'adapter_started', 'form_fill_started', 'form_submit_attempted', 'screenshot_captured', 'processing_succeeded', 'processing_failed'
+    - `adapter_name`: the name of the adapter being executed
+    - `external_id`: populated if success, null otherwise
+    - `error_message`: populated if failure, null otherwise
+    - `screenshot_path`: populated if a screenshot was captured during failure, null otherwise
+    - `log_level`: 'info', 'error', 'debug' as appropriate
+  - Worker logs must be structured and visible in application logs (stdout/stderr) for operational visibility.
+  - All audit events that occur during a failed request must reference the `screenshot_path` if one was captured.
+  - Store audit log data in application logs (and optionally in a database audit table for future UI consumption).
+- **Out of Scope:** UI display of audit trail (future PBI), real-time monitoring dashboards, alerting, export/reporting
+- **Acceptance Criteria:**
+  - All processing steps are logged with structured logging (adapter started, field fill, form submit, success/failure, screenshot path)
+  - Logs include event_type, adapter_name, external_id (if success), error_message, screenshot_path (if failure), and log_level
+  - Logs are structured and visible in application stdout/stderr
+  - Failed requests with screenshots include screenshot_path in log messages
+  - Tests verify all key state transitions are logged with correct event types and field values
+- **Dependencies:** PBI-042 (worker service), PBI-044 (retry logic)
+- **Systems Affected:** supabase, backend
+- **Risk Level:** Low
+- **Estimated Effort:** S
+
+---
+
+## PBI-046: Development Tools — Replay & Debug Mode
+
+- **Status:** READY
+- **Goal:** Add environment-specific verbose logging, message replay capability for local development, and test fixtures for Golf Ireland automation mocking.
+- **Scope:**
+  - Create an environment variable `WORKER_DEBUG_MODE` that enables verbose logging output (including full request payloads, adapter input/output, browser automation screenshots, etc.).
+  - Implement a CLI command `npm run worker:replay <requestId>` that:
+    - Fetches a request from the database
+    - Looks up its queue entry history from `integration_audit`
+    - Re-executes the worker logic with debug logging enabled
+    - Allows developers to replay and inspect failed requests locally
+  - Create mock/fixture implementations for Golf Ireland that simulate browser automation without hitting the real site (for local testing).
+  - Add a `.env.development` template with sensible defaults that enable debug mode and use mock adapters by default.
+  - Document the development workflow in a `DEVELOPMENT.md` or similar guide.
+- **Out of Scope:** Production performance optimization, production-only monitoring tools, CI/CD integration
+- **Acceptance Criteria:**
+  - `WORKER_DEBUG_MODE` environment variable can be set to enable verbose logging
+  - Debug mode outputs full request payloads, adapter steps, and status transitions
+  - `npm run worker:replay <requestId>` command exists and re-executes a request with debug logging
+  - Mock Golf Ireland adapter exists and can be used for local testing
+  - `.env.development` template includes debug settings and mock adapter references
+  - Developer guide documents how to use debug mode and replay
+  - Tests verify debug logging is conditional and does not impact production performance
+- **Dependencies:** PBI-040, PBI-041, PBI-042 (all worker infrastructure)
+- **Systems Affected:** backend, development tools
+- **Risk Level:** Low
+- **Estimated Effort:** S
