@@ -349,6 +349,62 @@ describe('Background Worker Service (PBI-042)', () => {
     );
   });
 
+  it('persists failed status when adapter resolution fails for an unmapped request type', async () => {
+    mockDequeue.mockResolvedValueOnce([
+      {
+        ...queueEntry,
+        requestType: 'full',
+      },
+    ]);
+    mockResolveAdapterNameForRequestType.mockImplementation((requestType: string) => {
+      throw new Error(`No adapter configured for request type: ${requestType}`);
+    });
+
+    const processedCount = await processQueueBatch('test-worker-1', new StructuredLogger(), 10);
+
+    expect(processedCount).toBe(1);
+    expect(mockResolveAdapterNameForRequestType).toHaveBeenCalledTimes(1);
+    expect(mockResolveAdapterNameForRequestType).toHaveBeenCalledWith('full');
+    expect(mockCreateAdapterByName).not.toHaveBeenCalled();
+    expect(mockUpdateMembershipRequest).toHaveBeenCalledWith(
+      'request-1',
+      expect.objectContaining({
+        status: 'failed',
+      })
+    );
+    expect(mockUpdateMembershipRequest).not.toHaveBeenCalledWith(
+      'request-1',
+      expect.objectContaining({
+        golfireland_account: 'failed',
+      })
+    );
+    expect(queueUpdateCalls).toContainEqual(
+      expect.objectContaining({
+        table: 'integration_queue',
+        id: 'queue-1',
+        values: expect.objectContaining({
+          status: 'failed',
+          last_error: 'No adapter configured for request type: full',
+        }),
+      })
+    );
+
+    const errorLogs = getLoggedEntries(consoleErrorSpy);
+    expect(errorLogs).toContainEqual(
+      expect.objectContaining({
+        event_type: 'processing_failed',
+        adapter_name: 'unknown',
+        error_message: 'No adapter configured for request type: full',
+        log_level: 'error',
+      })
+    );
+    expect(errorLogs).not.toContainEqual(
+      expect.objectContaining({
+        event_type: 'queue_processing_error',
+      })
+    );
+  });
+
   it('returns zero when no queue items are available', async () => {
     mockDequeue.mockResolvedValueOnce([]);
 

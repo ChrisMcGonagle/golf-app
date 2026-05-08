@@ -22,6 +22,7 @@ import { createServiceRoleClient } from '../supabase/server';
 
 const DEFAULT_POLL_INTERVAL_MS = 5000;
 const DEFAULT_WORKER_ID = () => `worker-${randomUUID()}`;
+const UNKNOWN_ADAPTER_NAME = 'unknown';
 
 function buildWorkerLog(entry: JsonObject): JsonObject {
   return {
@@ -36,6 +37,14 @@ function buildWorkerLog(entry: JsonObject): JsonObject {
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function getAdapterNameForLog(requestType: string): string | null {
+  try {
+    return resolveAdapterNameForRequestType(requestType);
+  } catch {
+    return null;
+  }
 }
 
 function getScreenshotPathFromError(error: unknown): string | undefined {
@@ -270,22 +279,24 @@ async function processQueueEntry(
   const requestId = queueEntry.requestId;
   const requestType = queueEntry.requestType;
   const payload = queueEntry.payload;
-  const adapterName = resolveAdapterNameForRequestType(requestType);
-
-  logger.info('queue_entry_received', {
-    ...buildWorkerLog({
-      event_type: 'queue_entry_received',
-      adapter_name: adapterName,
-    }),
-    queue_id: queueEntryId,
-    request_id: requestId,
-    request_type: requestType,
-  });
+  let adapterName = UNKNOWN_ADAPTER_NAME;
 
   let didStepStart = false;
   let stepOutcomePersisted = false;
 
   try {
+    adapterName = resolveAdapterNameForRequestType(requestType);
+
+    logger.info('queue_entry_received', {
+      ...buildWorkerLog({
+        event_type: 'queue_entry_received',
+        adapter_name: adapterName,
+      }),
+      queue_id: queueEntryId,
+      request_id: requestId,
+      request_type: requestType,
+    });
+
     // Instantiate adapter
     logger.info('adapter_instantiation_started', {
       ...buildWorkerLog({
@@ -386,7 +397,7 @@ async function processQueueBatch(
         logger.error('queue_processing_error', {
           ...buildWorkerLog({
             event_type: 'queue_processing_error',
-            adapter_name: resolveAdapterNameForRequestType(entry.requestType),
+            adapter_name: getAdapterNameForLog(entry.requestType),
             error_message: getErrorMessage(error),
           }),
           queue_id: entry.id,

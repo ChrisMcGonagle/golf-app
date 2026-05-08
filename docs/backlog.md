@@ -1516,6 +1516,12 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 - **Estimated Effort:** M
 - **Note:** Request failure status synchronization (ensuring `membership_requests.status` is updated when queue fails) was implemented and verified in PR #54 with comprehensive tests covering all worker failure scenarios.
 
+## PBI-042a: Worker Failure Status Sync Bugfix
+
+- **Status:** IN_PROGRESS
+- **Goal:** Ensure adapter resolution failures still persist `integration_queue.status = 'failed'` and `membership_requests.status = 'failed'` without retrying.
+- **Scope:** Apply a minimal worker fix for unmapped request types or adapter-name resolution failures, add a focused regression test, and validate the touched worker slice only.
+
 ---
 
 ## PBI-043: Golf Ireland Integration Adapter
