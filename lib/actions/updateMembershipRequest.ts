@@ -1,7 +1,7 @@
 import { createServiceRoleClient } from '../supabase/server';
 
 type MembershipRequestWorkflowStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
-type MembershipRequestOverallStatus = 'pending' | 'in_progress' | 'completed';
+type MembershipRequestOverallStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
 
 export type MembershipRequestUpdate = Partial<{
   status: MembershipRequestOverallStatus;

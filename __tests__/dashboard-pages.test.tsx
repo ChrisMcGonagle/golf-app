@@ -137,7 +137,7 @@ describe('RequestsPage', () => {
       const statusSelect = screen.getByRole('combobox', { name: /filter requests by status/i });
       const statusOptions = within(statusSelect).getAllByRole('option').map((option) => option.textContent);
 
-      expect(statusOptions).toEqual(['All', 'Completed', 'In Progress', 'Pending']);
+      expect(statusOptions).toEqual(['All', 'Completed', 'Failed', 'In Progress', 'Pending']);
       expect(statusSelect).toHaveValue('Pending');
     });
 

@@ -1,4 +1,4 @@
-export type RequestStatus = 'Pending' | 'In Progress' | 'Completed';
+export type RequestStatus = 'Pending' | 'In Progress' | 'Completed' | 'Failed';
 
 export type RequestStepState = 'completed' | 'active' | 'pending' | 'failed';
 

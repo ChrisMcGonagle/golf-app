@@ -215,7 +215,7 @@ alter table public.membership_requests
 alter table public.membership_requests drop constraint if exists membership_requests_status_check;
 alter table public.membership_requests
     add constraint membership_requests_status_check
-    check (status in ('pending', 'in_progress', 'completed'));
+        check (status in ('pending', 'in_progress', 'completed', 'failed'));
 
 alter table public.membership_requests drop constraint if exists membership_requests_golfireland_account_check;
 alter table public.membership_requests
