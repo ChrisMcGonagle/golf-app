@@ -125,6 +125,35 @@ describe('dequeue', () => {
     await expect(dequeue('worker-d')).rejects.toThrow('Unexpected claimed queue status: pending');
     expect(rpc).toHaveBeenCalledTimes(1);
   });
+
+  it('rejects claimed rows that are not locked to the claiming worker', async () => {
+    const rpc = jest.fn().mockResolvedValue({
+      data: [
+        {
+          id: 'queue-3',
+          request_id: 'request-3',
+          status: 'processing',
+          last_error: null,
+          last_error_at: null,
+          locked_at: null,
+          locked_by_worker: 'worker-e',
+          metadata: { source: 'membership_request' },
+          created_at: '2026-05-08T10:02:00.000Z',
+          updated_at: '2026-05-08T10:02:00.000Z',
+          request_type: 'Full Member',
+          payload: { firstName: 'Lee' },
+        },
+      ],
+      error: null,
+    });
+
+    mockCreateServiceRoleClient.mockReturnValue({ rpc } as never);
+
+    await expect(dequeue('worker-e')).rejects.toThrow(
+      'Claimed queue row is missing lock metadata or is locked by another worker',
+    );
+    expect(rpc).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('PBI-040 schema contract', () => {

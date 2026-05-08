@@ -37,9 +37,13 @@ export type DequeuedIntegrationQueueItem = {
   payload: JsonValue;
 };
 
-function mapClaimedRow(row: ClaimIntegrationQueueRow): DequeuedIntegrationQueueItem {
+function mapClaimedRow(row: ClaimIntegrationQueueRow, workerId: string): DequeuedIntegrationQueueItem {
   if (row.status !== 'processing') {
     throw new Error(`Unexpected claimed queue status: ${row.status}`);
+  }
+
+  if (row.locked_at === null || row.locked_by_worker !== workerId) {
+    throw new Error('Claimed queue row is missing lock metadata or is locked by another worker');
   }
 
   return {
@@ -73,5 +77,5 @@ export async function dequeue(workerId: string, batchSize = 10): Promise<Dequeue
     throw new Error(error.message);
   }
 
-  return ((data ?? []) as ClaimIntegrationQueueRow[]).map(mapClaimedRow);
+  return ((data ?? []) as ClaimIntegrationQueueRow[]).map((row) => mapClaimedRow(row, workerId));
 }
