@@ -354,6 +354,107 @@ describe('Background Worker Service (PBI-042)', () => {
     );
   });
 
+  it('marks an unmapped request type as failed without bubbling the adapter lookup failure', async () => {
+    const unsupportedQueueEntry: DequeuedIntegrationQueueItem = {
+      ...queueEntry,
+      requestType: 'full',
+    };
+
+    mockDequeue.mockResolvedValueOnce([unsupportedQueueEntry]);
+    mockResolveAdapterNameForRequestType.mockImplementation(() => {
+      throw new Error('No adapter configured for request type: full');
+    });
+
+    const processedCount = await processQueueBatch('test-worker-1', new StructuredLogger(), 10);
+
+    expect(processedCount).toBe(1);
+    expect(mockCreateAdapterByName).not.toHaveBeenCalled();
+    expect(mockUpdateMembershipRequest).toHaveBeenCalledWith(
+      'request-1',
+      expect.objectContaining({
+        status: 'failed',
+      })
+    );
+    expect(mockUpdateMembershipRequest).not.toHaveBeenCalledWith(
+      'request-1',
+      expect.objectContaining({
+        golfireland_account: 'failed',
+      })
+    );
+    expect(queueUpdateCalls).toContainEqual(
+      expect.objectContaining({
+        table: 'integration_queue',
+        id: 'queue-1',
+        values: expect.objectContaining({
+          status: 'failed',
+          last_error: 'No adapter configured for request type: full',
+        }),
+      })
+    );
+
+    const errorLogs = getLoggedEntries(consoleErrorSpy);
+    expect(errorLogs).toContainEqual(
+      expect.objectContaining({
+        event_type: 'processing_failed',
+        adapter_name: null,
+        error_message: 'No adapter configured for request type: full',
+      })
+    );
+    expect(errorLogs).not.toContainEqual(
+      expect.objectContaining({
+        event_type: 'queue_processing_error',
+      })
+    );
+  });
+
+  it('forces the queue row and membership request failed in the batch catch when item failure persistence aborts early', async () => {
+    const failingAdapter: IntegrationAdapter = {
+      name: 'mock',
+      validate: jest.fn(),
+      execute: jest.fn().mockResolvedValue({
+        success: false,
+        error: 'Form submission rejected',
+      }),
+    };
+
+    mockDequeue.mockResolvedValueOnce([queueEntry]);
+    mockCreateAdapterByName.mockReturnValue(failingAdapter);
+    mockUpdateMembershipRequest.mockRejectedValueOnce(new Error('membership update unavailable'));
+    mockUpdateMembershipRequest.mockRejectedValueOnce(new Error('membership update unavailable'));
+    mockUpdateMembershipRequest.mockResolvedValueOnce(undefined);
+
+    const processedCount = await processQueueBatch('test-worker-1', new StructuredLogger(), 10);
+
+    expect(processedCount).toBe(1);
+    expect(mockUpdateMembershipRequest).toHaveBeenCalledTimes(3);
+    expect(mockUpdateMembershipRequest).toHaveBeenLastCalledWith(
+      'request-1',
+      expect.objectContaining({
+        golfireland_account: 'failed',
+        status: 'failed',
+      })
+    );
+    expect(queueUpdateCalls).toContainEqual(
+      expect.objectContaining({
+        table: 'integration_queue',
+        id: 'queue-1',
+        values: expect.objectContaining({
+          status: 'failed',
+          last_error: 'membership update unavailable',
+        }),
+      })
+    );
+
+    const errorLogs = getLoggedEntries(consoleErrorSpy);
+    expect(errorLogs).toContainEqual(
+      expect.objectContaining({
+        event_type: 'queue_processing_error',
+        adapter_name: 'mock',
+        error_message: 'membership update unavailable',
+      })
+    );
+  });
+
   it('returns zero when no queue items are available', async () => {
     mockDequeue.mockResolvedValueOnce([]);
 

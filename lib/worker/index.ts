@@ -30,7 +30,15 @@ const SHUTDOWN_FAILURE_MESSAGE =
 type InFlightQueueEntryState = {
   queueEntryId: string;
   requestId: string;
-  adapterName: string;
+  adapterName: string | null;
+  didStepStart: boolean;
+  stepOutcomePersisted: boolean;
+};
+
+type QueueEntryProcessingFailureContext = {
+  queueEntryId: string;
+  requestId: string;
+  adapterName: string | null;
   didStepStart: boolean;
   stepOutcomePersisted: boolean;
 };
@@ -76,12 +84,18 @@ const MEMBERSHIP_REQUEST_STEP_COLUMN_BY_ADAPTER: Record<string, MembershipReques
   clubv1: 'clubv1_account',
 };
 
-function getMembershipRequestStepColumn(adapterName: string): MembershipRequestStepColumn {
-  return MEMBERSHIP_REQUEST_STEP_COLUMN_BY_ADAPTER[adapterName] ?? 'golfireland_account';
+function getMembershipRequestStepColumn(
+  adapterName: string | null | undefined
+): MembershipRequestStepColumn | undefined {
+  if (!adapterName) {
+    return undefined;
+  }
+
+  return MEMBERSHIP_REQUEST_STEP_COLUMN_BY_ADAPTER[adapterName];
 }
 
 function buildMembershipRequestOutcomeUpdate(
-  adapterName: string,
+  adapterName: string | null | undefined,
   stepStatus: 'completed' | 'failed',
   options: {
     didStepStart?: boolean;
@@ -97,9 +111,40 @@ function buildMembershipRequestOutcomeUpdate(
     return update;
   }
 
-  update[getMembershipRequestStepColumn(adapterName)] = stepStatus;
+  const stepColumn = getMembershipRequestStepColumn(adapterName);
+
+  if (!stepColumn) {
+    return update;
+  }
+
+  update[stepColumn] = stepStatus;
 
   return update;
+}
+
+function createQueueEntryProcessingFailure(
+  error: unknown,
+  context: QueueEntryProcessingFailureContext
+): Error & { context: QueueEntryProcessingFailureContext } {
+  const normalizedError = error instanceof Error ? error : new Error(getErrorMessage(error));
+
+  return Object.assign(normalizedError, { context });
+}
+
+function getQueueEntryProcessingFailureContext(
+  error: unknown
+): QueueEntryProcessingFailureContext | null {
+  if (!error || typeof error !== 'object' || !('context' in error)) {
+    return null;
+  }
+
+  const context = (error as { context?: QueueEntryProcessingFailureContext }).context;
+
+  if (!context) {
+    return null;
+  }
+
+  return context;
 }
 
 // ============================================================
@@ -199,7 +244,7 @@ async function handleSuccess(
 async function handleFailure(
   queueEntryId: string,
   requestId: string,
-  adapterName: string,
+  adapterName: string | null,
   error: string,
   screenshotPath: string | undefined,
   didStepStart: boolean,
@@ -272,7 +317,7 @@ async function handleFailure(
 function trackInFlightQueueEntry(
   queueEntryId: string,
   requestId: string,
-  adapterName: string
+  adapterName: string | null
 ): void {
   inFlightQueueEntries.set(queueEntryId, {
     queueEntryId,
@@ -285,7 +330,7 @@ function trackInFlightQueueEntry(
 
 function updateInFlightQueueEntry(
   queueEntryId: string,
-  updates: Partial<Pick<InFlightQueueEntryState, 'didStepStart' | 'stepOutcomePersisted'>>
+  updates: Partial<Pick<InFlightQueueEntryState, 'adapterName' | 'didStepStart' | 'stepOutcomePersisted'>>
 ): void {
   const entry = inFlightQueueEntries.get(queueEntryId);
 
@@ -297,6 +342,58 @@ function updateInFlightQueueEntry(
     ...entry,
     ...updates,
   });
+}
+
+async function forceQueueEntryFailure(
+  queueEntryId: string,
+  requestId: string,
+  adapterName: string | null,
+  error: string,
+  didStepStart: boolean,
+  logger: IntegrationLogger
+): Promise<void> {
+  const supabase = createServiceRoleClient();
+
+  try {
+    await updateMembershipRequest(
+      requestId,
+      buildMembershipRequestOutcomeUpdate(adapterName, 'failed', {
+        didStepStart,
+      })
+    );
+  } catch (membershipError) {
+    logger.error('queue_processing_force_failure_membership_error', {
+      ...buildWorkerLog({
+        event_type: 'queue_processing_force_failure_membership_error',
+        adapter_name: adapterName,
+        error_message: getErrorMessage(membershipError),
+      }),
+      queue_id: queueEntryId,
+      request_id: requestId,
+    });
+  }
+
+  const { error: queueError } = await supabase
+    .from('integration_queue')
+    .update({
+      status: 'failed',
+      last_error: error,
+      last_error_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', queueEntryId);
+
+  if (queueError) {
+    logger.error('queue_processing_force_failure_queue_error', {
+      ...buildWorkerLog({
+        event_type: 'queue_processing_force_failure_queue_error',
+        adapter_name: adapterName,
+        error_message: queueError.message,
+      }),
+      queue_id: queueEntryId,
+      request_id: requestId,
+    });
+  }
 }
 
 async function finalizeInFlightQueueEntries(
@@ -374,24 +471,27 @@ async function processQueueEntry(
   const requestId = queueEntry.requestId;
   const requestType = queueEntry.requestType;
   const payload = queueEntry.payload;
-  const adapterName = resolveAdapterNameForRequestType(requestType);
+  let adapterName: string | null = null;
 
   trackInFlightQueueEntry(queueEntryId, requestId, adapterName);
-
-  logger.info('queue_entry_received', {
-    ...buildWorkerLog({
-      event_type: 'queue_entry_received',
-      adapter_name: adapterName,
-    }),
-    queue_id: queueEntryId,
-    request_id: requestId,
-    request_type: requestType,
-  });
 
   let didStepStart = false;
   let stepOutcomePersisted = false;
 
   try {
+    adapterName = resolveAdapterNameForRequestType(requestType);
+    updateInFlightQueueEntry(queueEntryId, { adapterName });
+
+    logger.info('queue_entry_received', {
+      ...buildWorkerLog({
+        event_type: 'queue_entry_received',
+        adapter_name: adapterName,
+      }),
+      queue_id: queueEntryId,
+      request_id: requestId,
+      request_type: requestType,
+    });
+
     // Instantiate adapter
     logger.info('adapter_instantiation_started', {
       ...buildWorkerLog({
@@ -462,19 +562,36 @@ async function processQueueEntry(
     }
   } catch (error) {
     if (stepOutcomePersisted) {
-      throw error;
+      throw createQueueEntryProcessingFailure(error, {
+        queueEntryId,
+        requestId,
+        adapterName,
+        didStepStart,
+        stepOutcomePersisted,
+      });
     }
 
-    await handleFailure(
-      queueEntryId,
-      requestId,
-      adapterName,
-      getErrorMessage(error),
-      getScreenshotPathFromError(error),
-      didStepStart,
-      logger
-    );
-    updateInFlightQueueEntry(queueEntryId, { stepOutcomePersisted: true });
+    try {
+      await handleFailure(
+        queueEntryId,
+        requestId,
+        adapterName,
+        getErrorMessage(error),
+        getScreenshotPathFromError(error),
+        didStepStart,
+        logger
+      );
+      stepOutcomePersisted = true;
+      updateInFlightQueueEntry(queueEntryId, { stepOutcomePersisted: true });
+    } catch (failureError) {
+      throw createQueueEntryProcessingFailure(failureError, {
+        queueEntryId,
+        requestId,
+        adapterName,
+        didStepStart,
+        stepOutcomePersisted: false,
+      });
+    }
   } finally {
     inFlightQueueEntries.delete(queueEntryId);
   }
@@ -494,16 +611,29 @@ async function processQueueBatch(
   const promises = queueEntries.map((entry) => {
     inFlightCount++;
     return processQueueEntry(entry, workerId, logger)
-      .catch((error) => {
+      .catch(async (error) => {
+        const failureContext = getQueueEntryProcessingFailureContext(error);
+
         logger.error('queue_processing_error', {
           ...buildWorkerLog({
             event_type: 'queue_processing_error',
-            adapter_name: resolveAdapterNameForRequestType(entry.requestType),
+            adapter_name: failureContext?.adapterName ?? null,
             error_message: getErrorMessage(error),
           }),
           queue_id: entry.id,
           request_id: entry.requestId,
         });
+
+        if (failureContext && !failureContext.stepOutcomePersisted) {
+          await forceQueueEntryFailure(
+            failureContext.queueEntryId,
+            failureContext.requestId,
+            failureContext.adapterName,
+            getErrorMessage(error),
+            failureContext.didStepStart,
+            logger
+          );
+        }
       })
       .finally(() => {
         inFlightCount--;
