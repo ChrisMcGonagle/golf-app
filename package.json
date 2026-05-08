@@ -9,6 +9,7 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
+    "worker": "node --require ts-node/register lib/worker/index.ts",
     "prepare": "sh scripts/setup-hooks.sh"
   },
   "dependencies": {
@@ -36,6 +37,7 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "ts-jest": "^29.4.9",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }
