@@ -1462,7 +1462,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-041: Integration Adapter Framework
 
-- **Status:** READY
+- **Status:** DONE
 - **Goal:** Define a pluggable adapter interface that all external integrations must implement, with contract for request input, success/failure output, and idempotency guarantees.
 - **Scope:**
   - Create an abstract adapter interface in TypeScript (`lib/integrations/types.ts` or similar) that defines the contract all integrations must satisfy.
@@ -1488,7 +1488,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-042: Background Worker Service
 
-- **Status:** READY
+- **Status:** IN_PROGRESS
 - **Goal:** Build a Node.js worker process that polls the queue, executes adapters for each request, and handles success and failure with single attempt per entry.
 - **Scope:**
   - Create a worker service that runs continuously or as a scheduled job (e.g. every 5-10 seconds).
