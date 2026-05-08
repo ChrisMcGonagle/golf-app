@@ -1,22 +1,18 @@
 import { getIntegrationAdapterConfig } from '@/lib/integrations/config'
 import { createAdapterByName } from '@/lib/integrations/factory'
-import { IntegrationRequestContext } from '@/lib/integrations/types'
+import { ExecutionContext } from '@/lib/integrations/types'
 
 const originalEnv = process.env
 
-function createContext(): IntegrationRequestContext {
+function createContext(): ExecutionContext {
   return {
+    workerId: 'worker-123',
     requestId: 'request-123',
-    adapterName: 'mock',
-    idempotencyKey: 'idem-123',
-    attemptNumber: 1,
-    logger: jest.fn(),
-    handleError: (error) => {
-      if (error instanceof Error) {
-        return error.message
-      }
-
-      return 'Unknown integration error'
+    queueEntryId: 'queue-456',
+    logger: {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
     },
   }
 }
