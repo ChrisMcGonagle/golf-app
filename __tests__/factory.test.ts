@@ -3,14 +3,25 @@ import { MockAdapter } from '@/lib/integrations/mock';
 
 describe('integration factory adapter resolution', () => {
   const originalRequestTypeAdapterMap = process.env.INTEGRATION_REQUEST_TYPE_ADAPTER_MAP;
+  const originalMockEnabled = process.env.INTEGRATION_MOCK_ENABLED;
+
+  beforeEach(() => {
+    delete process.env.INTEGRATION_REQUEST_TYPE_ADAPTER_MAP;
+    process.env.INTEGRATION_MOCK_ENABLED = 'true';
+  });
 
   afterEach(() => {
     if (originalRequestTypeAdapterMap === undefined) {
       delete process.env.INTEGRATION_REQUEST_TYPE_ADAPTER_MAP;
-      return;
+    } else {
+      process.env.INTEGRATION_REQUEST_TYPE_ADAPTER_MAP = originalRequestTypeAdapterMap;
     }
 
-    process.env.INTEGRATION_REQUEST_TYPE_ADAPTER_MAP = originalRequestTypeAdapterMap;
+    if (originalMockEnabled === undefined) {
+      delete process.env.INTEGRATION_MOCK_ENABLED;
+    } else {
+      process.env.INTEGRATION_MOCK_ENABLED = originalMockEnabled;
+    }
   });
 
   it('creates a supported adapter by name', () => {
