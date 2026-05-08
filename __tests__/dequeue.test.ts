@@ -188,4 +188,33 @@ describe('PBI-040 schema contract', () => {
     expect(schema).toContain('locked_by_worker = claim_worker_id');
     expect(schema).toContain('claim_batch_size integer default 10');
   });
+
+  it('fails stale processing rows before claiming fresh pending rows', () => {
+    const schemaPath = path.join(process.cwd(), 'supabase/schema.sql');
+    const schema = fs.readFileSync(schemaPath, 'utf-8');
+    const claimFunctionStart = schema.indexOf('create or replace function public.claim_integration_queue(');
+    const claimFunctionEnd = schema.indexOf('revoke all on function public.claim_integration_queue(text, integer) from public;');
+
+    expect(claimFunctionStart).toBeGreaterThanOrEqual(0);
+    expect(claimFunctionEnd).toBeGreaterThan(claimFunctionStart);
+
+    const claimFunction = schema.slice(claimFunctionStart, claimFunctionEnd);
+    const staleRowsIndex = claimFunction.indexOf('with stale_rows as (');
+    const failedStaleRowsIndex = claimFunction.indexOf('failed_stale_rows as (');
+    const failedMembershipRequestsIndex = claimFunction.indexOf('failed_membership_requests as (');
+    const lockedRowsIndex = claimFunction.indexOf('locked_rows as (');
+
+    expect(claimFunction).toContain("stale_processing_cutoff timestamptz := now() - interval '15 minutes'");
+    expect(claimFunction).toContain("where iq.status = 'processing'");
+    expect(claimFunction).toContain('and iq.locked_at < stale_processing_cutoff');
+    expect(claimFunction).toContain("set status = 'failed',");
+    expect(claimFunction).toContain('last_error = abandoned_error_message');
+    expect(claimFunction).toContain('update public.membership_requests mr');
+    expect(claimFunction).toContain("where mr.id = failed_stale_rows.request_id");
+    expect(claimFunction).toContain("and mr.status in ('pending', 'in_progress')");
+    expect(staleRowsIndex).toBeGreaterThanOrEqual(0);
+    expect(failedStaleRowsIndex).toBeGreaterThan(staleRowsIndex);
+    expect(failedMembershipRequestsIndex).toBeGreaterThan(failedStaleRowsIndex);
+    expect(lockedRowsIndex).toBeGreaterThan(failedMembershipRequestsIndex);
+  });
 });

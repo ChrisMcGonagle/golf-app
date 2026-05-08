@@ -24,6 +24,11 @@ type QueueUpdateCall = {
   id: string;
 };
 
+const FATAL_RUNTIME_FAILURE_MESSAGE =
+  'Worker runtime failed before the job completed; marked failed as abandoned.';
+const SHUTDOWN_FAILURE_MESSAGE =
+  'Worker shutdown before the job completed; marked failed as abandoned.';
+
 const queueEntry: DequeuedIntegrationQueueItem = {
   id: 'queue-1',
   requestId: 'request-1',
@@ -487,6 +492,124 @@ describe('Background Worker Service (PBI-042)', () => {
         request_id: 'request-1',
       })
     ).toThrow('payload is required and must be an object');
+  });
+
+  it('best-effort finalizes unfinished claimed entries on fatal runtime failure', async () => {
+    const runtimeHandlers: Partial<
+      Record<'uncaughtException' | 'unhandledRejection', (...args: unknown[]) => void | Promise<void>>
+    > = {};
+    const processOnSpy = jest.spyOn(process, 'on').mockImplementation(
+      ((event: 'SIGINT' | 'SIGTERM' | 'uncaughtException' | 'unhandledRejection', handler: (...args: unknown[]) => void | Promise<void>) => {
+        if (event === 'uncaughtException' || event === 'unhandledRejection') {
+          runtimeHandlers[event] = handler;
+        }
+
+        return process;
+      }) as typeof process.on
+    );
+    const processExitSpy = jest
+      .spyOn(process, 'exit')
+      .mockImplementation((() => undefined) as never);
+
+    const hangingAdapter: IntegrationAdapter = {
+      name: 'mock',
+      validate: jest.fn(),
+      execute: jest.fn(() => new Promise(() => undefined)),
+    };
+
+    mockDequeue.mockResolvedValueOnce([queueEntry]);
+    mockCreateAdapterByName.mockReturnValue(hangingAdapter);
+
+    await setupGracefulShutdown(new StructuredLogger());
+
+    void processQueueBatch('test-worker-1', new StructuredLogger(), 10);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    await runtimeHandlers.unhandledRejection?.(new Error('fatal worker rejection'));
+
+    expect(mockUpdateMembershipRequest).toHaveBeenCalledWith(
+      'request-1',
+      expect.objectContaining({
+        golfireland_account: 'failed',
+        status: 'failed',
+      })
+    );
+    expect(queueUpdateCalls).toContainEqual(
+      expect.objectContaining({
+        table: 'integration_queue',
+        id: 'queue-1',
+        values: expect.objectContaining({
+          status: 'failed',
+          last_error: FATAL_RUNTIME_FAILURE_MESSAGE,
+        }),
+      })
+    );
+    expect(processExitSpy).toHaveBeenCalledWith(1);
+
+    processOnSpy.mockRestore();
+    processExitSpy.mockRestore();
+  });
+
+  it('best-effort finalizes unfinished claimed entries during shutdown timeout', async () => {
+    jest.useFakeTimers();
+
+    const signalHandlers: Partial<
+      Record<'SIGINT' | 'SIGTERM', (...args: unknown[]) => void | Promise<void>>
+    > = {};
+    const processOnSpy = jest.spyOn(process, 'on').mockImplementation(
+      ((event: 'SIGINT' | 'SIGTERM' | 'uncaughtException' | 'unhandledRejection', handler: (...args: unknown[]) => void | Promise<void>) => {
+        if (event === 'SIGTERM' || event === 'SIGINT') {
+          signalHandlers[event] = handler;
+        }
+
+        return process;
+      }) as typeof process.on
+    );
+    const processExitSpy = jest
+      .spyOn(process, 'exit')
+      .mockImplementation((() => undefined) as never);
+
+    const hangingAdapter: IntegrationAdapter = {
+      name: 'mock',
+      validate: jest.fn(),
+      execute: jest.fn(() => new Promise(() => undefined)),
+    };
+
+    mockDequeue.mockResolvedValueOnce([queueEntry]);
+    mockCreateAdapterByName.mockReturnValue(hangingAdapter);
+
+    await setupGracefulShutdown(new StructuredLogger());
+
+    void processQueueBatch('test-worker-1', new StructuredLogger(), 10);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const shutdownPromise = signalHandlers.SIGTERM?.();
+    await jest.advanceTimersByTimeAsync(30000);
+    await shutdownPromise;
+
+    expect(mockUpdateMembershipRequest).toHaveBeenCalledWith(
+      'request-1',
+      expect.objectContaining({
+        golfireland_account: 'failed',
+        status: 'failed',
+      })
+    );
+    expect(queueUpdateCalls).toContainEqual(
+      expect.objectContaining({
+        table: 'integration_queue',
+        id: 'queue-1',
+        values: expect.objectContaining({
+          status: 'failed',
+          last_error: SHUTDOWN_FAILURE_MESSAGE,
+        }),
+      })
+    );
+    expect(processExitSpy).toHaveBeenCalledWith(0);
+
+    processOnSpy.mockRestore();
+    processExitSpy.mockRestore();
   });
 });
 

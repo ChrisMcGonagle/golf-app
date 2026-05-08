@@ -1518,6 +1518,14 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ---
 
+## PBI-042a: Worker Failure Hardening
+
+- **Status:** IN_PROGRESS
+- **Goal:** Ensure claimed integration queue entries and their linked membership requests cannot remain stuck in processing, pending, or in_progress after worker or process failure; abandoned work must converge to failed without introducing retries.
+- **Scope:** Add bounded stale-processing recovery for abandoned queue rows, add worker best-effort fatal-error finalization for known in-flight entries, add focused regression coverage, and keep queue handling single-attempt only.
+
+---
+
 ## PBI-043: Golf Ireland Integration Adapter
 
 - **Status:** READY

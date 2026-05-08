@@ -390,6 +390,9 @@ returns table (
 )
 language plpgsql
 as $$
+declare
+    stale_processing_cutoff timestamptz := now() - interval '15 minutes';
+    abandoned_error_message text := 'Processing lease expired before the worker completed the job; marked failed as abandoned.';
 begin
     if claim_worker_id is null or btrim(claim_worker_id) = '' then
         raise exception 'claim_worker_id is required';
@@ -400,7 +403,34 @@ begin
     end if;
 
     return query
-    with locked_rows as (
+    with stale_rows as (
+        select iq.id, iq.request_id
+        from public.integration_queue iq
+        where iq.status = 'processing'
+          and iq.locked_at is not null
+          and iq.locked_at < stale_processing_cutoff
+        for update skip locked
+    ),
+    failed_stale_rows as (
+        update public.integration_queue iq
+        set status = 'failed',
+            last_error = abandoned_error_message,
+            last_error_at = now(),
+            updated_at = now()
+        from stale_rows
+        where iq.id = stale_rows.id
+        returning stale_rows.request_id
+    ),
+    failed_membership_requests as (
+        update public.membership_requests mr
+        set status = 'failed',
+            updated_at = now()
+        from failed_stale_rows
+        where mr.id = failed_stale_rows.request_id
+          and mr.status in ('pending', 'in_progress')
+        returning mr.id
+    ),
+    locked_rows as (
         select iq.id
         from public.integration_queue iq
         where iq.status = 'pending'

@@ -22,6 +22,18 @@ import { createServiceRoleClient } from '../supabase/server';
 
 const DEFAULT_POLL_INTERVAL_MS = 5000;
 const DEFAULT_WORKER_ID = () => `worker-${randomUUID()}`;
+const FATAL_RUNTIME_FAILURE_MESSAGE =
+  'Worker runtime failed before the job completed; marked failed as abandoned.';
+const SHUTDOWN_FAILURE_MESSAGE =
+  'Worker shutdown before the job completed; marked failed as abandoned.';
+
+type InFlightQueueEntryState = {
+  queueEntryId: string;
+  requestId: string;
+  adapterName: string;
+  didStepStart: boolean;
+  stepOutcomePersisted: boolean;
+};
 
 function buildWorkerLog(entry: JsonObject): JsonObject {
   return {
@@ -257,6 +269,98 @@ async function handleFailure(
   }
 }
 
+function trackInFlightQueueEntry(
+  queueEntryId: string,
+  requestId: string,
+  adapterName: string
+): void {
+  inFlightQueueEntries.set(queueEntryId, {
+    queueEntryId,
+    requestId,
+    adapterName,
+    didStepStart: false,
+    stepOutcomePersisted: false,
+  });
+}
+
+function updateInFlightQueueEntry(
+  queueEntryId: string,
+  updates: Partial<Pick<InFlightQueueEntryState, 'didStepStart' | 'stepOutcomePersisted'>>
+): void {
+  const entry = inFlightQueueEntries.get(queueEntryId);
+
+  if (!entry) {
+    return;
+  }
+
+  inFlightQueueEntries.set(queueEntryId, {
+    ...entry,
+    ...updates,
+  });
+}
+
+async function finalizeInFlightQueueEntries(
+  errorMessage: string,
+  logger: IntegrationLogger,
+  eventType: 'fatal_runtime_in_flight_finalization' | 'shutdown_in_flight_finalization'
+): Promise<void> {
+  if (inFlightFinalizationPromise) {
+    await inFlightFinalizationPromise;
+    return;
+  }
+
+  const unfinishedEntries = Array.from(inFlightQueueEntries.values()).filter(
+    (entry) => !entry.stepOutcomePersisted
+  );
+
+  if (unfinishedEntries.length === 0) {
+    return;
+  }
+
+  logger.warn(eventType, {
+    ...buildWorkerLog({
+      event_type: eventType,
+      error_message: errorMessage,
+    }),
+    in_flight_count: unfinishedEntries.length,
+  });
+
+  inFlightFinalizationPromise = Promise.all(
+    unfinishedEntries.map(async (entry) => {
+      try {
+        await handleFailure(
+          entry.queueEntryId,
+          entry.requestId,
+          entry.adapterName,
+          errorMessage,
+          undefined,
+          entry.didStepStart,
+          logger
+        );
+        updateInFlightQueueEntry(entry.queueEntryId, { stepOutcomePersisted: true });
+      } catch (error) {
+        logger.error('in_flight_finalization_failed', {
+          ...buildWorkerLog({
+            event_type: 'in_flight_finalization_failed',
+            adapter_name: entry.adapterName,
+            error_message: getErrorMessage(error),
+          }),
+          queue_id: entry.queueEntryId,
+          request_id: entry.requestId,
+        });
+      } finally {
+        inFlightQueueEntries.delete(entry.queueEntryId);
+      }
+    })
+  )
+    .then(() => undefined)
+    .finally(() => {
+      inFlightFinalizationPromise = null;
+    });
+
+  await inFlightFinalizationPromise;
+}
+
 // ============================================================
 // Process Single Queue Entry
 // ============================================================
@@ -271,6 +375,8 @@ async function processQueueEntry(
   const requestType = queueEntry.requestType;
   const payload = queueEntry.payload;
   const adapterName = resolveAdapterNameForRequestType(requestType);
+
+  trackInFlightQueueEntry(queueEntryId, requestId, adapterName);
 
   logger.info('queue_entry_received', {
     ...buildWorkerLog({
@@ -327,12 +433,14 @@ async function processQueueEntry(
     });
 
     didStepStart = true;
+    updateInFlightQueueEntry(queueEntryId, { didStepStart: true });
     const response = await adapter.execute(request, context);
 
     // Handle response
     if (response.success && response.externalId) {
       await handleSuccess(queueEntryId, requestId, adapterName, response.externalId, logger);
       stepOutcomePersisted = true;
+      updateInFlightQueueEntry(queueEntryId, { stepOutcomePersisted: true });
     } else {
       const errorMessage = response.error || 'Unknown error';
       await handleFailure(
@@ -345,6 +453,7 @@ async function processQueueEntry(
         logger
       );
       stepOutcomePersisted = true;
+      updateInFlightQueueEntry(queueEntryId, { stepOutcomePersisted: true });
     }
 
     // Optional cleanup
@@ -365,6 +474,9 @@ async function processQueueEntry(
       didStepStart,
       logger
     );
+    updateInFlightQueueEntry(queueEntryId, { stepOutcomePersisted: true });
+  } finally {
+    inFlightQueueEntries.delete(queueEntryId);
   }
 }
 
@@ -409,6 +521,8 @@ async function processQueueBatch(
 
 let isShuttingDown = false;
 let inFlightCount = 0;
+let inFlightQueueEntries = new Map<string, InFlightQueueEntryState>();
+let inFlightFinalizationPromise: Promise<void> | null = null;
 
 async function runWorker(): Promise<void> {
   const logger = new StructuredLogger();
@@ -489,6 +603,12 @@ async function setupGracefulShutdown(logger: IntegrationLogger): Promise<void> {
         }),
         in_flight_count: inFlightCount,
       });
+
+      await finalizeInFlightQueueEntries(
+        SHUTDOWN_FAILURE_MESSAGE,
+        logger,
+        'shutdown_in_flight_finalization'
+      );
     }
 
     logger.info('graceful_shutdown_complete', {
@@ -500,8 +620,34 @@ async function setupGracefulShutdown(logger: IntegrationLogger): Promise<void> {
     process.exit(0);
   };
 
-  process.on('SIGTERM', () => handleShutdown('SIGTERM'));
-  process.on('SIGINT', () => handleShutdown('SIGINT'));
+  const handleFatalRuntimeError = async (
+    eventType: 'uncaughtException' | 'unhandledRejection',
+    error: unknown
+  ) => {
+    logger.error('worker_runtime_fatal', {
+      ...buildWorkerLog({
+        event_type: 'worker_runtime_fatal',
+        error_message: getErrorMessage(error),
+      }),
+      runtime_event: eventType,
+      in_flight_count: inFlightCount,
+    });
+
+    isShuttingDown = true;
+
+    await finalizeInFlightQueueEntries(
+      FATAL_RUNTIME_FAILURE_MESSAGE,
+      logger,
+      'fatal_runtime_in_flight_finalization'
+    );
+
+    process.exit(1);
+  };
+
+  process.on('SIGTERM', async () => handleShutdown('SIGTERM'));
+  process.on('SIGINT', async () => handleShutdown('SIGINT'));
+  process.on('uncaughtException', async (error) => handleFatalRuntimeError('uncaughtException', error));
+  process.on('unhandledRejection', async (reason) => handleFatalRuntimeError('unhandledRejection', reason));
 }
 
 // ============================================================
@@ -536,6 +682,8 @@ if (require.main === module) {
 function resetWorkerStateForTests(): void {
   isShuttingDown = false;
   inFlightCount = 0;
+  inFlightQueueEntries = new Map();
+  inFlightFinalizationPromise = null;
 }
 
 export { processQueueBatch, processQueueEntry, resetWorkerStateForTests, runWorker, StructuredLogger, setupGracefulShutdown };
