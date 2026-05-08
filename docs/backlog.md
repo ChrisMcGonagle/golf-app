@@ -1462,7 +1462,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-041: Integration Adapter Framework
 
-- **Status:** IN_PROGRESS
+- **Status:** DONE
 - **Goal:** Define a pluggable adapter interface that all external integrations must implement, with contract for request input, success/failure output, and idempotency guarantees.
 - **Scope:**
   - Create an abstract adapter interface in TypeScript (`lib/integrations/types.ts` or similar) that defines the contract all integrations must satisfy.
@@ -1488,7 +1488,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-042: Background Worker Service
 
-- **Status:** READY
+- **Status:** DONE
 - **Goal:** Build a Node.js worker process that polls the queue, executes adapters for each request, and handles success and failure with single attempt per entry.
 - **Scope:**
   - Create a worker service that runs continuously or as a scheduled job (e.g. every 5-10 seconds).
@@ -1498,7 +1498,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
   - On adapter failure: capture the error, take a screenshot if the adapter provides one, update queue entry with `last_error`, `last_error_at`, and `screenshot_path` (if applicable), mark queue entry as `status = 'failed'`. No retries — single attempt only.
   - Add comprehensive structured logging for all steps: queue entry received, adapter started, adapter form fill, form submission, success/failure, screenshot capture (if applicable), worker completion. All logs must include event_type, adapter_name, external_id (if success), error_message, screenshot_path (if failure), and log_level.
   - Implement graceful shutdown handling (finish in-flight requests, exit cleanly).
-  - Worker should run as a background service (PM2, systemd, or equivalent).
+  - Worker should run as a background service on Render as a Background Worker.
 - **Out of Scope:** Audit logging (PBI-045), specific adapter implementations (PBI-043+), credential management
 - **Acceptance Criteria:**
   - Worker service exists and can be started via `npm run worker` or equivalent

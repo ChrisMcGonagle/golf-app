@@ -1,59 +1,82 @@
-type JsonPrimitive = string | number | boolean | null
+/**
+ * Integration adapter interface contract
+ * All external integration adapters must implement this interface
+ */
 
-export type JsonValue = JsonPrimitive | JsonObject | JsonValue[]
-
+export type JsonPrimitive = string | number | boolean | null;
+export type JsonValue = JsonPrimitive | JsonObject | JsonValue[];
 export type JsonObject = {
-  [key: string]: JsonValue
+  [key: string]: JsonValue;
+};
+
+export type LogEntry = string | JsonObject;
+
+/**
+ * Request context passed to adapter execution
+ */
+export interface IntegrationRequest {
+  id: string;
+  request_type: string;
+  payload: JsonValue;
+  request_id: string;
+  [key: string]: JsonValue;
 }
 
-export type IntegrationLogLevel = 'info' | 'warn' | 'error'
-
-export type IntegrationLogEntry = {
-  level: IntegrationLogLevel
-  message: string
-  requestId: string
-  adapterName: string
-  metadata?: JsonObject
+/**
+ * Execution context with logging and metadata
+ */
+export interface ExecutionContext {
+  workerId: string;
+  requestId: string;
+  queueEntryId: string;
+  logger: IntegrationLogger;
+  [key: string]: string | IntegrationLogger;
 }
 
-export type IntegrationLogger = (entry: IntegrationLogEntry) => void
-
-export type IntegrationErrorHandler = (error: unknown, context: IntegrationRequestContext) => string
-
-export type IntegrationRequestContext = {
-  requestId: string
-  adapterName: string
-  idempotencyKey: string
-  attemptNumber: number
-  logger: IntegrationLogger
-  handleError: IntegrationErrorHandler
+/**
+ * Structured logging interface
+ */
+export interface IntegrationLogger {
+  info(entry: LogEntry, data?: JsonObject): void;
+  warn(entry: LogEntry, data?: JsonObject): void;
+  error(entry: LogEntry, data?: JsonObject): void;
 }
 
-export type IntegrationAdapterRequest = {
-  requestId: string
-  requestType: string
-  payload: JsonValue
-  metadata: JsonValue
+/**
+ * Adapter execution response
+ */
+export interface AdapterResponse {
+  success: boolean;
+  externalId?: string;
+  error?: string;
+  screenshotPath?: string;
+  metadata?: JsonObject;
 }
 
-export type IntegrationExecutionResult = {
-  success: boolean
-  externalId?: string
-  error?: string
-  metadata?: JsonObject
-}
-
+/**
+ * Base adapter interface all integrations must implement
+ */
 export interface IntegrationAdapter {
-  name: string
-  validate(request: IntegrationAdapterRequest): boolean
   /**
-   * execute must treat context.idempotencyKey as the stable deduplication key for a logical request.
-   * Replays with the same idempotencyKey must not create duplicate external side effects and should
-   * resolve to the same logical outcome as the original attempt when the downstream system supports it.
+   * Unique identifier for this adapter (e.g., "golf_ireland")
    */
-  execute(
-    request: IntegrationAdapterRequest,
-    context: IntegrationRequestContext,
-  ): Promise<IntegrationExecutionResult>
-  cleanup?(context: IntegrationRequestContext): Promise<void>
+  readonly name: string;
+
+  /**
+   * Validate that the request payload is valid for this adapter
+   * @throws Error if validation fails
+   */
+  validate(request: IntegrationRequest): void;
+
+  /**
+   * Execute the integration action
+   * Must be idempotent - safe to call multiple times with same input
+   * @returns Response with success/failure and externalId if successful
+   */
+  execute(request: IntegrationRequest, context: ExecutionContext): Promise<AdapterResponse>;
+
+  /**
+   * Optional cleanup after execution
+   */
+  cleanup?(context: ExecutionContext): Promise<void>;
 }
