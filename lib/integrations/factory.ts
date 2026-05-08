@@ -4,6 +4,7 @@
 
 import { IntegrationAdapter } from './types';
 import { MockAdapter } from './mock';
+import { getIntegrationAdapterConfig } from './config';
 
 const SUPPORTED_ADAPTER_NAMES = ['mock'] as const;
 
@@ -73,10 +74,16 @@ export function resolveAdapterNameForRequestType(requestType: string): string {
  * @throws Error if adapter name is not recognized
  */
 export function createAdapterByName(name: string): IntegrationAdapter {
-  switch (normalizeAdapterName(name)) {
+  const normalizedName = normalizeAdapterName(name);
+  
+  switch (normalizedName) {
     case 'mock':
+      const config = getIntegrationAdapterConfig('mock');
+      if (!config.enabled) {
+        throw new Error(`Integration adapter is disabled: ${name}`);
+      }
       return new MockAdapter();
     default:
-      throw new Error(`Unknown adapter: ${name}`);
+      throw new Error(`Unknown integration adapter: ${name}`);
   }
 }

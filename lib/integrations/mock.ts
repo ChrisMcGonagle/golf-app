@@ -23,6 +23,27 @@ export class MockAdapter implements IntegrationAdapter {
   }
 
   async execute(request: IntegrationRequest, context: ExecutionContext): Promise<AdapterResponse> {
+    // Check if payload indicates failure
+    const payload = request.payload as Record<string, unknown>;
+    if (payload && typeof payload === 'object' && payload.shouldFail) {
+      context.logger.error({
+        event_type: 'adapter_execution_failed',
+        adapter_name: this.name,
+        queue_id: context.queueEntryId,
+        request_id: request.request_id,
+        worker_id: context.workerId,
+        error: 'Mock adapter failure',
+      });
+
+      return {
+        success: false,
+        error: 'Mock adapter failure',
+        metadata: {
+          outcome: 'mock-failure',
+        },
+      };
+    }
+
     context.logger.info({
       event_type: 'form_fill_in_progress',
       adapter_name: this.name,
@@ -40,7 +61,7 @@ export class MockAdapter implements IntegrationAdapter {
     });
 
     // Simulate successful execution with generated external ID
-    const externalId = `mock-${Date.now()}`;
+    const externalId = `mock-${request.request_id}`;
 
     context.logger.info({
       event_type: 'adapter_execution_completed',
@@ -57,7 +78,8 @@ export class MockAdapter implements IntegrationAdapter {
       success: true,
       externalId,
       metadata: {
-        executedAt: new Date().toISOString(),
+        outcome: 'mock-success',
+        attemptNumber: 1,
       },
     };
   }

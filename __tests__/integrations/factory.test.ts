@@ -62,20 +62,20 @@ describe('createAdapterByName', () => {
     expect(adapter.name).toBe('mock')
     expect(
       adapter.validate({
-        requestId: 'request-123',
-        requestType: 'membership_request',
+        id: 'req-123',
+        request_id: 'request-123',
+        request_type: 'membership_request',
         payload: { firstName: 'Pat' },
-        metadata: { source: 'test' },
       }),
-    ).toBe(true)
+    ).toBe(undefined)
 
     await expect(
       adapter.execute(
         {
-          requestId: 'request-123',
-          requestType: 'membership_request',
+          id: 'req-123',
+          request_id: 'request-123',
+          request_type: 'membership_request',
           payload: { firstName: 'Pat' },
-          metadata: { source: 'test' },
         },
         context,
       ),
@@ -95,10 +95,10 @@ describe('createAdapterByName', () => {
     await expect(
       adapter.execute(
         {
-          requestId: 'request-456',
-          requestType: 'membership_request',
+          id: 'req-456',
+          request_id: 'request-456',
+          request_type: 'membership_request',
           payload: { shouldFail: true },
-          metadata: { source: 'test' },
         },
         createContext(),
       ),
