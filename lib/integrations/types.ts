@@ -9,6 +9,8 @@ export type JsonObject = {
   [key: string]: JsonValue;
 };
 
+export type LogEntry = string | JsonObject;
+
 /**
  * Request context passed to adapter execution
  */
@@ -35,9 +37,9 @@ export interface ExecutionContext {
  * Structured logging interface
  */
 export interface IntegrationLogger {
-  info(message: string, data?: JsonObject): void;
-  warn(message: string, data?: JsonObject): void;
-  error(message: string, data?: JsonObject): void;
+  info(entry: LogEntry, data?: JsonObject): void;
+  warn(entry: LogEntry, data?: JsonObject): void;
+  error(entry: LogEntry, data?: JsonObject): void;
 }
 
 /**

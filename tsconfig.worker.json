@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "allowJs": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "rootDir": "./lib",
+    "outDir": "./dist",
+    "incremental": false,
+    "isolatedModules": false,
+    "jsx": "react-jsx",
+    "plugins": []
+  },
+  "include": ["lib/worker/index.ts"]
+}

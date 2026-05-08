@@ -1,442 +1,439 @@
-/**
- * Tests for background worker service (PBI-042)
- */
-
-import { StructuredLogger } from '@/lib/worker';
+import { MockAdapter } from '@/lib/integrations/mock';
+import type { IntegrationAdapter } from '@/lib/integrations/types';
+import * as updateMembershipRequestModule from '@/lib/actions/updateMembershipRequest';
 import * as dequeueModule from '@/lib/queue/dequeue';
 import * as factoryModule from '@/lib/integrations/factory';
 import * as supabaseModule from '@/lib/supabase/server';
-import { MockAdapter } from '@/lib/integrations/mock';
-import { DequeuedIntegrationQueueItem } from '@/lib/integrations/types';
+import {
+  processQueueBatch,
+  resetWorkerStateForTests,
+  runWorker,
+  setupGracefulShutdown,
+  StructuredLogger,
+} from '@/lib/worker';
+import type { DequeuedIntegrationQueueItem } from '@/lib/queue/dequeue';
 
-// Mock all external dependencies
+jest.mock('@/lib/actions/updateMembershipRequest');
 jest.mock('@/lib/queue/dequeue');
 jest.mock('@/lib/integrations/factory');
 jest.mock('@/lib/supabase/server');
 
+type QueueUpdateCall = {
+  table: string;
+  values: Record<string, unknown>;
+  id: string;
+};
+
+const queueEntry: DequeuedIntegrationQueueItem = {
+  id: 'queue-1',
+  requestId: 'request-1',
+  status: 'processing',
+  lastError: null,
+  lastErrorAt: null,
+  lockedAt: '2026-05-08T10:00:00.000Z',
+  lockedByWorker: 'test-worker-1',
+  metadata: null,
+  createdAt: '2026-05-08T10:00:00.000Z',
+  updatedAt: '2026-05-08T10:00:00.000Z',
+  requestType: 'Full Member',
+  payload: {
+    test: 'data',
+  },
+};
+
+function createSupabaseMock(queueUpdateCalls: QueueUpdateCall[]) {
+  return {
+    from: jest.fn((table: string) => ({
+      update: jest.fn((values: Record<string, unknown>) => ({
+        eq: jest.fn(async (_column: string, id: string) => {
+          queueUpdateCalls.push({ table, values, id });
+          return { error: null };
+        }),
+      })),
+    })),
+  };
+}
+
+function getLoggedEntries(spy: jest.SpyInstance): Record<string, unknown>[] {
+  return spy.mock.calls.map(([entry]) => JSON.parse(entry));
+}
+
 describe('Background Worker Service (PBI-042)', () => {
-  let mockDequeue: jest.Mock;
-  let mockCreateAdapterByName: jest.Mock;
-  let mockCreateServiceRoleClient: jest.Mock;
-  let mockSupabaseClient: any;
   let consoleLogSpy: jest.SpyInstance;
-  let consoleErrorSpy: jest.SpyInstance;
   let consoleWarnSpy: jest.SpyInstance;
+  let consoleErrorSpy: jest.SpyInstance;
+  let mockDequeue: jest.MockedFunction<typeof dequeueModule.dequeue>;
+  let mockCreateAdapterByName: jest.MockedFunction<typeof factoryModule.createAdapterByName>;
+  let mockResolveAdapterNameForRequestType: jest.MockedFunction<
+    typeof factoryModule.resolveAdapterNameForRequestType
+  >;
+  let mockCreateServiceRoleClient: jest.MockedFunction<typeof supabaseModule.createServiceRoleClient>;
+  let mockUpdateMembershipRequest: jest.MockedFunction<
+    typeof updateMembershipRequestModule.updateMembershipRequest
+  >;
+  let queueUpdateCalls: QueueUpdateCall[];
 
   beforeEach(() => {
     jest.clearAllMocks();
+    resetWorkerStateForTests();
 
-    // Setup dequeue mock
-    mockDequeue = dequeueModule.dequeue as jest.Mock;
-    mockDequeue.mockResolvedValue([]);
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
 
-    // Setup factory mock
-    mockCreateAdapterByName = factoryModule.createAdapterByName as jest.Mock;
+    queueUpdateCalls = [];
 
-    // Setup Supabase client mock
-    mockSupabaseClient = {
-      from: jest.fn().mockReturnThis(),
-      update: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockResolvedValue({ error: null }),
-    };
+    mockDequeue = dequeueModule.dequeue as jest.MockedFunction<typeof dequeueModule.dequeue>;
+    mockCreateAdapterByName =
+      factoryModule.createAdapterByName as jest.MockedFunction<typeof factoryModule.createAdapterByName>;
+    mockResolveAdapterNameForRequestType =
+      factoryModule.resolveAdapterNameForRequestType as jest.MockedFunction<
+        typeof factoryModule.resolveAdapterNameForRequestType
+      >;
+    mockCreateServiceRoleClient =
+      supabaseModule.createServiceRoleClient as jest.MockedFunction<typeof supabaseModule.createServiceRoleClient>;
+    mockUpdateMembershipRequest =
+      updateMembershipRequestModule.updateMembershipRequest as jest.MockedFunction<
+        typeof updateMembershipRequestModule.updateMembershipRequest
+      >;
 
-    mockCreateServiceRoleClient = supabaseModule.createServiceRoleClient as jest.Mock;
-    mockCreateServiceRoleClient.mockReturnValue(mockSupabaseClient);
-
-    // Setup console spies for logging assertions
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
-    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-    // Set environment variables
-    process.env.INTEGRATION_WORKER_ID = 'test-worker-1';
-    process.env.INTEGRATION_QUEUE_POLL_INTERVAL_MS = '100';
+    mockCreateServiceRoleClient.mockReturnValue(
+      createSupabaseMock(queueUpdateCalls) as unknown as ReturnType<
+        typeof supabaseModule.createServiceRoleClient
+      >
+    );
+    mockResolveAdapterNameForRequestType.mockReturnValue('mock');
+    mockUpdateMembershipRequest.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
-    consoleLogSpy.mockRestore();
-    consoleErrorSpy.mockRestore();
-    consoleWarnSpy.mockRestore();
-    delete process.env.INTEGRATION_WORKER_ID;
+    resetWorkerStateForTests();
+    jest.useRealTimers();
+
     delete process.env.INTEGRATION_QUEUE_POLL_INTERVAL_MS;
+    delete process.env.INTEGRATION_WORKER_ID;
+
+    consoleLogSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 
-  describe('Structured Logger', () => {
-    it('should log info messages as JSON with timestamp', () => {
-      const logger = new StructuredLogger();
-      logger.info('test message', { key: 'value' });
+  it('logs string entries as structured JSON', () => {
+    const logger = new StructuredLogger();
 
-      expect(consoleLogSpy).toHaveBeenCalled();
-      const logged = JSON.parse(consoleLogSpy.mock.calls[0][0]);
-      expect(logged).toMatchObject({
-        level: 'info',
-        message: 'test message',
-        key: 'value',
-      });
-      expect(logged.timestamp).toBeDefined();
-    });
+    logger.info('test message', { request_id: 'request-1' });
 
-    it('should log error messages as JSON with timestamp', () => {
-      const logger = new StructuredLogger();
-      logger.error('error occurred', { error_code: 'E001' });
-
-      expect(consoleErrorSpy).toHaveBeenCalled();
-      const logged = JSON.parse(consoleErrorSpy.mock.calls[0][0]);
-      expect(logged).toMatchObject({
-        level: 'error',
-        message: 'error occurred',
-        error_code: 'E001',
-      });
-      expect(logged.timestamp).toBeDefined();
-    });
-
-    it('should log warning messages as JSON with timestamp', () => {
-      const logger = new StructuredLogger();
-      logger.warn('warning issued', { context: 'test' });
-
-      expect(consoleWarnSpy).toHaveBeenCalled();
-      const logged = JSON.parse(consoleWarnSpy.mock.calls[0][0]);
-      expect(logged).toMatchObject({
-        level: 'warn',
-        message: 'warning issued',
-        context: 'test',
-      });
-      expect(logged.timestamp).toBeDefined();
+    expect(consoleLogSpy).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(consoleLogSpy.mock.calls[0][0])).toMatchObject({
+      log_level: 'info',
+      message: 'test message',
+      request_id: 'request-1',
     });
   });
 
-  describe('Adapter Execution', () => {
-    it('should instantiate correct adapter by request type', () => {
-      const mockAdapter = new MockAdapter();
-      mockCreateAdapterByName.mockReturnValue(mockAdapter);
+  it('logs object entries as structured JSON', () => {
+    const logger = new StructuredLogger();
 
-      const adapter = mockCreateAdapterByName('mock');
+    logger.info({ event_type: 'form_fill_in_progress', request_id: 'request-1' });
 
-      expect(mockCreateAdapterByName).toHaveBeenCalledWith('mock');
-      expect(adapter).toBe(mockAdapter);
+    expect(consoleLogSpy).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(consoleLogSpy.mock.calls[0][0])).toMatchObject({
+      log_level: 'info',
+      event_type: 'form_fill_in_progress',
+      request_id: 'request-1',
     });
+  });
 
-    it('should throw error for unknown adapter name', () => {
-      mockCreateAdapterByName.mockImplementation((name: string) => {
-        throw new Error(`Unknown adapter: ${name}`);
-      });
+  it('runs the dequeue-to-complete path and persists external_id', async () => {
+    mockDequeue.mockResolvedValueOnce([queueEntry]);
+    mockCreateAdapterByName.mockReturnValue(new MockAdapter());
 
-      expect(() => mockCreateAdapterByName('unknown')).toThrow('Unknown adapter: unknown');
-    });
+    const processedCount = await processQueueBatch('test-worker-1', new StructuredLogger(), 10);
 
-    it('should execute adapter with request payload', async () => {
-      const mockAdapter = new MockAdapter();
-      const executeSpy = jest.spyOn(mockAdapter, 'execute').mockResolvedValueOnce({
-        success: true,
-        externalId: 'ext-123',
-      });
-
-      const request = {
+    expect(processedCount).toBe(1);
+    expect(mockDequeue).toHaveBeenCalledWith('test-worker-1', 10);
+    expect(mockResolveAdapterNameForRequestType).toHaveBeenCalledWith('Full Member');
+    expect(mockCreateAdapterByName).toHaveBeenCalledWith('mock');
+    expect(mockUpdateMembershipRequest).toHaveBeenCalledWith(
+      'request-1',
+      expect.objectContaining({
+        external_id: expect.stringMatching(/^mock-\d+$/),
+        golfireland_account: 'completed',
+      })
+    );
+    expect(queueUpdateCalls).toContainEqual(
+      expect.objectContaining({
+        table: 'integration_queue',
         id: 'queue-1',
-        request_type: 'mock',
-        payload: { field1: 'value1' },
-        request_id: 'request-1',
-      };
+        values: expect.objectContaining({ status: 'completed' }),
+      })
+    );
 
-      const context = {
-        workerId: 'test-worker',
-        requestId: 'request-1',
-        queueEntryId: 'queue-1',
-        logger: new StructuredLogger(),
-      };
+    const infoLogs = getLoggedEntries(consoleLogSpy);
+    const loggedEvents = infoLogs.map((entry) => entry.event_type).filter(Boolean);
+    expect(loggedEvents).toContain('form_fill_in_progress');
+    expect(loggedEvents).toContain('form_submission_attempted');
 
-      const response = await mockAdapter.execute(request, context);
-
-      expect(response.success).toBe(true);
-      expect(response.externalId).toBe('ext-123');
-    });
+    expect(infoLogs).toContainEqual(
+      expect.objectContaining({
+        event_type: 'adapter_execution_completed',
+        adapter_name: 'mock',
+        external_id: expect.stringMatching(/^mock-\d+$/),
+        error_message: null,
+        screenshot_path: null,
+        log_level: 'info',
+      })
+    );
+    expect(infoLogs).toContainEqual(
+      expect.objectContaining({
+        event_type: 'adapter_cleanup_completed',
+        adapter_name: 'mock',
+        external_id: null,
+        error_message: null,
+        screenshot_path: null,
+        log_level: 'info',
+      })
+    );
   });
 
-  describe('Success Handling', () => {
-    it('should prepare success log with externalId', () => {
-      const logger = new StructuredLogger();
+  it('marks the queue entry as failed when the adapter returns a failed response', async () => {
+    const failingAdapter: IntegrationAdapter = {
+      name: 'mock',
+      validate: jest.fn(),
+      execute: jest.fn().mockResolvedValue({
+        success: false,
+        error: 'Form submission rejected',
+        screenshotPath: '/tmp/form-submission.png',
+      }),
+    };
 
-      logger.info('processing_succeeded', {
-        event_type: 'processing_succeeded',
-        adapter_name: 'mock',
-        externalId: 'ext-123',
-        request_id: 'request-1',
-      });
+    mockDequeue.mockResolvedValueOnce([queueEntry]);
+    mockCreateAdapterByName.mockReturnValue(failingAdapter);
 
-      expect(consoleLogSpy).toHaveBeenCalled();
-      const logged = JSON.parse(consoleLogSpy.mock.calls[0][0]);
-      expect(logged).toMatchObject({
-        event_type: 'processing_succeeded',
-        adapter_name: 'mock',
-        externalId: 'ext-123',
-        request_id: 'request-1',
-      });
-    });
+    const processedCount = await processQueueBatch('test-worker-1', new StructuredLogger(), 10);
 
-    it('should update membership_requests on successful adapter response', async () => {
-      mockSupabaseClient.from.mockReturnValue({
-        update: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ error: null }),
-        }),
-      });
-
-      const supabase = mockCreateServiceRoleClient();
-      const { error } = await supabase
-        .from('membership_requests')
-        .update({ golfireland_account: 'completed' })
-        .eq('id', 'request-1');
-
-      expect(error).toBeNull();
-      expect(mockSupabaseClient.from).toHaveBeenCalledWith('membership_requests');
-    });
-
-    it('should update queue entry to completed status', async () => {
-      mockSupabaseClient.from.mockReturnValue({
-        update: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ error: null }),
-        }),
-      });
-
-      const supabase = mockCreateServiceRoleClient();
-      const { error } = await supabase
-        .from('integration_queue')
-        .update({ status: 'completed' })
-        .eq('id', 'queue-1');
-
-      expect(error).toBeNull();
-      expect(mockSupabaseClient.from).toHaveBeenCalledWith('integration_queue');
-    });
-  });
-
-  describe('Failure Handling', () => {
-    it('should prepare failure log with error message', () => {
-      const logger = new StructuredLogger();
-
-      const errorLog: any = {
-        event_type: 'processing_failed',
-        adapter_name: 'mock',
-        error_message: 'Integration failed',
-        request_id: 'request-1',
-      };
-
-      logger.error('processing_failed', errorLog);
-
-      expect(consoleErrorSpy).toHaveBeenCalled();
-      const logged = JSON.parse(consoleErrorSpy.mock.calls[0][0]);
-      expect(logged).toMatchObject({
-        event_type: 'processing_failed',
-        adapter_name: 'mock',
-        error_message: 'Integration failed',
-        request_id: 'request-1',
-      });
-    });
-
-    it('should include screenshot_path in failure log when provided', () => {
-      const logger = new StructuredLogger();
-
-      const errorLog: any = {
-        event_type: 'processing_failed',
-        adapter_name: 'mock',
-        error_message: 'Form submission timeout',
-        request_id: 'request-1',
-        screenshot_path: '/path/to/screenshot.png',
-      };
-
-      logger.error('processing_failed', errorLog);
-
-      expect(consoleErrorSpy).toHaveBeenCalled();
-      const logged = JSON.parse(consoleErrorSpy.mock.calls[0][0]);
-      expect(logged.screenshot_path).toBe('/path/to/screenshot.png');
-    });
-
-    it('should mark queue entry as failed with error details', async () => {
-      mockSupabaseClient.from.mockReturnValue({
-        update: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({ error: null }),
-        }),
-      });
-
-      const supabase = mockCreateServiceRoleClient();
-      const { error } = await supabase
-        .from('integration_queue')
-        .update({
+    expect(processedCount).toBe(1);
+    expect(mockUpdateMembershipRequest).not.toHaveBeenCalled();
+    expect(queueUpdateCalls).toContainEqual(
+      expect.objectContaining({
+        table: 'integration_queue',
+        id: 'queue-1',
+        values: expect.objectContaining({
           status: 'failed',
-          last_error: 'Integration failed',
-          last_error_at: new Date().toISOString(),
-        })
-        .eq('id', 'queue-1');
-
-      expect(error).toBeNull();
-      expect(mockSupabaseClient.from).toHaveBeenCalledWith('integration_queue');
-    });
-
-    it('should NOT retry on failure (status should be failed, not pending)', () => {
-      const failedStatus = 'failed';
-      const retryStatus = 'pending';
-
-      expect(failedStatus).not.toBe(retryStatus);
-      expect(failedStatus).toBe('failed');
+          last_error: 'Form submission rejected',
+          screenshot_path: '/tmp/form-submission.png',
+        }),
+      })
+    );
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(JSON.parse(consoleErrorSpy.mock.calls[0][0])).toMatchObject({
+      event_type: 'processing_failed',
+      log_level: 'error',
+      screenshot_path: '/tmp/form-submission.png',
     });
   });
 
-  describe('Request Validation', () => {
-    it('should validate request has required fields', () => {
-      const mockAdapter = new MockAdapter();
+  it('marks the queue entry as failed when adapter execution throws', async () => {
+    const throwingAdapter: IntegrationAdapter = {
+      name: 'mock',
+      validate: jest.fn(),
+      execute: jest.fn().mockRejectedValue(new Error('Unexpected adapter error')),
+    };
 
-      const validRequest = {
+    mockDequeue.mockResolvedValueOnce([queueEntry]);
+    mockCreateAdapterByName.mockReturnValue(throwingAdapter);
+
+    const processedCount = await processQueueBatch('test-worker-1', new StructuredLogger(), 10);
+
+    expect(processedCount).toBe(1);
+    expect(mockUpdateMembershipRequest).not.toHaveBeenCalled();
+    expect(queueUpdateCalls).toContainEqual(
+      expect.objectContaining({
+        table: 'integration_queue',
         id: 'queue-1',
-        request_type: 'mock',
-        payload: { test: 'data' },
-        request_id: 'request-1',
-      };
-
-      // Should not throw
-      expect(() => mockAdapter.validate(validRequest)).not.toThrow();
-    });
-
-    it('should throw on invalid request (missing request_id)', () => {
-      const mockAdapter = new MockAdapter();
-
-      const invalidRequest = {
-        id: 'queue-1',
-        request_type: 'mock',
-        payload: { test: 'data' },
-        request_id: '',
-      };
-
-      expect(() => mockAdapter.validate(invalidRequest)).toThrow();
-    });
-
-    it('should throw on invalid request (missing payload)', () => {
-      const mockAdapter = new MockAdapter();
-
-      const invalidRequest = {
-        id: 'queue-1',
-        request_type: 'mock',
-        payload: null,
-        request_id: 'request-1',
-      };
-
-      expect(() => mockAdapter.validate(invalidRequest as any)).toThrow();
-    });
+        values: expect.objectContaining({
+          status: 'failed',
+          last_error: 'Unexpected adapter error',
+        }),
+      })
+    );
   });
 
-  describe('Mock Adapter', () => {
-    it('should have name property', () => {
-      const adapter = new MockAdapter();
-      expect(adapter.name).toBe('mock');
-    });
+  it('logs queue_processing_error with the resolved adapter name when failure persistence throws', async () => {
+    const persistenceError = { message: 'integration_queue update failed' };
+    const failingAdapter: IntegrationAdapter = {
+      name: 'mock',
+      validate: jest.fn(),
+      execute: jest.fn().mockResolvedValue({
+        success: false,
+        error: 'Form submission rejected',
+      }),
+    };
 
-    it('should execute successfully and return externalId', async () => {
-      const adapter = new MockAdapter();
-      const logger = new StructuredLogger();
+    mockDequeue.mockResolvedValueOnce([queueEntry]);
+    mockCreateAdapterByName.mockReturnValue(failingAdapter);
+    mockCreateServiceRoleClient.mockReturnValue({
+      from: jest.fn(() => ({
+        update: jest.fn(() => ({
+          eq: jest.fn(async () => ({ error: persistenceError })),
+        })),
+      })),
+    } as unknown as ReturnType<typeof supabaseModule.createServiceRoleClient>);
 
-      const request = {
-        id: 'queue-1',
-        request_type: 'mock',
-        payload: { test: 'data' },
-        request_id: 'request-1',
-      };
+    const processedCount = await processQueueBatch('test-worker-1', new StructuredLogger(), 10);
 
-      const context = {
-        workerId: 'test-worker',
-        requestId: 'request-1',
-        queueEntryId: 'queue-1',
-        logger,
-      };
+    expect(processedCount).toBe(1);
+    expect(consoleErrorSpy).toHaveBeenCalled();
 
-      const response = await adapter.execute(request, context);
-
-      expect(response.success).toBe(true);
-      expect(response.externalId).toBeDefined();
-      expect(response.externalId).toMatch(/^mock-\d+$/);
-      expect(response.metadata).toBeDefined();
-      expect(response.metadata!.executedAt).toBeDefined();
-    });
-
-    it('should support cleanup method', async () => {
-      const adapter = new MockAdapter();
-      const logger = new StructuredLogger();
-
-      const context = {
-        workerId: 'test-worker',
-        requestId: 'request-1',
-        queueEntryId: 'queue-1',
-        logger,
-      };
-
-      // Should not throw
-      await adapter.cleanup?.(context);
-      expect(consoleLogSpy).toHaveBeenCalled();
-    });
+    const errorLogs = getLoggedEntries(consoleErrorSpy);
+    expect(errorLogs).toContainEqual(
+      expect.objectContaining({
+        event_type: 'queue_processing_error',
+        adapter_name: 'mock',
+        error_message: 'Failed to update queue entry: integration_queue update failed',
+        log_level: 'error',
+      })
+    );
   });
 
-  describe('Dequeue Integration', () => {
-    it('should call dequeue with correct worker ID', async () => {
-      mockDequeue.mockResolvedValueOnce([]);
+  it('returns zero when no queue items are available', async () => {
+    mockDequeue.mockResolvedValueOnce([]);
 
-      await mockDequeue('test-worker-1', 10);
+    const processedCount = await processQueueBatch('test-worker-1', new StructuredLogger(), 10);
 
-      expect(mockDequeue).toHaveBeenCalledWith('test-worker-1', 10);
-    });
+    expect(processedCount).toBe(0);
+    expect(mockCreateAdapterByName).not.toHaveBeenCalled();
+    expect(mockUpdateMembershipRequest).not.toHaveBeenCalled();
+    expect(queueUpdateCalls).toEqual([]);
+  });
 
-    it('should call dequeue with default batch size of 10', async () => {
-      mockDequeue.mockResolvedValueOnce([]);
+  it('polls again after the configured interval and stops on graceful shutdown', async () => {
+    jest.useFakeTimers();
 
-      await mockDequeue('test-worker-1', 10);
+    const signalHandlers: Partial<Record<'SIGINT' | 'SIGTERM', () => void | Promise<void>>> = {};
+    const processOnSpy = jest.spyOn(process, 'on').mockImplementation(
+      ((event: NodeJS.Signals, handler: () => void | Promise<void>) => {
+        if (event === 'SIGTERM' || event === 'SIGINT') {
+          signalHandlers[event] = handler;
+        }
 
-      expect(mockDequeue).toHaveBeenCalledWith('test-worker-1', 10);
-    });
+        return process;
+      }) as typeof process.on
+    );
+    const processExitSpy = jest
+      .spyOn(process, 'exit')
+      .mockImplementation((() => undefined) as never);
 
-    it('should handle empty dequeue response', async () => {
-      mockDequeue.mockResolvedValueOnce([]);
+    process.env.INTEGRATION_QUEUE_POLL_INTERVAL_MS = '250';
+    process.env.INTEGRATION_WORKER_ID = 'test-worker-1';
+    mockDequeue.mockResolvedValue([]);
 
-      const result = await mockDequeue('test-worker-1', 10);
+    await setupGracefulShutdown(new StructuredLogger());
 
-      expect(result).toEqual([]);
-    });
+    const workerPromise = runWorker();
+    await Promise.resolve();
 
-    it('should handle batch of queue entries', async () => {
-      const mockEntries: DequeuedIntegrationQueueItem[] = [
-        {
-          id: 'queue-1',
-          requestId: 'request-1',
-          status: 'processing',
-          lastError: null,
-          lastErrorAt: null,
-          lockedAt: new Date().toISOString(),
-          lockedByWorker: 'test-worker-1',
-          metadata: null,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          requestType: 'mock',
-          payload: { test: 'data' },
-        },
-        {
-          id: 'queue-2',
-          requestId: 'request-2',
-          status: 'processing',
-          lastError: null,
-          lastErrorAt: null,
-          lockedAt: new Date().toISOString(),
-          lockedByWorker: 'test-worker-1',
-          metadata: null,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          requestType: 'mock',
-          payload: { test: 'data2' },
-        },
-      ];
+    expect(mockDequeue).toHaveBeenCalledTimes(1);
+    expect(mockDequeue).toHaveBeenNthCalledWith(1, 'test-worker-1', 10);
 
-      mockDequeue.mockResolvedValueOnce(mockEntries);
+    await jest.advanceTimersByTimeAsync(250);
 
-      const result = await mockDequeue('test-worker-1', 10);
+    expect(mockDequeue).toHaveBeenCalledTimes(2);
+    expect(mockDequeue).toHaveBeenNthCalledWith(2, 'test-worker-1', 10);
 
-      expect(result).toHaveLength(2);
-      expect(result[0].id).toBe('queue-1');
-      expect(result[1].id).toBe('queue-2');
-    });
+    await signalHandlers.SIGTERM?.();
+    await jest.advanceTimersByTimeAsync(250);
+    await workerPromise;
+
+    expect(processExitSpy).toHaveBeenCalledWith(0);
+    expect(consoleLogSpy.mock.calls.map(([entry]) => JSON.parse(entry).event_type)).toEqual(
+      expect.arrayContaining([
+        'worker_polling_started',
+        'graceful_shutdown_initiated',
+        'graceful_shutdown_complete',
+        'worker_polling_stopped',
+      ])
+    );
+
+    processOnSpy.mockRestore();
+    processExitSpy.mockRestore();
+  });
+
+  it('waits for in-flight work to complete before exiting during graceful shutdown', async () => {
+    jest.useFakeTimers();
+
+    let resolveExecution: ((value: { success: true; externalId: string }) => void) | undefined;
+    const signalHandlers: Partial<Record<'SIGINT' | 'SIGTERM', () => void | Promise<void>>> = {};
+    const processOnSpy = jest.spyOn(process, 'on').mockImplementation(
+      ((event: NodeJS.Signals, handler: () => void | Promise<void>) => {
+        if (event === 'SIGTERM' || event === 'SIGINT') {
+          signalHandlers[event] = handler;
+        }
+
+        return process;
+      }) as typeof process.on
+    );
+    const processExitSpy = jest
+      .spyOn(process, 'exit')
+      .mockImplementation((() => undefined) as never);
+
+    const slowAdapter: IntegrationAdapter = {
+      name: 'mock',
+      validate: jest.fn(),
+      execute: jest.fn().mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveExecution = resolve;
+          })
+      ),
+    };
+
+    mockDequeue.mockResolvedValueOnce([queueEntry]);
+    mockCreateAdapterByName.mockReturnValue(slowAdapter);
+
+    await setupGracefulShutdown(new StructuredLogger());
+
+    const batchPromise = processQueueBatch('test-worker-1', new StructuredLogger(), 10);
+    await Promise.resolve();
+
+    const shutdownPromise = signalHandlers.SIGTERM?.();
+    await Promise.resolve();
+
+    expect(processExitSpy).not.toHaveBeenCalled();
+
+    resolveExecution?.({ success: true, externalId: 'mock-42' });
+    await batchPromise;
+    await jest.advanceTimersByTimeAsync(1000);
+    await shutdownPromise;
+
+    expect(processExitSpy).toHaveBeenCalledWith(0);
+    expect(consoleLogSpy.mock.calls.map(([entry]) => JSON.parse(entry).event_type)).toEqual(
+      expect.arrayContaining(['graceful_shutdown_initiated', 'graceful_shutdown_complete'])
+    );
+
+    processOnSpy.mockRestore();
+    processExitSpy.mockRestore();
+  });
+
+  it('validates mock adapter payload requirements', () => {
+    const adapter = new MockAdapter();
+
+    expect(() =>
+      adapter.validate({
+        id: 'queue-1',
+        request_type: 'mock',
+        payload: { valid: true },
+        request_id: 'request-1',
+      })
+    ).not.toThrow();
+    expect(() =>
+      adapter.validate({
+        id: 'queue-1',
+        request_type: 'mock',
+        payload: null as never,
+        request_id: 'request-1',
+      })
+    ).toThrow('payload is required and must be an object');
   });
 });
 

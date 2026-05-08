@@ -175,6 +175,7 @@ describe('PBI-040 schema contract', () => {
 
     expect(schema).toContain('alter table public.integration_queue');
     expect(schema).toContain('add column if not exists request_id       uuid,');
+    expect(schema).toContain('add column if not exists screenshot_path  text,');
     expect(schema).toContain('alter column request_id set not null;');
   });
 

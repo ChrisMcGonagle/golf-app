@@ -1,4 +1,4 @@
-import { createServiceRoleClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '../supabase/server';
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonObject | JsonValue[];

@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GOLFAPP
 
-## Getting Started
+Next.js kiosk-style golf club application with a separate long-running integration worker.
 
-First, run the development server:
+## Local development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The worker compiles separately and can be built or run with:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build:worker
+npm run worker
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deployment
 
-## Learn More
+This repo is intended to run across three services:
 
-To learn more about Next.js, take a look at the following resources:
+- Vercel hosts the Next.js web app.
+- Supabase provides the database and storage.
+- Render runs the integration worker as a Background Worker.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The worker is a separate long-running process that polls the queue continuously. It is not something Vercel runs in the background for this app.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Web app on Vercel
 
-## Deploy on Vercel
+Deploy the repository to Vercel as a standard Next.js application. The existing `build` script already includes the worker compile step, so Vercel builds the full repo, but only the web application is served there.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Database and storage on Supabase
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Provision the Supabase project separately and supply the application environment variables in Vercel and Render as appropriate.
+
+### Worker on Render
+
+Use the repo-root `render.yaml` to create a Render Background Worker. It uses:
+
+- `buildCommand`: `npm install && npm run build`
+- `startCommand`: `npm run worker`
+
+Required worker environment variables:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `INTEGRATION_QUEUE_POLL_INTERVAL_MS`
+- `INTEGRATION_WORKER_ID`
+- `INTEGRATION_REQUEST_TYPE_ADAPTER_MAP`
+
+Example non-secret values:
+
+```env
+INTEGRATION_QUEUE_POLL_INTERVAL_MS=5000
+INTEGRATION_WORKER_ID=render-worker-1
+INTEGRATION_REQUEST_TYPE_ADAPTER_MAP={"Full Member":"mock"}
+```
+
+`SUPABASE_SERVICE_ROLE_KEY` must remain server-only. `INTEGRATION_REQUEST_TYPE_ADAPTER_MAP` must be valid JSON because the worker parses it at startup.

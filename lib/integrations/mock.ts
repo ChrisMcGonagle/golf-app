@@ -23,16 +23,34 @@ export class MockAdapter implements IntegrationAdapter {
   }
 
   async execute(request: IntegrationRequest, context: ExecutionContext): Promise<AdapterResponse> {
-    context.logger.info('mock adapter executing', {
+    context.logger.info({
+      event_type: 'form_fill_in_progress',
+      adapter_name: this.name,
+      queue_id: context.queueEntryId,
       request_id: request.request_id,
+      worker_id: context.workerId,
+    });
+
+    context.logger.info({
+      event_type: 'form_submission_attempted',
+      adapter_name: this.name,
+      queue_id: context.queueEntryId,
+      request_id: request.request_id,
+      worker_id: context.workerId,
     });
 
     // Simulate successful execution with generated external ID
     const externalId = `mock-${Date.now()}`;
 
-    context.logger.info('mock adapter completed', {
+    context.logger.info({
+      event_type: 'adapter_execution_completed',
+      adapter_name: this.name,
+      external_id: externalId,
+      error_message: null,
+      screenshot_path: null,
+      queue_id: context.queueEntryId,
       request_id: request.request_id,
-      externalId,
+      worker_id: context.workerId,
     });
 
     return {
@@ -45,8 +63,15 @@ export class MockAdapter implements IntegrationAdapter {
   }
 
   async cleanup(context: ExecutionContext): Promise<void> {
-    context.logger.info('mock adapter cleanup', {
+    context.logger.info({
+      event_type: 'adapter_cleanup_completed',
+      adapter_name: this.name,
+      external_id: null,
+      error_message: null,
+      screenshot_path: null,
+      queue_id: context.queueEntryId,
       request_id: context.requestId,
+      worker_id: context.workerId,
     });
   }
 }

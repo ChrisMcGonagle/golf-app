@@ -1,0 +1,17 @@
+services:
+  - type: worker
+    name: golfapp-worker
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run worker
+    envVars:
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: INTEGRATION_QUEUE_POLL_INTERVAL_MS
+        sync: false
+      - key: INTEGRATION_WORKER_ID
+        sync: false
+      - key: INTEGRATION_REQUEST_TYPE_ADAPTER_MAP
+        sync: false

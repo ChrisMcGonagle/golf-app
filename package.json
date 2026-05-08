@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && npm run build:worker",
+    "build:worker": "tsc -p tsconfig.worker.json",
     "start": "next start",
     "lint": "next lint",
+    "tsc": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
-    "worker": "node --require ts-node/register lib/worker/index.ts",
+    "worker": "node dist/worker/index.js",
     "prepare": "sh scripts/setup-hooks.sh"
   },
   "dependencies": {

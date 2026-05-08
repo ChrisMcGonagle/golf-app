@@ -4,15 +4,17 @@
  */
 
 import { randomUUID } from 'crypto';
-import { dequeue, DequeuedIntegrationQueueItem } from '@/lib/queue/dequeue';
-import { createAdapterByName } from '@/lib/integrations/factory';
+import { updateMembershipRequest, MembershipRequestUpdate } from '../actions/updateMembershipRequest';
+import { dequeue, DequeuedIntegrationQueueItem } from '../queue/dequeue';
+import { createAdapterByName, resolveAdapterNameForRequestType } from '../integrations/factory';
 import {
   ExecutionContext,
   IntegrationLogger,
   IntegrationRequest,
   JsonObject,
-} from '@/lib/integrations/types';
-import { createServiceRoleClient } from '@/lib/supabase/server';
+  LogEntry,
+} from '../integrations/types';
+import { createServiceRoleClient } from '../supabase/server';
 
 // ============================================================
 // Constants & Configuration
@@ -21,42 +23,77 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
 const DEFAULT_POLL_INTERVAL_MS = 5000;
 const DEFAULT_WORKER_ID = () => `worker-${randomUUID()}`;
 
+function buildWorkerLog(entry: JsonObject): JsonObject {
+  return {
+    adapter_name: null,
+    error_message: null,
+    event_type: null,
+    external_id: null,
+    screenshot_path: null,
+    ...entry,
+  };
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function getScreenshotPathFromError(error: unknown): string | undefined {
+  if (!error || typeof error !== 'object') {
+    return undefined;
+  }
+
+  const screenshotPath = (error as { screenshotPath?: unknown }).screenshotPath;
+  return typeof screenshotPath === 'string' ? screenshotPath : undefined;
+}
+
+function isMissingScreenshotPathColumn(message: string): boolean {
+  const normalizedMessage = message.toLowerCase();
+  return normalizedMessage.includes('screenshot_path') && normalizedMessage.includes('column');
+}
+
 // ============================================================
 // Structured Logger
 // ============================================================
 
 class StructuredLogger implements IntegrationLogger {
-  info(message: string, data?: JsonObject): void {
-    console.log(
-      JSON.stringify({
-        level: 'info',
-        message,
-        timestamp: new Date().toISOString(),
-        ...data,
-      })
-    );
+  private write(
+    level: 'info' | 'warn' | 'error',
+    entry: LogEntry,
+    data: JsonObject | undefined,
+    sink: typeof console.log
+  ): void {
+    const base = {
+      log_level: level,
+      timestamp: new Date().toISOString(),
+    };
+
+    const payload =
+      typeof entry === 'string'
+        ? {
+            ...base,
+            message: entry,
+            ...data,
+          }
+        : {
+            ...base,
+            ...entry,
+            ...data,
+          };
+
+    sink(JSON.stringify(payload));
   }
 
-  warn(message: string, data?: JsonObject): void {
-    console.warn(
-      JSON.stringify({
-        level: 'warn',
-        message,
-        timestamp: new Date().toISOString(),
-        ...data,
-      })
-    );
+  info(entry: LogEntry, data?: JsonObject): void {
+    this.write('info', entry, data, console.log);
   }
 
-  error(message: string, data?: JsonObject): void {
-    console.error(
-      JSON.stringify({
-        level: 'error',
-        message,
-        timestamp: new Date().toISOString(),
-        ...data,
-      })
-    );
+  warn(entry: LogEntry, data?: JsonObject): void {
+    this.write('warn', entry, data, console.warn);
+  }
+
+  error(entry: LogEntry, data?: JsonObject): void {
+    this.write('error', entry, data, console.error);
   }
 }
 
@@ -74,34 +111,30 @@ async function handleSuccess(
   const supabase = createServiceRoleClient();
 
   logger.info('processing_succeeded', {
-    event_type: 'processing_succeeded',
-    adapter_name: adapterName,
-    externalId,
+    ...buildWorkerLog({
+      event_type: 'processing_succeeded',
+      adapter_name: adapterName,
+      external_id: externalId,
+    }),
     request_id: requestId,
   });
 
   // Map adapter name to column name (e.g., 'golf_ireland' -> 'golfireland_account')
-  const columnMap: Record<string, string> = {
+  const columnMap = {
     mock: 'golfireland_account',
     golf_ireland: 'golfireland_account',
     brs: 'brs_account',
     clubv1: 'clubv1_account',
+  } as const;
+
+  const columnName = columnMap[adapterName as keyof typeof columnMap] || 'golfireland_account';
+
+  const membershipRequestUpdates: MembershipRequestUpdate = {
+    external_id: externalId,
   };
+  membershipRequestUpdates[columnName] = 'completed';
 
-  const columnName = columnMap[adapterName] || 'golfireland_account';
-
-  // Update membership_requests with externalId
-  const { error: updateError } = await supabase
-    .from('membership_requests')
-    .update({
-      [columnName]: 'completed',
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', requestId);
-
-  if (updateError) {
-    throw new Error(`Failed to update membership_requests: ${updateError.message}`);
-  }
+  await updateMembershipRequest(requestId, membershipRequestUpdates);
 
   // Update queue entry as completed
   const { error: queueError } = await supabase
@@ -132,28 +165,54 @@ async function handleFailure(
   const supabase = createServiceRoleClient();
 
   const errorLog: JsonObject = {
-    event_type: 'processing_failed',
-    adapter_name: adapterName,
-    error_message: error,
+    ...buildWorkerLog({
+      event_type: 'processing_failed',
+      adapter_name: adapterName,
+      error_message: error,
+      screenshot_path: screenshotPath ?? null,
+    }),
     request_id: requestId,
   };
 
-  if (screenshotPath) {
-    errorLog.screenshot_path = screenshotPath;
-  }
-
   logger.error('processing_failed', errorLog);
 
-  // Update queue entry as failed with error details
-  const { error: queueError } = await supabase
+  const failureUpdate: Record<string, string> = {
+    status: 'failed',
+    last_error: error,
+    last_error_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  if (screenshotPath) {
+    failureUpdate.screenshot_path = screenshotPath;
+  }
+
+  let { error: queueError } = await supabase
     .from('integration_queue')
-    .update({
-      status: 'failed',
-      last_error: error,
-      last_error_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
+    .update(failureUpdate)
     .eq('id', queueEntryId);
+
+  if (queueError && screenshotPath && isMissingScreenshotPathColumn(queueError.message)) {
+    logger.warn(
+      'failure_screenshot_persistence_unavailable',
+      buildWorkerLog({
+        event_type: 'failure_screenshot_persistence_unavailable',
+        adapter_name: adapterName,
+        error_message: queueError.message,
+        screenshot_path: screenshotPath,
+      })
+    );
+
+    ({ error: queueError } = await supabase
+      .from('integration_queue')
+      .update({
+        status: 'failed',
+        last_error: error,
+        last_error_at: failureUpdate.last_error_at,
+        updated_at: failureUpdate.updated_at,
+      })
+      .eq('id', queueEntryId));
+  }
 
   if (queueError) {
     throw new Error(`Failed to update queue entry: ${queueError.message}`);
@@ -173,22 +232,30 @@ async function processQueueEntry(
   const requestId = queueEntry.requestId;
   const requestType = queueEntry.requestType;
   const payload = queueEntry.payload;
+  const adapterName = resolveAdapterNameForRequestType(requestType);
 
   logger.info('queue_entry_received', {
-    event_type: 'queue_entry_received',
+    ...buildWorkerLog({
+      event_type: 'queue_entry_received',
+      adapter_name: adapterName,
+    }),
     queue_id: queueEntryId,
     request_id: requestId,
+    request_type: requestType,
   });
 
   try {
     // Instantiate adapter
     logger.info('adapter_instantiation_started', {
-      event_type: 'adapter_instantiation_started',
-      adapter_name: requestType,
+      ...buildWorkerLog({
+        event_type: 'adapter_instantiation_started',
+        adapter_name: adapterName,
+      }),
       request_id: requestId,
+      request_type: requestType,
     });
 
-    const adapter = createAdapterByName(requestType);
+    const adapter = createAdapterByName(adapterName);
 
     // Create execution context
     const context: ExecutionContext = {
@@ -210,22 +277,25 @@ async function processQueueEntry(
 
     // Execute adapter
     logger.info('adapter_execution_started', {
-      event_type: 'adapter_execution_started',
-      adapter_name: requestType,
+      ...buildWorkerLog({
+        event_type: 'adapter_execution_started',
+        adapter_name: adapterName,
+      }),
       request_id: requestId,
+      request_type: requestType,
     });
 
     const response = await adapter.execute(request, context);
 
     // Handle response
     if (response.success && response.externalId) {
-      await handleSuccess(queueEntryId, requestId, requestType, response.externalId, logger);
+      await handleSuccess(queueEntryId, requestId, adapterName, response.externalId, logger);
     } else {
       const errorMessage = response.error || 'Unknown error';
       await handleFailure(
         queueEntryId,
         requestId,
-        requestType,
+        adapterName,
         errorMessage,
         response.screenshotPath,
         logger
@@ -237,9 +307,50 @@ async function processQueueEntry(
       await adapter.cleanup(context);
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    await handleFailure(queueEntryId, requestId, requestType, errorMessage, undefined, logger);
+    await handleFailure(
+      queueEntryId,
+      requestId,
+      adapterName,
+      getErrorMessage(error),
+      getScreenshotPathFromError(error),
+      logger
+    );
   }
+}
+
+async function processQueueBatch(
+  workerId: string,
+  logger: IntegrationLogger,
+  batchSize = 10
+): Promise<number> {
+  const queueEntries = await dequeue(workerId, batchSize);
+
+  if (queueEntries.length === 0) {
+    return 0;
+  }
+
+  const promises = queueEntries.map((entry) => {
+    inFlightCount++;
+    return processQueueEntry(entry, workerId, logger)
+      .catch((error) => {
+        logger.error('queue_processing_error', {
+          ...buildWorkerLog({
+            event_type: 'queue_processing_error',
+            adapter_name: resolveAdapterNameForRequestType(entry.requestType),
+            error_message: getErrorMessage(error),
+          }),
+          queue_id: entry.id,
+          request_id: entry.requestId,
+        });
+      })
+      .finally(() => {
+        inFlightCount--;
+      });
+  });
+
+  await Promise.all(promises);
+
+  return queueEntries.length;
 }
 
 // ============================================================
@@ -257,7 +368,9 @@ async function runWorker(): Promise<void> {
   const batchSize = 10;
 
   logger.info('worker_polling_started', {
-    event_type: 'worker_polling_started',
+    ...buildWorkerLog({
+      event_type: 'worker_polling_started',
+    }),
     worker_id: workerId,
     poll_interval_ms: pollIntervalMs,
   });
@@ -265,36 +378,22 @@ async function runWorker(): Promise<void> {
   // Main polling loop
   while (!isShuttingDown) {
     try {
-      const queueEntries = await dequeue(workerId, batchSize);
+      const processedCount = await processQueueBatch(workerId, logger, batchSize);
 
-      if (queueEntries.length === 0) {
+      if (processedCount === 0) {
         // No items available, wait before polling again
         await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
         continue;
       }
 
-      // Process all dequeued entries in parallel
-      const promises = queueEntries.map((entry) => {
-        inFlightCount++;
-        return processQueueEntry(entry, workerId, logger)
-          .catch((error) => {
-            logger.error('queue_processing_error', {
-              queue_id: entry.id,
-              error_message: error instanceof Error ? error.message : String(error),
-            });
-          })
-          .finally(() => {
-            inFlightCount--;
-          });
-      });
-
-      await Promise.all(promises);
-
       // Yield briefly before next poll
       await new Promise((resolve) => setTimeout(resolve, 100));
     } catch (error) {
       logger.error('polling_error', {
-        error_message: error instanceof Error ? error.message : String(error),
+        ...buildWorkerLog({
+          event_type: 'polling_error',
+          error_message: getErrorMessage(error),
+        }),
       });
       // Wait before retrying on error
       await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
@@ -302,7 +401,9 @@ async function runWorker(): Promise<void> {
   }
 
   logger.info('worker_polling_stopped', {
-    event_type: 'worker_polling_stopped',
+    ...buildWorkerLog({
+      event_type: 'worker_polling_stopped',
+    }),
     worker_id: workerId,
   });
 }
@@ -314,7 +415,9 @@ async function runWorker(): Promise<void> {
 async function setupGracefulShutdown(logger: IntegrationLogger): Promise<void> {
   const handleShutdown = async (signal: string) => {
     logger.info('graceful_shutdown_initiated', {
-      event_type: 'graceful_shutdown_initiated',
+      ...buildWorkerLog({
+        event_type: 'graceful_shutdown_initiated',
+      }),
       signal,
       in_flight_count: inFlightCount,
     });
@@ -331,13 +434,17 @@ async function setupGracefulShutdown(logger: IntegrationLogger): Promise<void> {
 
     if (inFlightCount > 0) {
       logger.warn('graceful_shutdown_timeout', {
-        event_type: 'graceful_shutdown_timeout',
+        ...buildWorkerLog({
+          event_type: 'graceful_shutdown_timeout',
+        }),
         in_flight_count: inFlightCount,
       });
     }
 
     logger.info('graceful_shutdown_complete', {
-      event_type: 'graceful_shutdown_complete',
+      ...buildWorkerLog({
+        event_type: 'graceful_shutdown_complete',
+      }),
     });
 
     process.exit(0);
@@ -359,7 +466,10 @@ async function main(): Promise<void> {
     await runWorker();
   } catch (error) {
     logger.error('worker_startup_error', {
-      error_message: error instanceof Error ? error.message : String(error),
+      ...buildWorkerLog({
+        event_type: 'worker_startup_error',
+        error_message: getErrorMessage(error),
+      }),
     });
     process.exit(1);
   }
@@ -373,4 +483,9 @@ if (require.main === module) {
   });
 }
 
-export { runWorker, StructuredLogger };
+function resetWorkerStateForTests(): void {
+  isShuttingDown = false;
+  inFlightCount = 0;
+}
+
+export { processQueueBatch, processQueueEntry, resetWorkerStateForTests, runWorker, StructuredLogger, setupGracefulShutdown };
