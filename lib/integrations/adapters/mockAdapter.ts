@@ -3,10 +3,11 @@ import {
   IntegrationAdapter,
   IntegrationAdapterRequest,
   IntegrationExecutionResult,
+  JsonObject,
   IntegrationRequestContext,
 } from '@/lib/integrations/types'
 
-function isRecord(value: IntegrationAdapterRequest['payload']): value is Record<string, unknown> {
+function isRecord(value: IntegrationAdapterRequest['payload']): value is JsonObject {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
