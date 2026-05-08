@@ -270,3 +270,181 @@ create trigger set_membership_requests_updated_at
     before update on public.membership_requests
     for each row
     execute function public.set_updated_at();
+
+-- ============================================================
+-- PBI-040: integration_queue table
+-- One-attempt integration queue for downstream manual/terminal
+-- processing. Rows are auto-enqueued from membership_requests.
+-- Queue statuses are intentionally limited to:
+-- pending, processing, completed, failed.
+-- ============================================================
+
+create table if not exists public.integration_queue (
+    id               uuid        primary key default gen_random_uuid(),
+    request_id       uuid        not null references public.membership_requests(id) on delete cascade,
+    status           text        not null default 'pending',
+    last_error       text,
+    last_error_at    timestamptz,
+    locked_at        timestamptz,
+    locked_by_worker text,
+    metadata         jsonb,
+    created_at       timestamptz not null default now(),
+    updated_at       timestamptz not null default now(),
+    constraint integration_queue_request_id_key unique (request_id),
+    constraint integration_queue_status_check check (status in ('pending', 'processing', 'completed', 'failed'))
+);
+
+alter table public.integration_queue
+    add column if not exists request_id       uuid,
+    add column if not exists status           text        not null default 'pending',
+    add column if not exists last_error       text,
+    add column if not exists last_error_at    timestamptz,
+    add column if not exists locked_at        timestamptz,
+    add column if not exists locked_by_worker text,
+    add column if not exists metadata         jsonb,
+    add column if not exists created_at       timestamptz not null default now(),
+    add column if not exists updated_at       timestamptz not null default now();
+
+alter table public.integration_queue
+    alter column request_id set not null;
+
+alter table public.integration_queue drop constraint if exists integration_queue_request_id_fkey;
+alter table public.integration_queue
+    add constraint integration_queue_request_id_fkey
+    foreign key (request_id) references public.membership_requests(id) on delete cascade;
+
+alter table public.integration_queue drop constraint if exists integration_queue_request_id_key;
+alter table public.integration_queue
+    add constraint integration_queue_request_id_key unique (request_id);
+
+alter table public.integration_queue drop constraint if exists integration_queue_status_check;
+alter table public.integration_queue
+    add constraint integration_queue_status_check
+    check (status in ('pending', 'processing', 'completed', 'failed'));
+
+create index if not exists integration_queue_status_created_at_idx
+    on public.integration_queue (status, created_at);
+
+alter table public.integration_queue enable row level security;
+
+revoke all on table public.integration_queue from public;
+revoke all on table public.integration_queue from anon;
+revoke all on table public.integration_queue from authenticated;
+
+drop policy if exists "service role full access" on public.integration_queue;
+create policy "service role full access"
+    on public.integration_queue
+    for all
+    to service_role
+    using (true)
+    with check (true);
+
+drop trigger if exists set_integration_queue_updated_at on public.integration_queue;
+create trigger set_integration_queue_updated_at
+    before update on public.integration_queue
+    for each row
+    execute function public.set_updated_at();
+
+create or replace function public.enqueue_membership_request_for_integration()
+returns trigger
+language plpgsql
+as $$
+begin
+    if new.status = 'pending' then
+        insert into public.integration_queue (request_id, status)
+        values (new.id, 'pending')
+        on conflict (request_id) do nothing;
+    end if;
+
+    return new;
+end;
+$$;
+
+drop trigger if exists enqueue_membership_request_for_integration on public.membership_requests;
+create trigger enqueue_membership_request_for_integration
+    after insert on public.membership_requests
+    for each row
+    execute function public.enqueue_membership_request_for_integration();
+
+create or replace function public.claim_integration_queue(
+    claim_worker_id text,
+    claim_batch_size integer default 10
+)
+returns table (
+    id uuid,
+    request_id uuid,
+    status text,
+    last_error text,
+    last_error_at timestamptz,
+    locked_at timestamptz,
+    locked_by_worker text,
+    metadata jsonb,
+    created_at timestamptz,
+    updated_at timestamptz,
+    request_type text,
+    payload jsonb
+)
+language plpgsql
+as $$
+begin
+    if claim_worker_id is null or btrim(claim_worker_id) = '' then
+        raise exception 'claim_worker_id is required';
+    end if;
+
+    if coalesce(claim_batch_size, 0) <= 0 then
+        return;
+    end if;
+
+    return query
+    with locked_rows as (
+        select iq.id
+        from public.integration_queue iq
+        where iq.status = 'pending'
+        order by iq.created_at, iq.id
+        for update skip locked
+        limit claim_batch_size
+    ),
+    claimed_rows as (
+        update public.integration_queue iq
+        set status = 'processing',
+            locked_at = now(),
+            locked_by_worker = claim_worker_id,
+            updated_at = now()
+        from locked_rows
+        where iq.id = locked_rows.id
+        returning
+            iq.id,
+            iq.request_id,
+            iq.status,
+            iq.last_error,
+            iq.last_error_at,
+            iq.locked_at,
+            iq.locked_by_worker,
+            iq.metadata,
+            iq.created_at,
+            iq.updated_at
+    )
+    select
+        claimed_rows.id,
+        claimed_rows.request_id,
+        claimed_rows.status,
+        claimed_rows.last_error,
+        claimed_rows.last_error_at,
+        claimed_rows.locked_at,
+        claimed_rows.locked_by_worker,
+        claimed_rows.metadata,
+        claimed_rows.created_at,
+        claimed_rows.updated_at,
+        membership_requests.request_type,
+        membership_requests.payload
+    from claimed_rows
+    join public.membership_requests
+        on membership_requests.id = claimed_rows.request_id
+    order by claimed_rows.created_at, claimed_rows.id;
+end;
+$$;
+
+revoke all on function public.claim_integration_queue(text, integer) from public;
+revoke all on function public.claim_integration_queue(text, integer) from anon;
+revoke all on function public.claim_integration_queue(text, integer) from authenticated;
+grant execute on function public.claim_integration_queue(text, integer) to service_role;

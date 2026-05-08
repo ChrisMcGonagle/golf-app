@@ -1436,7 +1436,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
   - Create a new Supabase table `integration_queue` with columns: `id` (uuid, PK, default gen_random_uuid()); `request_id` (uuid, not null, FK → membership_requests.id ON DELETE CASCADE); `status` (text, not null, CHECK IN ('pending', 'processing', 'completed', 'failed'), default `'pending'`); `last_error` (text, nullable); `last_error_at` (timestamptz, nullable); `locked_at` (timestamptz, nullable); `locked_by_worker` (text, nullable); `metadata` (jsonb, nullable); `created_at` (timestamptz, not null, default now()); `updated_at` (timestamptz, not null, default now()).
   - Enable RLS on `integration_queue` with policies: service role can SELECT, INSERT, UPDATE, DELETE; anon key and client users cannot access.
   - Create a Supabase trigger on `membership_requests` that automatically inserts a row into `integration_queue` when a new request is created with `status = 'pending'`.
-  - Add an `updated_at` trigger on `integration_queue` to update the timestamp on every write.
+  - Add an `updated_at` trigger on `integration_queue` to refresh the timestamp on update; inserts populate `updated_at` from the column default.
   - Document the queue table schema and trigger in `/supabase/schema.sql`.
   - Create a basic TypeScript helper function `lib/queue/dequeue.ts` that accepts `batch_size` parameter (default 10), atomically claims pending queue entries, marks them `processing`, sets `locked_at` and `locked_by_worker`, and returns the claimed entries with their associated request data.
 - **Out of Scope:** Worker service implementation, integration adapter logic, automatic retry or retry scheduling logic, audit logging, external queue services, worker authentication beyond service role
@@ -1445,13 +1445,13 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
   - RLS is enabled and enforces service-role-only access
   - Inserting a row into `membership_requests` automatically creates a corresponding row in `integration_queue`
   - Auto-enqueued row has `status = 'pending'`
-  - `updated_at` trigger fires on insert and update
+  - `integration_queue.updated_at` is populated on insert by the column default and refreshed on update by the trigger
   - Dequeue helper function exists at `lib/queue/dequeue.ts`
   - `dequeue(batchSize)` atomically claims pending queue entries, marks them `processing`, returns them with request data, and sets `locked_at` and `locked_by_worker`
   - Queue failures are terminal and require manual intervention rather than automatic retry scheduling
   - Locked or already-processing entries are not included in subsequent dequeue results
   - Schema is fully documented in `/supabase/schema.sql`
-  - Tests verify trigger fires on membership_requests insert and dequeue returns locked entries
+  - Tests verify the in-repo schema contract for auto-enqueue and the dequeue helper's locking behavior
 - **Dependencies:** PBI-038 (membership_requests table exists)
 - **Systems Affected:** supabase, backend, tests
 - **Risk Level:** Medium
