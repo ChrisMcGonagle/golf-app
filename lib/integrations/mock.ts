@@ -60,8 +60,8 @@ export class MockAdapter implements IntegrationAdapter {
       worker_id: context.workerId,
     });
 
-    // Simulate successful execution with generated external ID
-    const externalId = `mock-${request.request_id}`;
+    // Simulate successful execution with timestamp-based external ID
+    const externalId = `mock-${Date.now()}`;
 
     context.logger.info({
       event_type: 'adapter_execution_completed',

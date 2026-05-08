@@ -81,7 +81,7 @@ describe('createAdapterByName', () => {
       ),
     ).resolves.toEqual({
       success: true,
-      externalId: 'mock-request-123',
+      externalId: expect.stringMatching(/^mock-\d+$/),
       metadata: {
         outcome: 'mock-success',
         attemptNumber: 1,
