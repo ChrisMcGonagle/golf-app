@@ -1430,7 +1430,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-040: Queue Infrastructure & Request Auto-Enqueue
 
-- **Status:** TESTING
+- **Status:** DONE
 - **Goal:** Establish a Supabase queue table with Row Level Security, an auto-trigger that enqueues membership requests when they are created, and a basic dequeue pattern for background workers.
 - **Scope:**
   - Create a new Supabase table `integration_queue` with columns: `id` (uuid, PK, default gen_random_uuid()); `request_id` (uuid, not null, FK → membership_requests.id ON DELETE CASCADE); `status` (text, not null, CHECK IN ('pending', 'processing', 'completed', 'failed'), default `'pending'`); `last_error` (text, nullable); `last_error_at` (timestamptz, nullable); `locked_at` (timestamptz, nullable); `locked_by_worker` (text, nullable); `metadata` (jsonb, nullable); `created_at` (timestamptz, not null, default now()); `updated_at` (timestamptz, not null, default now()).
@@ -1462,7 +1462,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-041: Integration Adapter Framework
 
-- **Status:** READY
+- **Status:** IN_PROGRESS
 - **Goal:** Define a pluggable adapter interface that all external integrations must implement, with contract for request input, success/failure output, and idempotency guarantees.
 - **Scope:**
   - Create an abstract adapter interface in TypeScript (`lib/integrations/types.ts` or similar) that defines the contract all integrations must satisfy.
