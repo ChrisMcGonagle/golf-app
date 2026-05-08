@@ -1374,7 +1374,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-038: Requests Workflow Backend — Data Model & Form Wiring
 
-- **Status:** TESTING
+- **Status:** DONE
 - **Goal:** Establish the backend data model and data wiring for the Requests management workflow, replacing "Pending" terminology with "Requests", connecting form submissions to a membership_requests table, and enabling the requests management page (PBI-037) to read live request and provisioning-step data.
 - **Scope:**
   - **Rename & Module Update:** Rename all backend terminology, variable names, function names, and internal references from `pending` or `submissions` to `requests`. Update any existing backend utilities, helpers, services, or constants that reference the old terminology.
@@ -1404,7 +1404,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 
 ## PBI-039: Requests Sidebar Pending Count Badge
 
-- **Status:** READY
+- **Status:** TESTING
 - **Goal:** Add a small pending-count badge to the Requests sidebar menu item so admins can immediately see when there are outstanding pending requests without opening the Requests page.
 - **Scope:**
   - Add a small circular number chip/badge to the `Requests` dashboard sidebar menu item
@@ -1421,7 +1421,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
   - The badge count reflects the live number of pending requests from `membership_requests`
   - The badge styling is visually consistent with the existing dashboard sidebar
   - The badge remains legible for multi-digit counts
-- **Dependencies:** PBI-037 (Requests Management Page — DONE), PBI-038 (Requests Workflow Backend — Data Model & Form Wiring — TESTING)
+- **Dependencies:** PBI-037 (Requests Management Page — DONE), PBI-038 (Requests Workflow Backend — Data Model & Form Wiring — DONE)
 - **Systems Affected:** frontend, backend
 - **Risk Level:** Low
 - **Estimated Effort:** S

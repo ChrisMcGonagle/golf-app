@@ -5,6 +5,10 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import HickoryBrand from "@/components/HickoryBrand";
 
+type DashboardSidebarProps = {
+  pendingRequestsCount?: number;
+};
+
 function DashboardIcon() {
   return (
     <svg
@@ -54,7 +58,7 @@ function MembershipIcon() {
   );
 }
 
-export default function DashboardSidebar() {
+export default function DashboardSidebar({ pendingRequestsCount = 0 }: DashboardSidebarProps) {
   const pathname = usePathname();
   const [membershipOpen, setMembershipOpen] = useState(false);
 
@@ -158,7 +162,7 @@ export default function DashboardSidebar() {
                 <span className="absolute left-0 top-1/2 w-3 h-px -translate-y-1/2 bg-[#e5e7eb]"></span>
                 <Link
                   href="/dashboard/requests"
-                  className={`relative flex items-center px-4 py-1.5 rounded text-sm transition-colors duration-200 ${
+                  className={`relative flex items-center gap-3 px-4 py-1.5 rounded text-sm transition-colors duration-200 ${
                     isRequestsActive
                       ? "bg-gray-100 text-[#2b2b2b] font-semibold"
                       : "text-[#2b2b2b] hover:bg-gray-50"
@@ -166,6 +170,14 @@ export default function DashboardSidebar() {
                 >
                   {isRequestsActive && <span aria-hidden="true" className="absolute left-0 top-1/2 h-[50%] w-[2px] -translate-y-1/2 rounded-full bg-[#000000]" />}
                   Requests
+                  {pendingRequestsCount > 0 ? (
+                    <span
+                      aria-label={`${pendingRequestsCount} pending requests`}
+                      className="ml-auto inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full border border-amber-500 bg-amber-500 px-1.5 text-[11px] font-semibold leading-none text-white shadow-sm ring-1 ring-amber-200 transition-colors duration-200"
+                    >
+                      {pendingRequestsCount}
+                    </span>
+                  ) : null}
                 </Link>
               </div>
 
