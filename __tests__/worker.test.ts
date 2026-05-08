@@ -159,6 +159,7 @@ describe('Background Worker Service (PBI-042)', () => {
       expect.objectContaining({
         external_id: expect.stringMatching(/^mock-\d+$/),
         golfireland_account: 'completed',
+        status: 'pending',
       })
     );
     expect(queueUpdateCalls).toContainEqual(
@@ -213,7 +214,13 @@ describe('Background Worker Service (PBI-042)', () => {
     const processedCount = await processQueueBatch('test-worker-1', new StructuredLogger(), 10);
 
     expect(processedCount).toBe(1);
-    expect(mockUpdateMembershipRequest).not.toHaveBeenCalled();
+    expect(mockUpdateMembershipRequest).toHaveBeenCalledWith(
+      'request-1',
+      expect.objectContaining({
+        golfireland_account: 'failed',
+        status: 'failed',
+      })
+    );
     expect(queueUpdateCalls).toContainEqual(
       expect.objectContaining({
         table: 'integration_queue',
@@ -246,7 +253,13 @@ describe('Background Worker Service (PBI-042)', () => {
     const processedCount = await processQueueBatch('test-worker-1', new StructuredLogger(), 10);
 
     expect(processedCount).toBe(1);
-    expect(mockUpdateMembershipRequest).not.toHaveBeenCalled();
+    expect(mockUpdateMembershipRequest).toHaveBeenCalledWith(
+      'request-1',
+      expect.objectContaining({
+        golfireland_account: 'failed',
+        status: 'failed',
+      })
+    );
     expect(queueUpdateCalls).toContainEqual(
       expect.objectContaining({
         table: 'integration_queue',
@@ -292,6 +305,46 @@ describe('Background Worker Service (PBI-042)', () => {
         adapter_name: 'mock',
         error_message: 'Failed to update queue entry: integration_queue update failed',
         log_level: 'error',
+      })
+    );
+  });
+
+  it('marks the request as failed without failing step 1 when execution never starts', async () => {
+    const invalidAdapter: IntegrationAdapter = {
+      name: 'mock',
+      validate: jest.fn(() => {
+        throw new Error('Adapter validation failed');
+      }),
+      execute: jest.fn(),
+    };
+
+    mockDequeue.mockResolvedValueOnce([queueEntry]);
+    mockCreateAdapterByName.mockReturnValue(invalidAdapter);
+
+    const processedCount = await processQueueBatch('test-worker-1', new StructuredLogger(), 10);
+
+    expect(processedCount).toBe(1);
+    expect(invalidAdapter.execute).not.toHaveBeenCalled();
+    expect(mockUpdateMembershipRequest).toHaveBeenCalledWith(
+      'request-1',
+      expect.objectContaining({
+        status: 'failed',
+      })
+    );
+    expect(mockUpdateMembershipRequest).not.toHaveBeenCalledWith(
+      'request-1',
+      expect.objectContaining({
+        golfireland_account: 'failed',
+      })
+    );
+    expect(queueUpdateCalls).toContainEqual(
+      expect.objectContaining({
+        table: 'integration_queue',
+        id: 'queue-1',
+        values: expect.objectContaining({
+          status: 'failed',
+          last_error: 'Adapter validation failed',
+        }),
       })
     );
   });

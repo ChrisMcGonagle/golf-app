@@ -94,6 +94,8 @@ function formatDateTime(value: string): string {
 
 function mapRequestStatus(status: string): RequestStatus {
   switch (status) {
+    case 'failed':
+      return 'Failed';
     case 'completed':
       return 'Completed';
     case 'in_progress':
@@ -114,6 +116,46 @@ function mapStepState(state: string): RequestStepState {
     default:
       return 'pending';
   }
+}
+
+function buildRequestSteps(record: MembershipRequestRecord): RequestRow['steps'] {
+  const rawSteps = [
+    {
+      label: '1' as const,
+      title: 'Golf Ireland' as const,
+      state: record.golfireland_account,
+      showWarningIcon: record.golfireland_account === 'failed',
+    },
+    {
+      label: '2' as const,
+      title: 'BRS' as const,
+      state: record.brs_account,
+      showWarningIcon: record.brs_account === 'failed',
+    },
+    {
+      label: '3' as const,
+      title: 'ClubV1' as const,
+      state: record.clubv1_account,
+      showWarningIcon: record.clubv1_account === 'failed',
+    },
+  ];
+
+  const failedStepIndex = rawSteps.findIndex((step) => step.state === 'failed');
+
+  if (record.status === 'failed' && failedStepIndex > 0) {
+    rawSteps.forEach((step, index) => {
+      if (index > failedStepIndex && step.state !== 'completed') {
+        step.state = 'failed';
+      }
+    });
+  }
+
+  return rawSteps.map((step) => ({
+    label: step.label,
+    title: step.title,
+    state: mapStepState(step.state),
+    showWarningIcon: step.showWarningIcon,
+  })) as RequestRow['steps'];
 }
 
 function getIntent(intent: unknown): 'New' | 'Renew' {
@@ -171,26 +213,7 @@ function mapMembershipRequestToRow(
     membershipStatus: record.membership_status,
     operatorName: operatorNameById.get(record.operator_id),
     status: mapRequestStatus(record.status),
-    steps: [
-      {
-        label: '1',
-        title: 'Golf Ireland',
-        state: mapStepState(record.golfireland_account),
-        showWarningIcon: record.golfireland_account === 'failed',
-      },
-      {
-        label: '2',
-        title: 'BRS',
-        state: mapStepState(record.brs_account),
-        showWarningIcon: record.brs_account === 'failed',
-      },
-      {
-        label: '3',
-        title: 'ClubV1',
-        state: mapStepState(record.clubv1_account),
-        showWarningIcon: record.clubv1_account === 'failed',
-      },
-    ],
+    steps: buildRequestSteps(record),
     payload: {
       name: requester,
       email: getStringValue(payload?.personal?.email) || record.requester_email,

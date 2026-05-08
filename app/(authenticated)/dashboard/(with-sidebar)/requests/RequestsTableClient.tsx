@@ -11,12 +11,13 @@ import type {
 
 type RequestStatusFilter = 'All' | RequestStatus;
 
-const filters: RequestStatusFilter[] = ['All', 'Completed', 'In Progress', 'Pending'];
+const filters: RequestStatusFilter[] = ['All', 'Completed', 'Failed', 'In Progress', 'Pending'];
 
 const statusChipClassNames: Record<RequestStatus, string> = {
   Pending: 'border border-amber-200 bg-amber-50 text-amber-800',
   'In Progress': 'border border-blue-200 bg-blue-50 text-blue-700',
   Completed: 'border border-emerald-200 bg-emerald-50 text-emerald-700',
+  Failed: 'border border-red-200 bg-red-50 text-red-700',
 };
 
 const stepChipClassNames: Record<RequestStepState, string> = {

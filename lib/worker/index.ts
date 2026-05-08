@@ -52,6 +52,44 @@ function isMissingScreenshotPathColumn(message: string): boolean {
   return normalizedMessage.includes('screenshot_path') && normalizedMessage.includes('column');
 }
 
+type MembershipRequestStepColumn = keyof Pick<
+  MembershipRequestUpdate,
+  'golfireland_account' | 'brs_account' | 'clubv1_account'
+>;
+
+const MEMBERSHIP_REQUEST_STEP_COLUMN_BY_ADAPTER: Record<string, MembershipRequestStepColumn> = {
+  mock: 'golfireland_account',
+  golf_ireland: 'golfireland_account',
+  brs: 'brs_account',
+  clubv1: 'clubv1_account',
+};
+
+function getMembershipRequestStepColumn(adapterName: string): MembershipRequestStepColumn {
+  return MEMBERSHIP_REQUEST_STEP_COLUMN_BY_ADAPTER[adapterName] ?? 'golfireland_account';
+}
+
+function buildMembershipRequestOutcomeUpdate(
+  adapterName: string,
+  stepStatus: 'completed' | 'failed',
+  options: {
+    didStepStart?: boolean;
+    updates?: MembershipRequestUpdate;
+  } = {}
+): MembershipRequestUpdate {
+  const update: MembershipRequestUpdate = {
+    status: stepStatus === 'failed' ? 'failed' : 'pending',
+    ...(options.updates ?? {}),
+  };
+
+  if (stepStatus === 'failed' && options.didStepStart === false) {
+    return update;
+  }
+
+  update[getMembershipRequestStepColumn(adapterName)] = stepStatus;
+
+  return update;
+}
+
 // ============================================================
 // Structured Logger
 // ============================================================
@@ -119,22 +157,14 @@ async function handleSuccess(
     request_id: requestId,
   });
 
-  // Map adapter name to column name (e.g., 'golf_ireland' -> 'golfireland_account')
-  const columnMap = {
-    mock: 'golfireland_account',
-    golf_ireland: 'golfireland_account',
-    brs: 'brs_account',
-    clubv1: 'clubv1_account',
-  } as const;
-
-  const columnName = columnMap[adapterName as keyof typeof columnMap] || 'golfireland_account';
-
-  const membershipRequestUpdates: MembershipRequestUpdate = {
-    external_id: externalId,
-  };
-  membershipRequestUpdates[columnName] = 'completed';
-
-  await updateMembershipRequest(requestId, membershipRequestUpdates);
+  await updateMembershipRequest(
+    requestId,
+    buildMembershipRequestOutcomeUpdate(adapterName, 'completed', {
+      updates: {
+        external_id: externalId,
+      },
+    })
+  );
 
   // Update queue entry as completed
   const { error: queueError } = await supabase
@@ -160,6 +190,7 @@ async function handleFailure(
   adapterName: string,
   error: string,
   screenshotPath: string | undefined,
+  didStepStart: boolean,
   logger: IntegrationLogger
 ): Promise<void> {
   const supabase = createServiceRoleClient();
@@ -175,6 +206,13 @@ async function handleFailure(
   };
 
   logger.error('processing_failed', errorLog);
+
+  await updateMembershipRequest(
+    requestId,
+    buildMembershipRequestOutcomeUpdate(adapterName, 'failed', {
+      didStepStart,
+    })
+  );
 
   const failureUpdate: Record<string, string> = {
     status: 'failed',
@@ -244,6 +282,9 @@ async function processQueueEntry(
     request_type: requestType,
   });
 
+  let didStepStart = false;
+  let stepOutcomePersisted = false;
+
   try {
     // Instantiate adapter
     logger.info('adapter_instantiation_started', {
@@ -285,11 +326,13 @@ async function processQueueEntry(
       request_type: requestType,
     });
 
+    didStepStart = true;
     const response = await adapter.execute(request, context);
 
     // Handle response
     if (response.success && response.externalId) {
       await handleSuccess(queueEntryId, requestId, adapterName, response.externalId, logger);
+      stepOutcomePersisted = true;
     } else {
       const errorMessage = response.error || 'Unknown error';
       await handleFailure(
@@ -298,8 +341,10 @@ async function processQueueEntry(
         adapterName,
         errorMessage,
         response.screenshotPath,
+        didStepStart,
         logger
       );
+      stepOutcomePersisted = true;
     }
 
     // Optional cleanup
@@ -307,12 +352,17 @@ async function processQueueEntry(
       await adapter.cleanup(context);
     }
   } catch (error) {
+    if (stepOutcomePersisted) {
+      throw error;
+    }
+
     await handleFailure(
       queueEntryId,
       requestId,
       adapterName,
       getErrorMessage(error),
       getScreenshotPathFromError(error),
+      didStepStart,
       logger
     );
   }
