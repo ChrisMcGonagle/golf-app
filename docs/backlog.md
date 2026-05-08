@@ -1495,7 +1495,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
   - Worker must poll `integration_queue` using the `dequeue()` helper from PBI-040.
   - For each dequeued message: load the associated request payload from `membership_requests`, determine which adapter to use (based on request_type or configuration), instantiate the adapter from PBI-041, call `adapter.execute(request)`, and handle the response.
   - On adapter success: write the returned `externalId` back to the `membership_requests` table, update the corresponding step status (e.g. `golfireland_account = 'completed'`), update queue entry to `status = 'completed'`, log success with externalId.
-  - On adapter failure: capture the error, take a screenshot if the adapter provides one, update queue entry with `last_error`, `last_error_at`, and `screenshot_path` (if applicable), mark queue entry as `status = 'failed'`. No retries — single attempt only.
+  - On adapter failure: capture the error, take a screenshot if the adapter provides one, update queue entry with `last_error`, `last_error_at`, and `screenshot_path` (if applicable), mark queue entry as `status = 'failed'`. Also update `membership_requests.status = 'Failed'` to ensure request-level failure state is persisted. No retries — single attempt only.
   - Add comprehensive structured logging for all steps: queue entry received, adapter started, adapter form fill, form submission, success/failure, screenshot capture (if applicable), worker completion. All logs must include event_type, adapter_name, external_id (if success), error_message, screenshot_path (if failure), and log_level.
   - Implement graceful shutdown handling (finish in-flight requests, exit cleanly).
   - Worker should run as a background service on Render as a Background Worker.
@@ -1506,7 +1506,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
   - Worker successfully dequeues locked messages and processes them
   - On success, `externalId` is written to `membership_requests`
   - On success, queue entry is marked `completed`
-  - On failure, error is captured, queue entry is marked `failed`, and no retry is scheduled
+  - On failure, error is captured, queue entry is marked `failed`, request status is updated to `Failed`, and no retry is scheduled
   - All processing steps logged with structured logging (adapter started, field fill, form submit, success/failure, screenshot path)
   - Graceful shutdown is implemented
   - Tests verify worker dequeues, executes adapters, and updates state correctly (with mock adapter)
@@ -1514,6 +1514,7 @@ Use these statuses to keep backlog state aligned with branch, PR, and deployment
 - **Systems Affected:** backend, supabase
 - **Risk Level:** Medium
 - **Estimated Effort:** M
+- **Note:** Request failure status synchronization (ensuring `membership_requests.status` is updated when queue fails) was implemented and verified in PR #54 with comprehensive tests covering all worker failure scenarios.
 
 ---
 
